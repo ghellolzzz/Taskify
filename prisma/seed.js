@@ -26,13 +26,13 @@ const persons = [
 
 async function main() {
 
-  const insertedPersons = await prisma.person.createManyAndReturn({
+  const insertedPersons = await prisma.person.createMany({
     data: persons,
   });
 
   console.log(insertedPersons);
 
-  const insertedSomethings = await prisma.something.createManyAndReturn({
+  const insertedSomethings = await prisma.something.createMany({
     data: [
       { name: 'Seed 1' },
       { name: 'Seed 2' },

@@ -1,9 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma
+// Task Management App - Simplified Version (No Session, No Activity Log)
 
 generator client {
   provider = "prisma-client-js"
-  // previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -11,14 +10,73 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Something {
-  id       Int              @id @default(autoincrement())
-  name     String
+// ==============================
+// USER TABLE
+// ==============================
+model User {
+  id         Int          @id @default(autoincrement())
+  name       String
+  email      String       @unique
+  password   String
+  createdAt  DateTime     @default(now())
+
+  // Relations
+  tasks      Task[]
+  categories Category[]
+  comments   Comment[]
+
+  @@map("users") // 👈 rename SQL table to avoid reserved keyword issue
 }
 
-model Person {
-  id     Int              @id @default(autoincrement())
-  email  String           @unique
-  name   String
-  avatar String?
+// ==============================
+// TASK TABLE
+// ==============================
+model Task {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  status      String        @default("Pending")
+  priority    String        @default("Medium")
+  dueDate     DateTime?
+  userId      Int
+  categoryId  Int?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  user        User          @relation(fields: [userId], references: [id])
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  comments    Comment[]
+
+  @@map("tasks")
+}
+
+// ==============================
+// CATEGORY TABLE
+// ==============================
+model Category {
+  id       Int      @id @default(autoincrement())
+  name     String
+  color    String?
+  userId   Int
+  user     User     @relation(fields: [userId], references: [id])
+  tasks    Task[]
+
+  @@map("categories")
+}
+
+// ==============================
+// COMMENT TABLE
+// ==============================
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  taskId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("comments")
 }

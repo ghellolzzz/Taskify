@@ -1,77 +1,137 @@
 const prisma = require('../src/models/prismaClient');
 
 async function main() {
-  console.log('Seeding data...');
+  console.log(" Seeding Taskify data...");
 
-  // 1️ Create Users
-  const usersData = [
-    { name: 'Alice', email: 'alice@example.com', password: 'password123' },
-    { name: 'Bob', email: 'bob@example.com', password: 'password123' },
-    { name: 'Charlie', email: 'charlie@example.com', password: 'password123' },
-  ];
+  // ==========================================
+  // 1. USERS
+  // ==========================================
+  const users = await prisma.user.createMany({
+    data: [
+      { name: "Alice", email: "alice@example.com", password: "password123" },
+      { name: "Bob", email: "bob@example.com", password: "password123" },
+      { name: "Charlie", email: "charlie@example.com", password: "password123" },
+    ],
+  });
 
-  await prisma.user.createMany({ data: usersData });
-  console.log(' Users inserted');
+  const allUsers = await prisma.user.findMany();
+  console.log("Users seeded");
 
-  // 2️ Fetch all users
-  const users = await prisma.user.findMany();
-
-  // 3️ Create Categories for each user
-  for (const user of users) {
+  // ==========================================
+  // 2. CATEGORIES (for every user)
+  // ==========================================
+  for (const user of allUsers) {
     await prisma.category.createMany({
       data: [
-        { name: 'Work', color: '#1E90FF', userId: user.id },
-        { name: 'Personal', color: '#32CD32', userId: user.id },
+        { name: "Work", color: "#1E90FF", userId: user.id },
+        { name: "Personal", color: "#32CD32", userId: user.id },
       ],
     });
   }
-  console.log('Categories inserted');
+  console.log(" Categories seeded");
 
-  // 4 Create Tasks for Alice
-  const alice = await prisma.user.findFirst({ where: { email: 'alice@example.com' } });
-  const workCategory = await prisma.category.findFirst({ where: { userId: alice.id, name: 'Work' } });
+  // Get Alice for sample tasks
+  const alice = await prisma.user.findFirst({
+    where: { email: "alice@example.com" },
+  });
 
+  const aliceWorkCategory = await prisma.category.findFirst({
+    where: { name: "Work", userId: alice.id },
+  });
+
+  // ==========================================
+  // 3. TASKS
+  // ==========================================
   await prisma.task.createMany({
     data: [
       {
-        title: 'Finish CA1 Project',
-        description: 'Complete backend and frontend integration',
-        status: 'In Progress',
-        priority: 'High',
+        title: "Finish CA1 Project",
+        description: "Complete backend and frontend",
+        status: "In Progress",
+        priority: "High",
         userId: alice.id,
-        categoryId: workCategory.id,
+        categoryId: aliceWorkCategory.id,
       },
       {
-        title: 'Buy groceries',
-        description: 'Milk, bread, eggs, butter',
-        status: 'Pending',
-        priority: 'Low',
+        title: "Buy Groceries",
+        priority: "Low",
+        status: "Pending",
         userId: alice.id,
+        categoryId: aliceWorkCategory.id,
       },
     ],
   });
-  console.log('Tasks inserted');
 
-  // 5️ Create Comments for a Task
-  const task = await prisma.task.findFirst({ where: { title: 'Finish CA1 Project' } });
+  console.log(" Tasks seeded");
+
+  // ==========================================
+  // 4. COMMENTS
+  // ==========================================
+  const task = await prisma.task.findFirst({
+    where: { title: "Finish CA1 Project" },
+  });
+
   await prisma.comment.create({
     data: {
-      content: 'Remember to commit and push the final code!',
+      content: "Don't forget to push your code!",
       taskId: task.id,
       userId: alice.id,
     },
   });
-  console.log(' Comments inserted');
 
-  console.log(' Seeding complete!');
+  console.log(" Comments seeded");
+
+  // ==========================================
+  // 5. GOALS
+  // ==========================================
+  await prisma.goal.createMany({
+    data: [
+      { title: "Become productive", userId: alice.id },
+      { title: "Finish tasks daily", userId: alice.id },
+    ],
+  });
+
+  console.log(" Goals seeded");
+
+  // ==========================================
+  // 6. BADGES
+  // ==========================================
+  await prisma.badge.createMany({
+    data: [
+      { code: "ROOKIE", name: "Rookie", description: "Created your first task", icon: "⭐" },
+      { code: "STREAK_3", name: "3-Day Streak", description: "Completed tasks for 3 days" },
+    ],
+  });
+
+  const rookieBadge = await prisma.badge.findFirst({ where: { code: "ROOKIE" } });
+
+  await prisma.userBadge.create({
+    data: { userId: alice.id, badgeId: rookieBadge.id },
+  });
+
+  console.log("Badges seeded");
+
+  // ==========================================
+  // 7. CALENDAR TASKS
+  // ==========================================
+  await prisma.calendarTask.create({
+    data: {
+      date: new Date(),
+      content: "Finish UI for Dashboard",
+      userId: alice.id,
+    },
+  });
+
+  console.log("Calendar tasks seeded");
+
+  console.log("Seed completed!");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

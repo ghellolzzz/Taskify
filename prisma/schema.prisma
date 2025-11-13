@@ -1,6 +1,3 @@
-// prisma/schema.prisma
-// Task Management App - Simplified Version (No Session, No Activity Log)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,40 +7,97 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==============================
+//////////////////////////////////////////////////////
 // USER TABLE
-// ==============================
+//////////////////////////////////////////////////////
 model User {
-  id         Int          @id @default(autoincrement())
-  name       String
-  email      String       @unique
-  password   String
-  createdAt  DateTime     @default(now())
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  password    String
+  createdAt   DateTime     @default(now())
+
+  // Profile
+  avatarUrl   String?
+  bio         String?
+  streakCount Int          @default(0)
+  lastActive  DateTime?
+  theme       String?      // "light" or "dark"
+  accentColor String?      // e.g. #4FD1C5
 
   // Relations
-  tasks      Task[]
-  categories Category[]
-  comments   Comment[]
+  tasks       Task[]
+  categories  Category[]
+  comments    Comment[]
+  goals       Goal[]
+  calendar    CalendarTask[]
+  badges      UserBadge[]
 
-  @@map("users") // 👈 rename SQL table to avoid reserved keyword issue
+  @@map("users")
 }
 
-// ==============================
-// TASK TABLE
-// ==============================
+//////////////////////////////////////////////////////
+// BADGE TABLE
+//////////////////////////////////////////////////////
+model Badge {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique     // "ROOKIE", "STREAK_7"
+  name        String
+  description String
+  icon        String?
+
+  users       UserBadge[]
+
+  @@map("badges")
+}
+
+//////////////////////////////////////////////////////
+// USER_BADGE TABLE (Many-to-many)
+//////////////////////////////////////////////////////
+model UserBadge {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  badgeId   Int
+  awardedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+//////////////////////////////////////////////////////
+// CATEGORY TABLE
+//////////////////////////////////////////////////////
+model Category {
+  id       Int      @id @default(autoincrement())
+  name     String
+  color    String?
+  userId   Int
+
+  user     User     @relation(fields: [userId], references: [id])
+  tasks    Task[]
+
+  @@map("categories")
+}
+
+//////////////////////////////////////////////////////
+// TASK TABLE (Main Feature)
+//////////////////////////////////////////////////////
 model Task {
   id          Int          @id @default(autoincrement())
   title       String
   description String?
-  status      String        @default("Pending")
-  priority    String        @default("Medium")
+  status      String        @default("Pending")     // Pending, Completed
+  priority    String        @default("Medium")      // Low, Medium, High
   dueDate     DateTime?
-  userId      Int
-  categoryId  Int?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  // Relations
+  userId      Int
+  categoryId  Int?
+
   user        User          @relation(fields: [userId], references: [id])
   category    Category?     @relation(fields: [categoryId], references: [id])
   comments    Comment[]
@@ -51,32 +105,58 @@ model Task {
   @@map("tasks")
 }
 
-// ==============================
-// CATEGORY TABLE
-// ==============================
-model Category {
-  id       Int      @id @default(autoincrement())
-  name     String
-  color    String?
-  userId   Int
-  user     User     @relation(fields: [userId], references: [id])
-  tasks    Task[]
-
-  @@map("categories")
-}
-
-// ==============================
+//////////////////////////////////////////////////////
 // COMMENT TABLE
-// ==============================
+//////////////////////////////////////////////////////
 model Comment {
   id        Int      @id @default(autoincrement())
   content   String
+  createdAt DateTime @default(now())
   taskId    Int
   userId    Int
-  createdAt DateTime @default(now())
 
-  task Task @relation(fields: [taskId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("comments")
 }
+
+//////////////////////////////////////////////////////
+// GOAL TABLE (User Motivation)
+//////////////////////////////////////////////////////
+model Goal {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  userId      Int
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("goals")
+}
+
+//////////////////////////////////////////////////////
+// CALENDAR TASK TABLE (for daily planning)
+//////////////////////////////////////////////////////
+model CalendarTask {
+  id        Int      @id @default(autoincrement())
+  date      DateTime // Represents yyyy-mm-dd
+  content   String
+  userId    Int
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("calendar_tasks")
+}
+
+//////////////////////////////////////////////////////
+// QUOTES TABLE 
+//////////////////////////////////////////////////////
+model Quote {
+  id        Int      @id @default(autoincrement())
+  text      String
+  author    String?
+}
+

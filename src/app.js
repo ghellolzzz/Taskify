@@ -1,16 +1,14 @@
 const express = require('express');
 const createError = require('http-errors');
-
-const somethingRouter = require('./routers/Something.router');
-const personRouter = require('./routers/Person.router');
 const path = require('path');
+const taskRouter=require("./routers/taskRouter.js")
 
 const app = express();
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/somethings', somethingRouter);
-app.use('/persons', personRouter);
+app.use('/tasks',taskRouter);
+
 
 app.use((req, res, next) => {
   next(createError(404, `Unknown resource ${req.method} ${req.originalUrl}`));

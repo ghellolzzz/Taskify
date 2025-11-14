@@ -1,0 +1,44 @@
+/* =======================
+   Taskify Styling
+======================= */
+
+/* Table hover color */
+.table-hover tbody tr:hover {
+    background-color: #eaffea !important;
+}
+
+/* Priority Colors */
+.priority-high {
+    color: #d00000;
+    font-weight: bold;
+}
+
+.priority-medium {
+    color: #e67e22;
+    font-weight: bold;
+}
+
+.priority-low {
+    color: #2d6a4f;
+    font-weight: bold;
+}
+
+/* Card shadow */
+.card {
+    border-radius: 10px;
+}
+
+/* Add Task button */
+#show-add-form {
+    font-weight: bold;
+}
+
+/* Smooth form reveal */
+#add-task-card {
+    transition: all 0.3s ease;
+}
+
+/* Modal header */
+.modal-header {
+    background-color: #2d6a4f !important;
+}

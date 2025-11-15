@@ -10,6 +10,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/tasks',taskRouter);
 
 
+
+app.get('/.well-known/appspecific/*', (req, res) => {
+  res.status(204).end();
+});
+
 app.use((req, res, next) => {
   next(createError(404, `Unknown resource ${req.method} ${req.originalUrl}`));
 });

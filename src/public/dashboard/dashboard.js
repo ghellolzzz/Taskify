@@ -1,0 +1,17 @@
+const apiUrl = "http://localhost:3000/api";
+
+// Load dashboard stats
+function loadDashboardStats() {
+  fetch("/api/dashboard")
+    .then((response) => response.json())
+    .then((data) => {
+      // Insert values into your HTML
+      document.getElementById("totalTasks").innerText = data.total;
+      document.getElementById("completedTasks").innerText = data.completed;
+      document.getElementById("pendingTasks").innerText = data.pending;
+    })
+    .catch((error) => console.error("Error loading dashboard:", error));
+}
+
+// Run on page load
+document.addEventListener("DOMContentLoaded", loadDashboardStats);

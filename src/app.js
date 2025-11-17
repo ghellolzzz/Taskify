@@ -3,7 +3,7 @@ const createError = require('http-errors');
 
 const somethingRouter = require('./routers/Something.router');
 const personRouter = require('./routers/Person.router');
-const dashboardRouter = require('./routers/dashboard.router')
+const dashboardRouter = require('./routers/dashboardRouter')
 const path = require('path');
 
 const app = express();

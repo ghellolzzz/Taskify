@@ -6,9 +6,9 @@ function loadDashboardStats() {
     .then((response) => response.json())
     .then((data) => {
       // Insert values into your HTML
-      document.getElementById("totalTasks").innerText = data.total;
-      document.getElementById("completedTasks").innerText = data.completed;
-      document.getElementById("pendingTasks").innerText = data.pending;
+      document.getElementById("totalTasks").innerText = data.stats.total;
+      document.getElementById("completedTasks").innerText = data.stats.completed;
+      document.getElementById("pendingTasks").innerText = data.stats.pending;
     })
     .catch((error) => console.error("Error loading dashboard:", error));
 }

@@ -1,0 +1,140 @@
+/*side bar*/
+
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:230px;
+    height:100vh;
+    background: #ffffff;
+    border-right: 1px solid #e6e6e6;
+}
+
+
+.sidebar .brand{
+    font-size:1.4rem;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    color:#198754
+}
+
+
+
+
+.sidebar ul li {
+    list-style: none;
+    margin: 15px 0;
+}
+
+
+.sidebar a {
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 10px 5px;
+    color: #535353;
+    display: block;
+    border-radius: 8px;
+}
+
+
+.sidebar a.active,
+.sidebar a:hover {
+    background: #e9f7ef;
+    color: #198754;
+}
+
+
+
+
+/* ===== MAIN DASHBOARD AREA ===== */
+.dashboard {
+    margin-left: 250px;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+}
+
+.dashboard h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.dashboard .accent {
+    color: #198754;
+    font-weight: 600;
+}
+
+/* ===== STATS CARDS ===== */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #f5fff7; /* pastel green tint */
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #d8f3dd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Specific Card Colors */
+.stat-card.total {
+    border-left: 5px solid #66bb6a;
+}
+
+.stat-card.completed {
+    border-left: 5px solid #4caf50;
+}
+
+.stat-card.pending {
+    border-left: 5px solid #ffca28;
+}
+
+.stat-card.progress {
+    border-left: 5px solid #a1a1a1;
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #444;
+}
+
+.stat-card .number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-top: 10px;
+    color: #198754;
+}
+
+/* ===== CHART PLACEHOLDER ===== */
+.chart-placeholder {
+    background: #eefaf1;
+    border: 2px dashed #bfe8c9;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    color: #198754;
+    font-size: 1.2rem;
+}
+
+.chart-placeholder i {
+    font-size: 2rem;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #6c757d;
+}

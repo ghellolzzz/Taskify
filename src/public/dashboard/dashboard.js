@@ -9,6 +9,8 @@ function loadDashboardStats() {
       document.getElementById("totalTasks").innerText = data.stats.total;
       document.getElementById("completedTasks").innerText = data.stats.completed;
       document.getElementById("pendingTasks").innerText = data.stats.pending;
+      document.getElementById("progressTasks").innerText = data.stats.inProgress;
+
     })
     .catch((error) => console.error("Error loading dashboard:", error));
 }

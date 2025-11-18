@@ -10,8 +10,8 @@ const app = express();
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/tasks',taskRouter);
-app.use('/dashboard', dashboardRouter);
+app.use('/api/tasks',taskRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 
 

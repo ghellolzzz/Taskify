@@ -20,6 +20,7 @@ module.exports.create = function(req,res){
     .then(task=>res.json({task}))
     .catch(err=>res.status(500).json({error:err.messaage}))
 }
+
 //retrieving user tasks
 module.exports.retrieveAll=function(req,res){
     return taskModel.retrieveAll(MOCK_USER_ID)
@@ -27,6 +28,20 @@ module.exports.retrieveAll=function(req,res){
     .catch(err=>res.status(500).json({error:err.messaage}))
 }
 
+//retrive task by id
+module.exports.retrieveById=function(req,res){
+    const taskId= parseInt(req.params.id);
+
+    return taskModel.retrieveById(taskId,MOCK_USER_ID)
+        .then(task=>res.json({task}))
+        .catch(err=>{
+            if(err instanceof EMPTY_RESULT_ERROR){
+                return res.status(404).json({error:err.message});
+            
+            }
+            res.status(500).json({error:err.message});
+        })
+}
 //updating task
 module.exports.update=function(req,res){
     const taskId=parseInt(req.params.id);

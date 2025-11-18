@@ -74,17 +74,67 @@ document.getElementById("add-task-form").addEventListener("submit", function (e)
     })
     .then(res => res.json())
     .then(() => loadTasks());
-    document.getElementById("add-task-card").classList.add("d-none"); 
+    document.getElementById("add-task-card").classList.add("d-none"); //closes the create form task card
     document.getElementById("add-task-form").reset(); 
 });
 
 
 //deleting task
 function deleteTask(id){
-    fetch(`/tasks/${id}`,{method:"DELETE"})
-        .then(()=>loadTasks());
+     const ok = confirm("Are you sure you want to delete this task?");
+
+    if (!ok) 
+        return
+
+    
+    fetch(`/tasks/${id}`, {
+        method: "DELETE"
+    })
+    .then(() => loadTasks());
 }
 
-function openEditModal(id) {
-    alert("Edit modal coming in Week 7!");
+function openEditModal(taskId) {
+    fetch(`/tasks/${taskId}`)
+        .then((res) => res.json())
+        .then((data) => {
+            const task = data.task;
+
+            document.querySelector("#edit-title").value = task.title;
+            document.querySelector("#edit-desc").value = task.description || "";
+            document.querySelector("#edit-date").value = task.dueDate ? task.dueDate.split("T")[0] : "";
+            document.querySelector("#edit-priority").value = task.priority;
+            document.querySelector("#edit-status").value = task.status;
+
+            document.querySelector("#edit-task-id").value = taskId;
+
+            const modal = new bootstrap.Modal(document.getElementById("editModal"));
+            modal.show();
+        })
+        .catch((err) => console.error(err));
 }
+
+// SAVE CHANGES
+document.querySelector("#edit-task-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const taskId = document.querySelector("#edit-task-id").value;
+
+    const updatedTask = {
+        title: document.querySelector("#edit-title").value,
+        description: document.querySelector("#edit-desc").value,
+        dueDate: document.querySelector("#edit-date").value,
+        priority: document.querySelector("#edit-priority").value,
+        status: document.querySelector("#edit-status").value,
+    };
+
+    fetch(`/tasks/${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedTask),
+    })
+        .then((res) => res.json())
+        .then(() => {
+            loadTasks();
+            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+        });
+});

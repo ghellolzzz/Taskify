@@ -63,13 +63,13 @@ body {
 }
 
 /* Header */
-.top-header{
+.top-header{ 
     display:flex;
     justify-content:space-between;
     align-items:center
 }
 
-/* Add task card */
+/* Add task card styling */
 .add-task-card {
     border-radius: 12px;
     border: 1px solid #dcdcdc;
@@ -84,28 +84,31 @@ body {
     margin-top: 20px;
 }
 
-/* Glass effect task card */
+
+/* Sticky Note Effect */
 .task-card {
-    padding: 20px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.35);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    padding: 22px;
+    border-radius: 6px;
+    background: #fff8bc;
+    box-shadow: 
+        0 8px 14px rgba(0,0,0,0.12),
+        0 4px 6px rgba(0,0,0,0.08);
+     
+    background-image: linear-gradient(
+        rgba(255,255,255,0.3) 0%,
+        rgba(255,255,255,0.5) 100%
+    );
+
+    transform: rotate(-1.5deg);
+    transition: all 0.2s ease-in-out;
 }
 
-/* Hover effect */
 .task-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: rotate(0deg) translateY(-6px);
+    box-shadow: 
+        0 14px 20px rgba(0,0,0,0.15),
+        0 6px 10px rgba(0,0,0,0.08);
 }
-/* styling the card */
-.task-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
-
 /* Title */
 .task-title {
     font-size: 1.2rem;
@@ -120,9 +123,30 @@ body {
     font-size: 0.8rem;
 }
 
-.badge-low { background: #6c757d; }
-.badge-medium { background: #198754; }
-.badge-high { background: #dc3545; }
+.badge-priority-low { 
+    background: #6c757d;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 0.8rem;
+
+}
+
+.badge-priority-medium { 
+    background: #198754;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 0.8rem;
+}
+
+.badge-priority-high { 
+    background: #dc3545; 
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 0.8rem;
+}
 
 /* Status Badge */
 .badge-status {

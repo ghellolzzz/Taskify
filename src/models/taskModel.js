@@ -19,13 +19,36 @@ module.exports.retrieveAll= function(userId){
                 include:{user:true}
             }
         },
-        orderBy:{createdAt:'desc'}
+        orderBy:{createdAt:'desc'}//shows the tasks by upcoming to ltr
     })
 
 }
 
+//retrive task by id
+module.exports.retrieveById=function(taskId,userId){
+    return prisma.task.findFirst({
+        where:{id:taskId,userId:userId},
+        include:{
+            comments:{
+                include:{
+                    user:true
+                }
+            }
+        }
+    })
+    .then(task=>{
+        if(!task){
+            throw new EMPTY_RESULT_ERROR(`Task ${taskId} not found`)
+        }
+        return task;
+    })
+}
+
 //User updates task
 module.exports.updateTask=function(taskId,userId,data){
+       if (data.dueDate) {
+        data.dueDate = new Date(data.dueDate).toISOString();
+    }
         return prisma.task.updateMany({
             where:{id:taskId,userId:userId},
             data:data

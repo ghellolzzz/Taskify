@@ -2,7 +2,7 @@ const apiUrl = "http://localhost:3000/api";
 
 // Load dashboard stats
 function loadDashboardStats() {
-  fetch("/api/dashboard")
+  fetch("/dashboard")
     .then((response) => response.json())
     .then((data) => {
       // Insert values into your HTML

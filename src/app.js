@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/somethings', somethingRouter);
 app.use('/persons', personRouter);
-app.use('/api/dashboard', dashboardRouter);
+app.use('/dashboard', dashboardRouter);
 
 app.use((req, res, next) => {
   next(createError(404, `Unknown resource ${req.method} ${req.originalUrl}`));

@@ -1,6 +1,4 @@
 /*side bar*/
-
-
 .sidebar{
     position:fixed;
     top:0;
@@ -9,12 +7,7 @@
     height:100vh;
     background: #ffffff;
     border-right: 1 px solid #e6e6e6;
-
-
-
-
 }
-
 
 .sidebar .brand{
     font-size:1.4rem;
@@ -25,14 +18,10 @@
     color:#198754
 }
 
-
-
-
 .sidebar ul li {
     list-style: none;
     margin: 15px 0;
 }
-
 
 .sidebar a {
     text-decoration: none;
@@ -42,7 +31,6 @@
     display: block;
     border-radius: 8px;
 }
-
 
 .sidebar a.active,
 .sidebar a:hover {
@@ -103,14 +91,20 @@
 
 /* Individual Category Card */
 .category-card {
-    background: #f9f9f9;
-    padding: 30px 20px;
+    background-color: #00b894; /* default green */
     border-radius: 20px;
-    text-align: center;
-    transition: 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
-    box-shadow: 0px 2px 4px rgba(0,0,0,0.06);
+    text-align: center;
 }
+
+/* Rest of the styles remain same for icon, title, task count, buttons */
+
 
 .category-card:hover {
     transform: translateY(-8px);
@@ -136,4 +130,73 @@
     color: #555;
     font-size: 0.9rem;
     margin: 0;
+}
+
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+/* Category Card */
+.category-card {
+    background-color: #fff; 
+    border-radius: 20px;    /* rounded corners */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* soft shadow */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    text-align: center;
+}
+
+/* Hover Effect */
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+
+.category-card i {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+/* Title */
+.category-card h4 {
+    font-size: 1.1rem;
+    margin: 5px 0;
+    color: #222;
+}
+
+/* Task Count */
+.category-card p {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* Edit/Delete Buttons */
+.category-card .btn-container {
+    margin-top: 10px;
+    display: flex;
+    gap: 5px;
+}
+
+.category-card button {
+    background-color: rgba(0,0,0,0.05);
+    border: none;
+    border-radius: 12px;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.category-card button:hover {
+    background-color: rgba(0,0,0,0.15);
 }

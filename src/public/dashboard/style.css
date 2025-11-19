@@ -56,15 +56,29 @@
     font-family: Arial, sans-serif;
 }
 
-.dashboard h1 {
-    font-size: 2rem;
-    margin-bottom: 20px;
+.greeting-container {
+    margin-bottom: 25px;
 }
 
-.dashboard .accent {
-    color: #198754;
+.greeting {
+    font-size: 2.2rem;
     font-weight: 600;
+    color: #333;
 }
+
+.greeting .name {
+    color: #198754;
+    font-weight: 700;
+}
+
+
+.quote {
+    margin-top: 5px;
+    font-size: 1.05rem;
+    font-style: italic;
+    color: #555;
+}
+
 
 /* ===== STATS CARDS ===== */
 .stats-container {

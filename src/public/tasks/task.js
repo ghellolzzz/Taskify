@@ -8,7 +8,7 @@ document.getElementById("show-add-form").addEventListener("click",()=>{
 document.addEventListener("DOMContentLoaded",loadTasks)
 
 function loadTasks(){
-    fetch("/tasks")
+    fetch("/api/tasks")
         .then(res=>res.json())
         .then(data=>{
             renderTasks(data.tasks||[]);
@@ -67,7 +67,7 @@ document.getElementById("add-task-form").addEventListener("submit", function (e)
         priority: priority.value
     };
 
-    fetch("/tasks", {
+    fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
@@ -87,14 +87,14 @@ function deleteTask(id){
         return
 
     
-    fetch(`/tasks/${id}`, {
+    fetch(`api/tasks/${id}`, {
         method: "DELETE"
     })
     .then(() => loadTasks());
 }
 
 function openEditModal(taskId) {
-    fetch(`/tasks/${taskId}`)
+    fetch(`/api/tasks/${taskId}`)
         .then((res) => res.json())
         .then((data) => {
             const task = data.task;
@@ -127,7 +127,7 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
         status: document.querySelector("#edit-status").value,
     };
 
-    fetch(`/tasks/${taskId}`, {
+    fetch(`/api/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedTask),

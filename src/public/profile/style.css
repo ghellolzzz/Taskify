@@ -1,0 +1,240 @@
+/* ===== Sidebar (existing, with tiny fix) ===== */
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:230px;
+    height:100vh;
+    background:#ffffff;
+    border-right:1px solid #e6e6e6; /* remove space in 1 px */
+    padding:20px 16px;
+    z-index:1000;
+}
+
+.sidebar .brand{
+    font-size:1.4rem;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    color:#198754;
+}
+
+.sidebar ul li{
+    list-style:none;
+    margin:15px 0;
+}
+
+.sidebar a{
+    text-decoration:none;
+    font-size:1rem;
+    padding:10px 8px;
+    color:#535353;
+    display:block;
+    border-radius:8px;
+    transition:background-color 0.15s ease,color 0.15s ease;
+}
+
+.sidebar a.active,
+.sidebar a:hover{
+    background:#e9f7ef;
+    color:#198754;
+}
+
+.sidebar-footer{
+    position:absolute;
+    bottom:20px;
+    left:16px;
+    right:16px;
+}
+
+/* ===== Footer (existing) ===== */
+
+.footer{
+    text-align:center;
+    margin-top:40px;
+    color:#6c757d;
+    font-size:0.85rem;
+}
+
+/* ===== Profile page layout ===== */
+
+:root{
+    --accent-color:#198754; /* default, will be updated from JS using user.accentColor */
+}
+
+body.profile-theme-dark{
+    background-color:#0f172a;
+    color:#e2e8f0;
+}
+
+body.profile-theme-dark .main-content{
+    background-color:#0f172a;
+}
+
+body.profile-theme-dark .card{
+    background-color:#111827;
+    border-color:#1f2937;
+}
+
+.main-content{
+    margin-left:230px;          /* space for sidebar */
+    min-height:100vh;
+    background:#f8f9fa;
+}
+
+/* Optional: if you want a subtle top bar spacing */
+.profile-page{
+    max-width:1200px;
+}
+
+/* Cards & UI elements */
+
+.profile-card{
+    border-radius:14px;
+    border:1px solid #e5e7eb;
+    box-shadow:0 8px 24px rgba(15,23,42,0.03);
+}
+
+.profile-avatar{
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid var(--accent-color);
+}
+
+.profile-name{
+    font-size:1.35rem;
+    font-weight:600;
+}
+
+.streak-flame{
+    font-size:2.2rem;
+}
+
+.streak-count{
+    font-size:1.75rem;
+    font-weight:700;
+    color:var(--accent-color);
+}
+
+.mini-stat{
+    font-size:0.85rem;
+}
+
+/* Last 7 days chain */
+
+.chain-day{
+    width:18px;
+    height:18px;
+    border-radius:6px;
+    margin-right:4px;
+    background:#e9ecef;
+    transition:background-color 0.15s ease,transform 0.15s ease;
+}
+
+.chain-day.active{
+    background:var(--accent-color);
+    transform:translateY(-1px);
+}
+
+/* Badges */
+
+.achievement-card{
+    border-radius:12px;
+    padding:0.7rem;
+    border:1px solid #e5e7eb;
+    display:flex;
+    align-items:center;
+    gap:0.65rem;
+    background:#ffffff;
+    transition:box-shadow 0.15s ease,transform 0.15s ease,background-color 0.15s;
+}
+
+.achievement-card:hover{
+    box-shadow:0 8px 24px rgba(15,23,42,0.08);
+    transform:translateY(-1px);
+    background:#f8fff9;
+}
+
+.achievement-card.locked{
+    opacity:0.55;
+}
+
+.achievement-icon{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background-color:rgba(25,135,84,0.08);
+    color:var(--accent-color);
+    font-size:1.4rem;
+}
+
+/* Activity heatmap */
+
+.activity-heatmap{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:4px;
+}
+
+.heat-cell{
+    width:18px;
+    height:18px;
+    border-radius:4px;
+    background:#e9ecef;
+}
+
+.heat-cell.level-1{background:#d1e7dd;}
+.heat-cell.level-2{background:#a3cfbb;}
+.heat-cell.level-3{background:#75b798;}
+
+/* Theme swatches */
+
+.theme-swatch{
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:2px solid #dee2e6;
+    cursor:pointer;
+    outline:none;
+    padding:0;
+}
+
+.theme-swatch.active{
+    border-color:var(--accent-color);
+}
+
+/* Tabs */
+
+.profile-tabs .nav-link{
+    border:none;
+    border-bottom:2px solid transparent;
+    color:#6c757d;
+    padding:0.5rem 1rem;
+    font-size:0.95rem;
+}
+
+.profile-tabs .nav-link.active{
+    color:#198754;
+    border-color:#198754;
+    background:transparent;
+}
+
+/* Responsive tweaks */
+
+@media (max-width:991.98px){
+    .main-content{
+        margin-left:0;
+        padding-left:1rem;
+        padding-right:1rem;
+    }
+    .sidebar{
+        display:none; /* or convert to offcanvas if you want */
+    }
+}

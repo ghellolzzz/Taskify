@@ -1,16 +1,20 @@
 const prisma = require('../src/models/prismaClient');
+const bcrypt = require('bcrypt');
 
 async function main() {
   console.log(" Seeding Taskify data...");
 
   // ==========================================
-  // 1. USERS
+  // 1. USERS (with hashed passwords)
   // ==========================================
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash("password123", saltRounds);
+  
   const users = await prisma.user.createMany({
     data: [
-      { name: "Alice", email: "alice@example.com", password: "password123" },
-      { name: "Bob", email: "bob@example.com", password: "password123" },
-      { name: "Charlie", email: "charlie@example.com", password: "password123" },
+      { name: "Alice", email: "alice@example.com", password: hashedPassword },
+      { name: "Bob", email: "bob@example.com", password: hashedPassword },
+      { name: "Charlie", email: "charlie@example.com", password: hashedPassword },
     ],
   });
 

@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Redirect to dashboard after short delay
         setTimeout(() => {
-          window.location.href = '/dashboard.html';
+          window.location.href = '../dashboard/dashboard.html';
         }, 1000);
       } else {
         throw new Error('Invalid response from server');

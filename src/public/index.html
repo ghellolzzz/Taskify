@@ -1,57 +1,77 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>My Web App</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskify - Task Management App</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      th,
-      td {
-        padding: 10px;
-        border: 1px solid #ddd;
-        text-align: left;
-      }
+        .home-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .home-header h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .home-header p {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .home-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .home-btn {
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        .home-btn-primary {
+            background: #198754;
+            color: #ffffff;
+        }
+        .home-btn-primary:hover {
+            background: #157347;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+        }
+        .home-btn-secondary {
+            background: #ffffff;
+            color: #198754;
+            border: 2px solid #198754;
+        }
+        .home-btn-secondary:hover {
+            background: #e9f7ef;
+        }
     </style>
-  </head>
-  <body>
-    <h1>My Web App</h1>
+</head>
+<body>
+    <div class="auth-container home-container">
+        <div class="home-header">
+            <h1><i class="bi bi-list-task"></i> Taskify</h1>
+            <p>A simple way to organize and track your daily tasks.</p>
+        </div>
 
-    <!-- Form to add new something -->
-    <form id="somethingForm">
-      <p>
-        <label for="somethingName">Name:</label>
-        <input type="text" id="somethingName" name="somethingName" required />
-      </p>
-      <button type="submit">Enter</button>
-    </form>
-
-    <h2>Table</h2>
-
-    <!-- Table to view all somethings -->
-    <table>
-      <thead>
-        <tr>
-          <th>Id</th>
-          <th>Name</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="somethingsTableBody">
-        <!-- Rows will be populated by JavaScript -->
-      </tbody>
-    </table>
-
-    <!-- Template for something row -->
-    <template id="somethingRowTemplate">
-      <tr>
-        <td class="something-id"></td>
-        <td class="something-name"></td>
-        <td><button class="delete-button">Delete</button></td>
-      </tr>
-    </template>
-
-    <script src="./index.js" type="text/javascript"></script>
-  </body>
+        <div class="home-actions">
+            <a href="login.html" class="home-btn home-btn-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+            <a href="register.html" class="home-btn home-btn-secondary">
+                <i class="bi bi-person-plus"></i> Register
+            </a>
+        </div>
+    </div>
+</body>
 </html>

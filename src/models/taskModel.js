@@ -1,0 +1,76 @@
+const prisma = require('../models/prismaClient');
+const { EMPTY_RESULT_ERROR } = require('../errors');
+//User creates a task
+module.exports.createTask = function(taskData){
+    return prisma.task.create(
+       {
+        data:taskData
+       }
+    )
+    .then(task=>task)
+    .catch(err=>{throw err})
+}
+//Retrieving all the task by userid
+module.exports.retrieveAll= function(userId){
+    return prisma.task.findMany({
+        where:{userId:userId},
+        include:{
+            comments:{
+                include:{user:true}
+            }
+        },
+        orderBy:{createdAt:'desc'}//shows the tasks by upcoming to ltr
+    })
+
+}
+
+//retrive task by id
+module.exports.retrieveById=function(taskId,userId){
+    return prisma.task.findFirst({
+        where:{id:taskId,userId:userId},
+        include:{
+            comments:{
+                include:{
+                    user:true
+                }
+            }
+        }
+    })
+    .then(task=>{
+        if(!task){
+            throw new EMPTY_RESULT_ERROR(`Task ${taskId} not found`)
+        }
+        return task;
+    })
+}
+
+//User updates task
+module.exports.updateTask=function(taskId,userId,data){
+       if (data.dueDate) {
+        data.dueDate = new Date(data.dueDate).toISOString();
+    }
+        return prisma.task.updateMany({
+            where:{id:taskId,userId:userId},
+            data:data
+            
+        })
+        .then(result=>{
+            if(result.count==0){
+                throw new EMPTY_RESULT_ERROR(`Task ${taskId} not found`);
+            }
+            return result;
+        })
+}
+
+//user deletes task
+module.exports.deleteTask=function (taskId,userId){
+    return prisma.task.deleteMany({
+        where:{id:taskId,userId:userId}
+    })
+    .then(result=>{
+        if(result.count==0){
+            throw new EMPTY_RESULT_ERROR(`Task ${taskId} not found`)
+        }
+        return result;
+    })
+}

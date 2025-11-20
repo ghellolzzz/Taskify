@@ -1,104 +1,98 @@
-const { registerUser, loginUser } = require('../models/User.model');
-const jwt = require('jsonwebtoken');
+//////////////////////////////////////////////////////
+// REQUIRE MODULES
+//////////////////////////////////////////////////////
 
-const secretKey = process.env.JWT_SECRET_KEY;
-const tokenDuration = process.env.JWT_EXPIRES_IN;
-const tokenAlgorithm = process.env.JWT_ALGORITHM;
+const model = require('../models/User.model');
 
-module.exports.register = function(req, res) {
-  const { name, email, password } = req.body;
+//////////////////////////////////////////////////////
+// CONTROLLER FOR LOGIN
+//////////////////////////////////////////////////////
 
-  // Validate required fields
-  if (!name || !email || !password) {
-    return res.status(400).json({
-      error: 'Name, email, and password are required',
-    });
-  }
+module.exports.login = (req, res, next) => {
+    if (req.body.email == undefined || req.body.password == undefined) {
+        res.status(400).send("Error: email or password is undefined");
+        return;
+    }
 
-  // Validate email format (basic)
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({
-      error: 'Invalid email format',
-    });
-  }
+    const data = {
+        email: req.body.email
+    };
 
-  // Validate password length
-  if (password.length < 6) {
-    return res.status(400).json({
-      error: 'Password must be at least 6 characters long',
-    });
-  }
+    const callback = (error, results) => {
+        if (error) {
+            console.error("Error login", error);
+            res.status(500).json(error);
+        } else {
+            if (results.length == 0) {
+                res.status(404).json({message: "User not found"})
+            }
+            else {
+                res.locals.email = results[0].email;
+                res.locals.hash = results[0].password;
+                res.locals.userId = results[0].id;
+                res.locals.message = 'Login successful';
 
-  return registerUser(name, email, password)
-    .then((user) => {
-      try {
-        const payload = {
-          user_id: user.id,
-          timestamp: new Date()
-        };
+                // Generate token after successful login
+                next(); // This will trigger the `comparePassword` middleware, then `generateToken`
+            }
+        }
+    };
 
-        const options = {
-          algorithm: tokenAlgorithm,
-          expiresIn: tokenDuration,
-        };
-
-        const token = jwt.sign(payload, secretKey, options);
-        
-        return res.status(200).json({
-          message: 'Registration successful',
-          token: token,
-          user_id: user.id,
-        });
-      } catch (jwtError) {
-        console.error("Error jwt:", jwtError);
-        return res.status(500).json({ error: 'Token generation failed' });
-      }
-    })
-    .catch(err => {
-      const statusCode = err.status || 500;
-      return res.status(statusCode).json({ error: err.message || 'Registration failed' });
-    });
+    model.selectByEmail(data, callback);
 };
 
-module.exports.login = function(req, res) {
-  const { email, password } = req.body;
+//////////////////////////////////////////////////////
+// CONTROLLER FOR REGISTER
+//////////////////////////////////////////////////////
 
-  // Validate required fields
-  if (!email || !password) {
-    return res.status(400).json({
-      error: 'Email and password are required',
-    });
-  }
+module.exports.register = (req, res, next) => {
+    if (req.body.name == undefined || req.body.email == undefined || req.body.password == undefined) {
+        res.status(400).send("Error: name / email / password is undefined");
+        return;
+    }
 
-  return loginUser(email, password)
-    .then((user) => {
-      try {
-        const payload = {
-          user_id: user.id,
-          timestamp: new Date()
-        };
+    const data = {
+        name: req.body.name,
+        email: req.body.email,
+        password: res.locals.hash
+    }
 
-        const options = {
-          algorithm: tokenAlgorithm,
-          expiresIn: tokenDuration,
-        };
+    const callback = (error, results) => {
+        if (error) {
+            console.error("Error register", error);
+            res.status(500).json(error);
+        } else {
+            res.locals.userId = results[0].id
+            res.locals.message = `User ${data.name} created successfully.`
+            next();
+        }
+    }
 
-        const token = jwt.sign(payload, secretKey, options);
-        
-        return res.status(200).json({
-          message: 'Login successful',
-          token: token,
-          user_id: user.id,
-        });
-      } catch (jwtError) {
-        console.error("Error jwt:", jwtError);
-        return res.status(500).json({ error: 'Token generation failed' });
-      }
-    })
-    .catch(err => {
-      const statusCode = err.status || 500;
-      return res.status(statusCode).json({ error: err.message || 'Login failed' });
-    });
-};
+    model.addUser(data, callback);
+}
 
+//////////////////////////////////////////////////////
+// MIDDLEWARE FOR CHECK IF EMAIL EXISTS
+//////////////////////////////////////////////////////
+
+module.exports.checkEmailExist = (req, res, next) => {
+    const data = {
+        email: req.body.email
+    }
+
+    const callback = (error, exists) => {
+        if (error) {
+            console.error("Error checkEmailExist:", error);
+            res.status(500).json(error);
+        } else {
+            if (exists) {
+                res.status(409).json({message: "Email already exists"})
+            }
+            else {
+                next();
+            }
+        }
+    }
+
+    model.checkEmailExists(data, callback);
+}

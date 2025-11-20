@@ -1,86 +1,81 @@
-const bcrypt = require('bcrypt');
+//////////////////////////////////////////////////////
+// REQUIRE MODULES
+//////////////////////////////////////////////////////
+
 const prisma = require('./prismaClient');
-const createError = require('http-errors');
 
-/**
- * Register a new user
- * @param {string} name - User's name
- * @param {string} email - User's email
- * @param {string} password - User's plain text password
- * @returns {Promise<Object>} Created user object (without password)
- */
-module.exports.registerUser = async function registerUser(name, email, password) {
-  // Check if user already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-    select: {
-      id: true,
-      email: true,
-    },
-  });
+//////////////////////////////////////////////////////
+// CHECK IF EMAIL EXISTS
+//////////////////////////////////////////////////////
 
-  if (existingUser) {
-    throw createError(409, 'User with this email already exists');
-  }
-
-  // Hash the password
-  const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-  // Create the user
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdAt: true,
-    },
-  });
-
-  return user;
+module.exports.checkEmailExists = (data, callback) => {
+    prisma.user.findUnique({
+        where: { email: data.email },
+        select: {
+            id: true,
+            email: true,
+        },
+    })
+        .then((user) => {
+            callback(null, user !== null);
+        })
+        .catch((error) => {
+            callback(error, null);
+        });
 };
 
-/**
- * Login a user
- * @param {string} email - User's email
- * @param {string} password - User's plain text password
- * @returns {Promise<Object>} User object (without password)
- */
-module.exports.loginUser = async function loginUser(email, password) {
-  // Find user by email
-  const user = await prisma.user.findUnique({
-    where: { email },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      password: true,
-      createdAt: true,
-    },
-  });
+//////////////////////////////////////////////////////
+// SELECT USER BY EMAIL
+//////////////////////////////////////////////////////
 
-  if (!user) {
-    throw createError(401, 'Invalid email or password');
-  }
-
-  // Verify password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    throw createError(401, 'Invalid email or password');
-  }
-
-  // Return user without password
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    createdAt: user.createdAt,
-  };
+module.exports.selectByEmail = (data, callback) => {
+    prisma.user.findUnique({
+        where: { email: data.email },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            password: true,
+            createdAt: true,
+        },
+    })
+        .then((user) => {
+            if (!user) {
+                // Return empty array to match callback pattern (let controller handle 404)
+                callback(null, []);
+            } else {
+                // Return as array to match callback pattern
+                callback(null, [user]);
+            }
+        })
+        .catch((error) => {
+            callback(error, null);
+        });
 };
 
+//////////////////////////////////////////////////////
+// INSERT NEW USER
+//////////////////////////////////////////////////////
+
+module.exports.addUser = (data, callback) => {
+    prisma.user.create({
+        data: {
+            name: data.name,
+            email: data.email,
+            password: data.password,
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+        },
+    })
+        .then((user) => {
+            // Return as array to match callback pattern
+            callback(null, [user]);
+        })
+        .catch((error) => {
+            callback(error, null);
+        });
+};

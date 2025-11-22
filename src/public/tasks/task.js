@@ -1,3 +1,5 @@
+
+
 //configuring showing and hiding the task form
 document.getElementById("show-add-form").addEventListener("click",()=>{
     const card=document.getElementById("add-task-card");
@@ -8,7 +10,11 @@ document.getElementById("show-add-form").addEventListener("click",()=>{
 document.addEventListener("DOMContentLoaded",loadTasks)
 
 function loadTasks(){
-    fetch("/api/tasks")
+    fetch("/api/tasks",{
+        headers:{
+            "Authorization":"Bearer "+localStorage.getItem("token")
+        }
+    })
         .then(res=>res.json())
         .then(data=>{
             renderTasks(data.tasks||[]);
@@ -51,8 +57,20 @@ function renderTasks(tasks){
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
+             <hr>
+
+            <!-- COMMENTS SECTION -->
+            <div id="comments-${task.id}">
+                <em>Loading comments...</em>
+            </div>
+
+            <div class="input-group mt-2">
+                <input id="comment-input-${task.id}" class="form-control" placeholder="Write a comment...">
+            <button class="btn btn-success" onclick="addComment(${task.id})">Post</button>
+            </div>
         `;
         container.appendChild(card);
+        loadComments(task.id)
     })
 }
 
@@ -69,7 +87,9 @@ document.getElementById("add-task-form").addEventListener("submit", function (e)
 
     fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" ,
+                    "Authorization":"Bearer "+ localStorage.getItem("token")
+        },
         body: JSON.stringify(body)
     })
     .then(res => res.json())
@@ -88,13 +108,20 @@ function deleteTask(id){
 
     
     fetch(`/api/tasks/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers:{
+         "Authorization":"Bearer "+ localStorage.getItem("token")
+        }
     })
     .then(() => loadTasks());
 }
 
 function openEditModal(taskId) {
-    fetch(`/api/tasks/${taskId}`)
+    fetch(`/api/tasks/${taskId}`,{
+         headers:{
+         "Authorization":"Bearer "+ localStorage.getItem("token")
+        }
+    })
         .then((res) => res.json())
         .then((data) => {
             const task = data.task;
@@ -129,7 +156,10 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
 
     fetch(`/api/tasks/${taskId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+         "Authorization":"Bearer "+ localStorage.getItem("token")
+        
+        },
         body: JSON.stringify(updatedTask),
     })
         .then((res) => res.json())
@@ -138,3 +168,70 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
             bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
         });
 });
+
+
+//comment form
+
+function loadComments(taskId){
+    fetch(`/api/comments/${taskId}`,{
+        headers:{
+            "Authorization":"Bearer "+localStorage.getItem("token")
+        }
+    })
+    .then(res=>res.json())
+    .then(data=>{
+
+        const container = document.getElementById(`comments-${taskId}`);
+      //if comment doesnt exist
+        if (!data.comments || data.comments.length === 0) {
+            container.innerHTML = `<p class="text-muted">No comments yet.</p>`;
+            return;
+        }
+//renders each of the comments
+
+        container.innerHTML = data.comments.map(c => `
+            <div class="comment border rounded p-2 mb-2">
+                <strong>${c.user?.name || "User"}</strong>
+                <p class="mb-1">${c.content}</p>
+                <small class="text-muted">${new Date(c.createdAt).toLocaleString()}</small>
+
+                <button class="btn btn-sm btn-danger float-end" onclick="deleteComment(${c.id}, ${taskId})">
+                Delete
+                </button>
+    </div>
+    `).join("");
+
+    })
+}
+//adds comments
+function addComment(taskId) {
+    const input = document.getElementById(`comment-input-${taskId}`);
+    const content = input.value;
+
+    if (!content.trim()) return;
+
+    fetch(`/api/comments/${taskId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ content })
+    })
+    //reloads comments once added
+    .then(() => {
+        input.value = "";
+        loadComments(taskId);
+    });
+}
+
+function deleteComment(commentId, taskId) {
+    console.log(commentId)
+    fetch(`/api/comments/delete/${commentId}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    })
+    .then(() => loadComments(taskId));
+}

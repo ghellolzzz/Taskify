@@ -13,6 +13,7 @@ body {
 
 /*side bar*/
 
+/* Sidebar */
 .sidebar{
     position:fixed;
     top:0;
@@ -20,9 +21,8 @@ body {
     width:230px;
     height:100vh;
     background: #ffffff;
-    border-right: 1 px solid #e6e6e6;
-
-
+    border-right: 1px solid #e6e6e6;
+    padding: 20px;
 }
 
 .sidebar .brand{
@@ -31,9 +31,8 @@ body {
     align-items:center;
     gap:10px;
     font-weight:600;
-    color:#198754
+    color:#198754;
 }
-
 
 .sidebar ul li {
     list-style: none;
@@ -53,6 +52,24 @@ body {
 .sidebar a:hover {
     background: #e9f7ef;
     color: #198754;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.sidebar-footer a {
+    color: #535353;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+/* Main content spacing */
+.main-content {
+    margin-left: 230px;
+    padding: 30px;
 }
 
 /*Main content*/

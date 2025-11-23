@@ -9,9 +9,19 @@ body,html{
 body {
     display: flex;
     flex-direction: column;
+    background: #F6FFF9; /* soft mint white */
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
 }
 
-/*side bar*/
+
+.top-header h2 {
+  color: #2c5e4b;
+  font-weight: 700;
+}
+
 
 /* Sidebar */
 .sidebar{
@@ -20,8 +30,8 @@ body {
     left:0;
     width:230px;
     height:100vh;
-    background: #ffffff;
-    border-right: 1px solid #e6e6e6;
+   background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
     padding: 20px;
 }
 
@@ -105,17 +115,10 @@ body {
 /* Sticky Note Effect */
 .task-card {
     padding: 22px;
-    border-radius: 6px;
-    background: #fff8bc;
-    box-shadow: 
-        0 8px 14px rgba(0,0,0,0.12),
-        0 4px 6px rgba(0,0,0,0.08);
-     
-    background-image: linear-gradient(
-        rgba(255,255,255,0.3) 0%,
-        rgba(255,255,255,0.5) 100%
-    );
-
+    background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-left: 6px solid #4CAF50;
     transform: rotate(-1.5deg);
     transition: all 0.2s ease-in-out;
 }
@@ -131,31 +134,39 @@ body {
     font-size: 1.2rem;
     font-weight: 600;
 }
+.task-completed {
+    border-left: 6px solid #28a745 !important;
+    background: #e9ffe9 !important;
+    opacity: 0.95;
+    transition: 0.3s;
+}
+
 
 /* Priority Badge */
-.badge-priority {
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 0.8rem;
+.badge-priority-high {
+  background: linear-gradient(135deg, #ff5f5f, #ff8f8f);
+  padding: 4px 10px;
+  border-radius: 16px;
+  color: white;
+  font-weight: 600;
 }
 
-.badge-priority-low { 
-    background: #6c757d;
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 0.8rem;
-
+.badge-priority-medium {
+  background: linear-gradient(135deg, #ffc107, #ffdd55);
+padding: 4px 10px;
+  border-radius: 16px;
+  color: white;
+  font-weight: 600;
 }
 
-.badge-priority-medium { 
-    background: #198754;
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 0.8rem;
+.badge-priority-low {
+  background: linear-gradient(135deg, #6ccf81, #9de8a8);
+   padding: 4px 10px;
+  border-radius: 16px;
+  color: white;
+  font-weight: 600;
 }
+
 
 .badge-priority-high { 
     background: #dc3545; 
@@ -198,3 +209,16 @@ body {
     color: #6c757d;
     padding: 20px 0;
 }
+
+/*animation effect when user completes the card*/
+.task-complete-anim {
+    animation: completePop 0.5s ease forwards;
+    background: #d4f7d0 !important;
+}
+
+@keyframes completePop {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 0.3; }
+}
+

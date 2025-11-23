@@ -19,7 +19,7 @@ module.exports.retrieveAll= function(userId){
                 include:{user:true}
             }
         },
-        orderBy:{createdAt:'desc'}//shows the tasks by upcoming to ltr
+        orderBy:{dueDate:'asc'}//shows the tasks by upcoming to ltr
     })
 
 }

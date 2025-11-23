@@ -31,7 +31,8 @@ function renderTasks(tasks){
 
     tasks.forEach(task=>{
         const card= document.createElement("div");
-        card.className="task-card";
+        card.className = "task-card " + (task.status === "Completed" ? "task-completed" : "");
+
 
         card.innerHTML=`
             <div class="task-title">${task.title}</div>
@@ -53,10 +54,15 @@ function renderTasks(tasks){
                     <i class="bi bi-pencil-square"></i>
                 </button>
 
+                <button class="complete-btn" onclick="markTaskComplete(${task.id}, this)">
+                    <i class="bi bi-check2-circle"></i>
+                </button>
+
                 <button class="delete-btn" onclick="deleteTask(${task.id})">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
+            
              <hr>
 
             <!-- COMMENTS SECTION -->
@@ -140,7 +146,7 @@ function openEditModal(taskId) {
         .catch((err) => console.error(err));
 }
 
-// SAVE CHANGES
+// saving changes when the user completes the task
 document.querySelector("#edit-task-form").addEventListener("submit", function (e) {
     e.preventDefault();
 
@@ -165,9 +171,27 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
         .then((res) => res.json())
         .then(() => {
             loadTasks();
-            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+            
         });
 });
+
+function markTaskComplete(taskId, element) {
+    fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ status: "Completed" })
+    })
+    .then(() => {
+        const card = element.closest(".task-card");
+        card.classList.add("task-complete-anim");
+
+        setTimeout(() => loadTasks(), 400);
+    });
+}
+
 
 
 //comment form

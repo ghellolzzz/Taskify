@@ -22,6 +22,31 @@ document.getElementById("show-add-form").addEventListener("click",()=>{
 //fetch tasks
 document.addEventListener("DOMContentLoaded",loadTasks)
 
+
+document.addEventListener("DOMContentLoaded",loadCategories);
+
+//loading all the categories
+function loadCategories() {
+    fetch("/api/categories", {
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const dropdown = document.getElementById("category")
+        data.categories.forEach(cat => {
+            const option = document.createElement("option")
+            option.value = cat.id
+            option.textContent = cat.name
+            dropdown.appendChild(option)
+        });
+    });
+}
+
+
+
+
 function loadTasks(){
     fetch("/api/tasks",{
         headers:{
@@ -98,11 +123,13 @@ document.getElementById("add-task-form").addEventListener("submit", function (e)
     e.preventDefault();
 
     const body = {
-        title: title.value,
-        description: description.value,
-        dueDate: dueDate.value,
-        priority: priority.value
-    };
+    title: title.value,
+    description: description.value,
+    dueDate: dueDate.value,
+    priority: priority.value,
+    categoryId: document.getElementById("category").value || null
+};
+
 
     fetch("/api/tasks", {
         method: "POST",
@@ -153,6 +180,9 @@ function openEditModal(taskId) {
 
             document.querySelector("#edit-task-id").value = taskId;
 
+            loadEditCategories(task.categoryId)
+
+
             const modal = new bootstrap.Modal(document.getElementById("editModal"));
             modal.show();
         })
@@ -171,6 +201,7 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
         dueDate: document.querySelector("#edit-date").value,
         priority: document.querySelector("#edit-priority").value,
         status: document.querySelector("#edit-status").value,
+        categoryId: document.getElementById("edit-category").value || null,
     };
 
     fetch(`/api/tasks/${taskId}`, {
@@ -187,6 +218,31 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
             
         });
 });
+
+function loadEditCategories(selectedId) {
+    fetch("/api/categories", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const dropdown = document.getElementById("edit-category")
+        dropdown.innerHTML = `<option value="">Select Category</option>`
+
+        data.categories.forEach(cat => {
+            const option = document.createElement("option")
+            option.value = cat.id;
+            option.textContent = cat.name;
+
+            if (selectedId == cat.id){
+                option.selected=true
+            }
+               
+
+            dropdown.appendChild(option);
+        });
+    });
+}
+
 
 function markTaskComplete(taskId, element) {
     fetch(`/api/tasks/${taskId}`, {

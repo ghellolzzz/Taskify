@@ -1,3 +1,16 @@
+document.addEventListener("DOMContentLoaded", () => {
+    const name = localStorage.getItem("username") || "User";
+    const greeting = document.getElementById("dynamicGreeting");
+
+    function getGreeting() {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 18) return "Good afternoon";
+        return "Good evening";
+    }
+
+    greeting.textContent = `${getGreeting()}, ${name} — here are your tasks for today.`;
+});
 
 
 //configuring showing and hiding the task form

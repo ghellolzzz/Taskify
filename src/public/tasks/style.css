@@ -1,4 +1,6 @@
 /**General layout color**/
+
+
 body,html{
     background:#f7f9fa;
     font-family:'Inter',sans-serif;
@@ -20,6 +22,19 @@ body {
 .top-header h2 {
   color: #2c5e4b;
   font-weight: 700;
+}
+/*greeting*/
+.top-greeting {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+    animation: fadeDown 0.8s ease;
+}
+
+@keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 

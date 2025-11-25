@@ -64,24 +64,96 @@
     --accent-color:#198754; /* default, will be updated from JS using user.accentColor */
 }
 
-body.profile-theme-dark{
-    background-color:#0f172a;
-    color:#e2e8f0;
+/* DARK THEME UPGRADE */
+body.profile-theme-dark {
+    background-color: #0d1117;   /* deep navy */
+    color: #e2e8f0;              /* soft white */
 }
 
-body.profile-theme-dark .main-content{
-    background-color:#0f172a;
+/* Sidebar */
+body.profile-theme-dark .sidebar {
+    background-color: #0f172a;
+    border-right: 1px solid #1e293b;
 }
 
-body.profile-theme-dark .card{
-    background-color:#111827;
-    border-color:#1f2937;
+body.profile-theme-dark .sidebar a {
+    color: #cbd5e1;
 }
+
+body.profile-theme-dark .sidebar a:hover,
+body.profile-theme-dark .sidebar a.active {
+    background: rgba(255,255,255,0.08);
+    color: var(--accent-color);
+}
+
+/* Cards */
+body.profile-theme-dark .card.profile-card {
+    background-color: #1f2937;   /* dark surface */
+    border-color: #2d3748;
+    color: #e2e8f0;
+}
+
+/* Tabs */
+body.profile-theme-dark .profile-tabs .nav-link {
+    color: #94a3b8;
+}
+
+body.profile-theme-dark .profile-tabs .nav-link.active {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Progress bars */
+body.profile-theme-dark .progress {
+    background-color: #2d3748;
+}
+
+body.profile-theme-dark .progress-bar {
+    background-color: var(--accent-color) !important;
+}
+
+/* Category bars */
+body.profile-theme-dark .progress-bar.bg-success {
+    background-color: var(--accent-color) !important;
+}
+
+/* Muted text */
+body.profile-theme-dark .text-muted {
+    color: #94a3b8 !important;
+}
+
+/* 7 day chain */
+body.profile-theme-dark .chain-day {
+    background: #2d3748;
+}
+
+body.profile-theme-dark .chain-day.active {
+    background: var(--accent-color);
+}
+
+/* Heatmap */
+body.profile-theme-dark .heat-cell {
+    background: #2d3748;
+}
+
+body.profile-theme-dark .heat-cell.level-1 { background: rgba(25,135,84,0.3); }
+body.profile-theme-dark .heat-cell.level-2 { background: rgba(25,135,84,0.5); }
+body.profile-theme-dark .heat-cell.level-3 { background: rgba(25,135,84,0.8); }
+
+/* Theme cards */
+body.profile-theme-dark .theme-swatch {
+    border-color: #334155;
+}
+
 
 .main-content{
     margin-left:230px;          /* space for sidebar */
     min-height:100vh;
-    background:#f8f9fa;
+    background:#f3f4f6;
+}
+
+body.profile-theme-dark .main-content {
+    background: #0d1117; /* deep navy dark */
 }
 
 /* Optional: if you want a subtle top bar spacing */
@@ -237,4 +309,55 @@ body.profile-theme-dark .card{
     .sidebar{
         display:none; /* or convert to offcanvas if you want */
     }
+}
+
+/* ===== NEXT-GEN GLOW THEME ===== */
+
+body.profile-theme-dark {
+    background: radial-gradient(circle at top left, #151a2f, #0a0f1c 60%, #06080f 100%);
+    color:#e2e8f0;
+}
+
+/* Sidebar glow */
+body.profile-theme-dark .sidebar {
+    background:rgba(14,18,27,0.92);
+    backdrop-filter: blur(12px);
+    border-right:1px solid rgba(255,255,255,0.05);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+}
+
+/* Main cards glassmorphism */
+body.profile-theme-dark .profile-card {
+    background:rgba(255,255,255,0.04);
+    backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 8px 20px rgba(0,0,0,0.35);
+}
+
+/* Purple glow accent */
+body.profile-theme-dark .profile-tabs .nav-link.active {
+    color:#a78bfa;
+    border-color:#a78bfa;
+}
+
+body.profile-theme-dark .achievement-icon {
+    background:rgba(167,139,250,0.15);
+    color:#c4b5fd;
+}
+
+/* Modern blue-purple progress bars */
+body.profile-theme-dark .progress-bar {
+    background: linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7) !important;
+    box-shadow:0 0 10px rgba(139,92,246,0.6);
+}
+
+/* Heatmap glow */
+body.profile-theme-dark .heat-cell.level-1{ background:#4c1d95; }
+body.profile-theme-dark .heat-cell.level-2{ background:#6d28d9; }
+body.profile-theme-dark .heat-cell.level-3{ background:#8b5cf6; }
+
+/* 7-day chain glowing blocks */
+body.profile-theme-dark .chain-day.active {
+    background:linear-gradient(135deg,#6d28d9,#8b5cf6);
+    box-shadow:0 0 8px rgba(139,92,246,0.75);
 }

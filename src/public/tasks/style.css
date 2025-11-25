@@ -1,4 +1,6 @@
 /**General layout color**/
+
+
 body,html{
     background:#f7f9fa;
     font-family:'Inter',sans-serif;
@@ -9,20 +11,106 @@ body,html{
 body {
     display: flex;
     flex-direction: column;
+    background: #F6FFF9; /* soft mint white */
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
 }
 
-/*side bar*/
 
+/* FILTER BAR CONTAINER */
+.filter-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 1rem 1.5rem;
+    border-radius: 14px;
+    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+/* FILTER ITEM */
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+}
+
+.filter-item label {
+    font-size: 0.82rem;
+    color: #555;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+/* INPUTS & SELECTS */
+.filter-bar .form-select,
+.filter-bar .form-control {
+    border-radius: 10px;
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.filter-bar select:focus,
+.filter-bar input:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+}
+
+/* BUTTONS */
+.filter-btn {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+#applyFiltersBtn {
+    background-color: #4CAF50;
+    border: none;
+}
+
+#applyFiltersBtn:hover {
+    background-color: #3f9a45;
+}
+
+#resetFiltersBtn:hover {
+    background-color: #eee;
+}
+
+
+
+/*greeting*/
+.top-greeting {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+    animation: fadeDown 0.8s ease;
+}
+
+@keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* Sidebar */
 .sidebar{
     position:fixed;
     top:0;
     left:0;
     width:230px;
     height:100vh;
-    background: #ffffff;
-    border-right: 1 px solid #e6e6e6;
-
-
+   background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
+    padding: 20px;
 }
 
 .sidebar .brand{
@@ -31,9 +119,8 @@ body {
     align-items:center;
     gap:10px;
     font-weight:600;
-    color:#198754
+    color:#198754;
 }
-
 
 .sidebar ul li {
     list-style: none;
@@ -53,6 +140,24 @@ body {
 .sidebar a:hover {
     background: #e9f7ef;
     color: #198754;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.sidebar-footer a {
+    color: #535353;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+/* Main content spacing */
+.main-content {
+    margin-left: 230px;
+    padding: 30px;
 }
 
 /*Main content*/
@@ -88,17 +193,10 @@ body {
 /* Sticky Note Effect */
 .task-card {
     padding: 22px;
-    border-radius: 6px;
-    background: #fff8bc;
-    box-shadow: 
-        0 8px 14px rgba(0,0,0,0.12),
-        0 4px 6px rgba(0,0,0,0.08);
-     
-    background-image: linear-gradient(
-        rgba(255,255,255,0.3) 0%,
-        rgba(255,255,255,0.5) 100%
-    );
-
+    background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-left: 6px solid #4CAF50;
     transform: rotate(-1.5deg);
     transition: all 0.2s ease-in-out;
 }
@@ -114,31 +212,39 @@ body {
     font-size: 1.2rem;
     font-weight: 600;
 }
+.task-completed {
+    border-left: 6px solid #28a745 !important;
+    background: #e9ffe9 !important;
+    opacity: 0.95;
+    transition: 0.3s;
+}
+
 
 /* Priority Badge */
-.badge-priority {
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 0.8rem;
+.badge-priority-high {
+  background: linear-gradient(135deg, #ff5f5f, #ff8f8f);
+  padding: 4px 10px;
+  border-radius: 16px;
+  color: white;
+  font-weight: 600;
 }
 
-.badge-priority-low { 
-    background: #6c757d;
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 0.8rem;
-
+.badge-priority-medium {
+  background: linear-gradient(135deg, #ffc107, #ffdd55);
+padding: 4px 10px;
+  border-radius: 16px;
+  color: white;
+  font-weight: 600;
 }
 
-.badge-priority-medium { 
-    background: #198754;
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 0.8rem;
+.badge-priority-low {
+  background: linear-gradient(135deg, #6ccf81, #9de8a8);
+   padding: 4px 10px;
+  border-radius: 16px;
+  color: white;
+  font-weight: 600;
 }
+
 
 .badge-priority-high { 
     background: #dc3545; 
@@ -181,3 +287,16 @@ body {
     color: #6c757d;
     padding: 20px 0;
 }
+
+/*animation effect when user completes the card*/
+.task-complete-anim {
+    animation: completePop 0.5s ease forwards;
+    background: #d4f7d0 !important;
+}
+
+@keyframes completePop {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 0.3; }
+}
+

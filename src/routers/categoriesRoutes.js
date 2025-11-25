@@ -11,18 +11,18 @@ router.get("/:userId", (req, res) => {
 
 // add category
 router.post("/create", (req, res) => {
-    const { name, userId } = req.body;
+    const { name, color, userId } = req.body;
 
     if (!name || !userId) return res.status(400).json({ error: "Name and userId required" });
 
-    categoriesController.createCategory({ name, userId })
+    categoriesController.createCategory({ name, color, userId })
         .then(result => res.status(201).json(result))
         .catch(err => res.status(500).json({ message: err.message }));
 });
 
 // Update category
 router.put("/update/:id", (req, res) => {
-    categoriesController.updateCategory(req, res);
+    categoriesController.updateCategory(req, res); // pass req/res directly
 });
 
 

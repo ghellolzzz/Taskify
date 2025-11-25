@@ -34,39 +34,57 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                     `;
 
-                    // green for all categories
-                    card.style.backgroundColor = "#17a84f";
+                    if (cat.color) card.style.backgroundColor = cat.color;
 
                     categoriesGrid.appendChild(card);
                 });
 
-               
-                // Edit button
+                // Update and Delete button
                 document.querySelectorAll(".update-category-btn").forEach(btn => {
                     btn.addEventListener("click", () => {
                         const catId = btn.dataset.id;
                         const newName = prompt("Enter new category name:");
                         if (!newName) return;
-                        fetch(`/api/categories/update/${catId}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ name: newName })
-                        })
-                        .then(res => res.json())
-                        .then(() => loadCategories())
-                        .catch(err => console.error("Error updating category:", err));
-                    });
-                });
+                // Choose color by name
+                const colorOptions = {
+                    Default: "",
+                    Purple: "#6c5ce7",
+                    Blue: "#0984e3",
+                    Red: "#d63031",
+                    Green: "#00b894",
+                    Yellow: "#fdcb6e"
+                };
 
-                // Delete button
+        let colorChoice = prompt(
+            `Choose a color for the category:\n${Object.keys(colorOptions).join(", ")}`,
+            "Default"
+        );
+
+        if (!colorOptions[colorChoice]) colorChoice = "";
+
+        // Send update to backend
+        fetch(`/api/categories/update/${catId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: newName, color: colorOptions[colorChoice] })
+        })
+        .then(res => res.json())
+        .then(() => loadCategories())
+        .catch(err => console.error("Error updating category:", err));
+    });
+});
+
                 document.querySelectorAll(".delete-category-btn").forEach(btn => {
                     btn.addEventListener("click", () => {
                         const catId = btn.dataset.id;
                         if (!confirm("Are you sure you want to delete this category?")) return;
-                        fetch(`/api/categories/delete/${catId}`, { method: "DELETE" })
-                            .then(res => res.json())
-                            .then(() => loadCategories())
-                            .catch(err => console.error("Error deleting category:", err));
+
+                        fetch(`/api/categories/delete/${catId}`, {
+                            method: "DELETE"
+                        })
+                        .then(res => res.json())
+                        .then(() => loadCategories())
+                        .catch(err => console.error("Error deleting category:", err));
                     });
                 });
             })
@@ -85,13 +103,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add new category
     submitBtn.addEventListener("click", () => {
         const name = document.getElementById("new-category-name").value.trim();
+        const color = document.getElementById("new-category-color").value;
 
         if (!name) return alert("Category name is required");
 
         fetch("/api/categories/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, userId })
+            body: JSON.stringify({ name, color, userId })
         })
         .then(res => res.json())
         .then(data => {

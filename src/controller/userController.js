@@ -28,6 +28,7 @@ module.exports.login = (req, res, next) => {
             }
             else {
                 res.locals.email = results[0].email;
+                res.locals.name = results[0].name;
                 res.locals.hash = results[0].password;
                 res.locals.userId = results[0].id;
                 res.locals.message = 'Login successful';
@@ -60,11 +61,22 @@ module.exports.register = (req, res, next) => {
     const callback = (error, results) => {
         if (error) {
             console.error("Error register", error);
-            res.status(500).json(error);
+            // Check if it's a unique constraint violation (duplicate email)
+            if (error.code === 'P2002' || error.meta?.target?.includes('email')) {
+                res.status(409).json({message: "Email already exists"});
+            } else {
+                res.status(500).json({error: error.message || "Internal server error"});
+            }
         } else {
-            res.locals.userId = results[0].id
-            res.locals.message = `User ${data.name} created successfully.`
-            next();
+            if (!results || results.length === 0) {
+                res.status(500).json({error: "Failed to create user"});
+            } else {
+                res.locals.userId = results[0].id;
+                res.locals.name = results[0].name;
+                res.locals.email = results[0].email;
+                res.locals.message = `User ${data.name} created successfully.`
+                next();
+            }
         }
     }
 
@@ -83,10 +95,10 @@ module.exports.checkEmailExist = (req, res, next) => {
     const callback = (error, exists) => {
         if (error) {
             console.error("Error checkEmailExist:", error);
-            res.status(500).json(error);
+            res.status(500).json({error: error.message || "Internal server error"});
         } else {
             if (exists) {
-                res.status(409).json({message: "Email already exists"})
+                res.status(409).json({message: "Email already exists"});
             }
             else {
                 next();

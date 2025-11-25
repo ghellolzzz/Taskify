@@ -32,16 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ name, email, password }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error('Invalid response from server');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || data.message || 'Registration failed');
       }
 
-      // Success - store user data (token optional)
-      const user = data.user || data;
-      const userId = data.user_id || user?.id;
-      const userName = user?.name || user?.email || name;
+      // Success - store user data
+      const userId = data.user_id;
+      const userName = data.name || data.email || name;
 
       if (userId) {
         localStorage.setItem('userId', userId.toString());

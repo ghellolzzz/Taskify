@@ -74,3 +74,35 @@ module.exports.deleteTask=function (taskId,userId){
         return result;
     })
 }
+
+//flitering tasks
+
+module.exports.filterTasks=function(userId,filters){
+    
+    const where={userId:userId}
+
+    if(filters.categoryId){
+        where.categoryId=parseInt(filters.categoryId)
+    }
+
+    if (filters.status){
+        where.status=filters.status
+    }
+
+    if(filters.priority){
+        where.priority=filters.priority
+    }
+
+    if(filters.fromDate || filters.toDate){
+        where.dueDate={}
+
+        if(filters.fromDate){
+            where.duedate.gte=new Date(filters.fromDate);
+        }
+
+        if(filters.toDate){
+            where.dueDate.lte=new Date(filters.toDate)
+        }
+
+    }
+}

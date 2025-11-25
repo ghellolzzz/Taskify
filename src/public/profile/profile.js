@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setupProfileUI(overview);
       setupBadgesUI(badges);
       setupActivityUI(activity);
-      //setupThemeControls(overview.user);
+      setupThemeControls(overview.user);
       setupEditProfileModal(overview.user);
     })
     .catch((err) => {
@@ -93,12 +93,9 @@ function setupProfileUI(overview) {
     tasksPct + '%';
 
   // Focus areas (categories)
-  // Replace placeholder rows by building from overview.categories
   const focusCardBody = document.querySelector(
     '.card-body:has(#goalsMessage)'
-  ).parentElement.nextElementSibling; // this is hacky; easier: give an id.
-  // If that feels confusing, you can instead add an id to the categories block in HTML,
-  // e.g. <div class="card-body" id="categoriesContainer"> and target that.
+  ).parentElement.nextElementSibling; 
 
   const categoriesContainer = document.querySelector(
     '#categoriesContainer'
@@ -271,7 +268,7 @@ function setupActivityUI(activity) {
 /**
  * Setup theme & accent controls that persist via PUT /api/profile/:userId
  */
-/** 
+
 function setupThemeControls(user) {
   const userId = user.id;
 
@@ -327,7 +324,7 @@ function setupThemeControls(user) {
       saveProfileTheme(userId, { accentColor: color });
     });
   });
-}*/
+}
 
 /**
  * PUT theme/accentColor to backend

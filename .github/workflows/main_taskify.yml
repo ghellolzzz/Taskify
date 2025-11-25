@@ -34,7 +34,6 @@ jobs:
             prisma/
             src/
             node_modules/
-            .env.production?   # optional
           retention-days: 1
 
   deploy:
@@ -61,4 +60,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: Taskify
-          package: .
+          package: taskify-build

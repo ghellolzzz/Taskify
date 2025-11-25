@@ -37,10 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(data.error || data.message || 'Login failed');
       }
 
-      // Success - store user data (token optional)
-      const user = data.user || data;
-      const userId = data.user_id || user?.id;
-      const userName = user?.name || user?.email;
+      // Success - store user data
+      const userId = data.user_id;
+      const userName = data.name || data.email;
 
       if (userId) {
         localStorage.setItem('userId', userId.toString());

@@ -33,7 +33,7 @@ module.exports.generateToken = (req, res, next) => {
     const callback = (err, token) => {
       if (err) {
         console.error("Error jwt:", err);
-        res.status(500).json(err);
+        res.status(500).json({error: err.message || "Failed to generate token"});
       } else {
         res.locals.token = token;
         next();
@@ -51,6 +51,8 @@ module.exports.sendToken = (req, res, next) => {
     message: res.locals.message,
     token: res.locals.token,
     user_id: res.locals.userId,
+    name: res.locals.name,
+    email: res.locals.email,
   });
 };
 

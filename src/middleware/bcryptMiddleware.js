@@ -40,7 +40,7 @@ module.exports.hashPassword = (req, res, next) => {
     const callback = (err, hash) => {
       if (err) {
         console.error("Error bcrypt:", err);
-        res.status(500).json(err);
+        res.status(500).json({error: err.message || "Failed to hash password"});
       } else {
         res.locals.hash = hash;
         next();

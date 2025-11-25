@@ -19,7 +19,15 @@ function getGreeting() {
 
 //greeting with username
 function loadUser() {
-  fetch("/api/dashboard/user")
+  const token = localStorage.getItem("token");
+  fetch("/api/dashboard/user",{
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    }
+
+  })
     .then(res => res.json())
     .then(data => {
       const user = data.users;
@@ -52,7 +60,14 @@ document.getElementById("daily-quote").innerText = getDailyQuote();
 
 // Load dashboard stats
 function loadDashboardStats() {
-  fetch("/api/dashboard")
+  const token = localStorage.getItem("token");
+  fetch("/api/dashboard",{
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    }
+  })
     .then((response) => response.json())
     .then((data) => {
       // Insert values into your HTML

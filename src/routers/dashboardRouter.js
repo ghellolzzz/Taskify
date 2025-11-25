@@ -8,4 +8,5 @@ router.get('/user', verifyToken, dashboardController.getUser)
 // GET /api/dashboard
 router.get('/', verifyToken, dashboardController.getDashboard);
 
+
 module.exports = router;

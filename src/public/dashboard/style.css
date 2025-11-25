@@ -1,6 +1,4 @@
-/*side bar*/
-
-
+/* Sidebar */
 .sidebar{
     position:fixed;
     top:0;
@@ -9,8 +7,8 @@
     height:100vh;
     background: #ffffff;
     border-right: 1px solid #e6e6e6;
+    padding: 20px;
 }
-
 
 .sidebar .brand{
     font-size:1.4rem;
@@ -18,17 +16,13 @@
     align-items:center;
     gap:10px;
     font-weight:600;
-    color:#198754
+    color:#198754;
 }
-
-
-
 
 .sidebar ul li {
     list-style: none;
     margin: 15px 0;
 }
-
 
 .sidebar a {
     text-decoration: none;
@@ -39,13 +33,23 @@
     border-radius: 8px;
 }
 
-
 .sidebar a.active,
 .sidebar a:hover {
     background: #e9f7ef;
     color: #198754;
 }
 
+/* Sidebar footer */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.sidebar-footer a {
+    color: #535353;
+    text-decoration: none;
+    font-size: 1rem;
+}
 
 
 
@@ -114,7 +118,7 @@
     border-left: 5px solid #ffca28;
 }
 
-.stat-card.progress {
+.stat-card.inprogress {
     border-left: 5px solid #a1a1a1;
 }
 

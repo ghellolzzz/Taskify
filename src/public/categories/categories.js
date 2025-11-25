@@ -120,4 +120,22 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => console.error("Error adding category:", err));
     });  
+
+    // Logout functionality
+    const logoutBtn = document.querySelector('.sidebar-footer a');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Clear all authentication data from localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('accountNo');
+            localStorage.removeItem('role');
+            localStorage.removeItem('memberId');
+            
+            // Redirect to login page
+            window.location.href = '../login.html';
+        });
+    }
 });

@@ -27,22 +27,28 @@ document.addEventListener("DOMContentLoaded",loadCategories);
 
 //loading all the categories
 function loadCategories() {
-    fetch("/api/categories", {
+    const userId = localStorage.getItem("userId");
+
+    fetch(`/api/categories/${userId}`, {
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("token")
         }
     })
     .then(res => res.json())
     .then(data => {
-        const dropdown = document.getElementById("category")
+        console.log(data)
+        const dropdown = document.getElementById("category");
+        dropdown.innerHTML = `<option value="">Select Category</option>`;
+
         data.categories.forEach(cat => {
-            const option = document.createElement("option")
-            option.value = cat.id
-            option.textContent = cat.name
-            dropdown.appendChild(option)
+            const option = document.createElement("option");
+            option.value = cat.id;
+            option.textContent = cat.name;
+            dropdown.appendChild(option);
         });
     });
 }
+
 
 
 
@@ -220,9 +226,14 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
 });
 
 function loadEditCategories(selectedId) {
-    fetch("/api/categories", {
-        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
-    })
+   const userId = localStorage.getItem("userId");
+
+fetch(`/api/categories/${userId}`, {
+    headers: {
+        "Authorization": "Bearer " + localStorage.getItem("token")
+    }
+})
+
     .then(res => res.json())
     .then(data => {
         const dropdown = document.getElementById("edit-category")

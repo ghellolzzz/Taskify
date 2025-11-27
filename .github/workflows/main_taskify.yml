@@ -67,8 +67,8 @@ jobs:
         uses: azure/login@v2
         with:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B4DEB4821E3847958F1DF97C0FD660ED }}
-          tenant-id:  ${{ secrets.AZUREAPPSERVICE_TENANTID_901ECBEC6F134D41B1A93A389F10381F }}
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F1A9DE9A0ED24F4AA76175FC81BE592F}}
+          tenant-id:  ${{ secrets.AZUREAPPSERVICE_TENANTID_7604ff02-abd8-45db-8cac-550054323fc9 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_d35436a2-f1a7-4573-8712-b8f210c12a7e}}
           
 
       - name: Deploy to Azure Web App
@@ -76,6 +76,7 @@ jobs:
         with:
           app-name: Taskify
           package: .
+
 
 
 

@@ -156,15 +156,14 @@ body {
 
 /* Main content spacing */
 .main-content {
-    margin-left: 230px;
+    margin-left: 260px;
     padding: 30px;
-}
-
-/*Main content*/
-.main-content{
-    margin-left:260px;
-    padding:30px;
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: calc(100vw - 260px);
+    overflow-x: hidden; 
+    padding-bottom: 200px;
 }
 
 /* Header */
@@ -182,23 +181,26 @@ body {
 }
 
 /* Task card grid container */
+
 .task-card-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     margin-top: 20px;
+    width: 100%; /* NEW */
 }
 
-
-/* Sticky Note Effect */
 .task-card {
     padding: 22px;
     background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  border-left: 6px solid #4CAF50;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    border-left: 6px solid #4CAF50;
     transform: rotate(-1.5deg);
     transition: all 0.2s ease-in-out;
+    margin-bottom: 30px;
+
+
 }
 
 .task-card:hover {
@@ -298,5 +300,34 @@ padding: 4px 10px;
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); opacity: 0.3; }
+}
+
+
+.section-title {
+  font-weight: 600;
+}
+
+.collapsible-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.completed-wrapper {
+    margin-bottom: 50px;
+}
+
+/* collapsible container */
+#completed-task-container {
+    overflow: hidden;
+    max-height: 2000px;   
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 1;
+    padding-bottom: 150px;
+}
+
+/* When collapsed */
+#completed-task-container.collapsed {
+    max-height: 0;
+    opacity: 0;
 }
 

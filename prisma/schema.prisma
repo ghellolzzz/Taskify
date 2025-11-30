@@ -94,13 +94,14 @@ model Task {
   dueDate     DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  completedAt DateTime?    
 
   userId      Int
   categoryId  Int?
 
   user        User          @relation(fields: [userId], references: [id])
   category    Category?     @relation(fields: [categoryId], references: [id])
-  comments    Comment[]
+  comments    Comment[]    
 
   @@map("tasks")
 }
@@ -115,7 +116,7 @@ model Comment {
   taskId    Int
   userId    Int
 
-  task      Task     @relation(fields: [taskId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("comments")

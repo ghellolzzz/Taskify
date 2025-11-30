@@ -49,6 +49,8 @@ module.exports.updateTask=function(taskId,userId,data){
        if (data.dueDate) {
         data.dueDate = new Date(data.dueDate).toISOString();
     }
+
+
         return prisma.task.updateMany({
             where:{id:taskId,userId:userId},
             data:data
@@ -80,29 +82,37 @@ module.exports.deleteTask=function (taskId,userId){
 module.exports.filterTasks=function(userId,filters){
     
     const where={userId:userId}
-
-    if(filters.categoryId){
-        where.categoryId=parseInt(filters.categoryId)
-    }
-
+    //filter by status
     if (filters.status){
         where.status=filters.status
     }
-
+    //filter by priority
     if(filters.priority){
         where.priority=filters.priority
     }
+    //filters by due date
 
-    if(filters.fromDate || filters.toDate){
-        where.dueDate={}
+if(filters.fromDate || filters.toDate){
+    where.dueDate = {}
 
-        if(filters.fromDate){
-            where.duedate.gte=new Date(filters.fromDate);
-        }
-
-        if(filters.toDate){
-            where.dueDate.lte=new Date(filters.toDate)
-        }
-
+    if(filters.fromDate){
+        where.dueDate.gte = new Date(filters.fromDate);
     }
+
+    if(filters.toDate){
+        where.dueDate.lte = new Date(filters.toDate)
+    }
+}
+
+    return prisma.task.findMany({
+        where,
+        include:{
+            comments:{
+                include:{user:true}
+            }
+        },
+        orderBy:{dueDate:"asc"}
+    })
+    .then(tasks=>tasks)
+    .catch(err=>{throw err})
 }

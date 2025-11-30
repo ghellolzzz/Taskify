@@ -68,60 +68,77 @@ function loadTasks(){
         .catch(err=>console.error(err))
 }
 
-//rendering the grid cards
-function renderTasks(tasks){
-    const container = document.getElementById("task-card-container");
-    container.innerHTML="";
+function createTaskCard(task) {
+    const card = document.createElement("div");
+    card.className = "task-card " + (task.status === "Completed" ? "task-completed" : "")
 
-    tasks.forEach(task=>{
-        const card= document.createElement("div");
-        card.className = "task-card " + (task.status === "Completed" ? "task-completed" : "");
+    card.innerHTML = `
+        <div class="task-title">${task.title}</div>
 
+        <div class="mt-2">
+            <span class="badge-priority-${task.priority.toLowerCase()}">
+                ${task.priority}
+            </span>
+            <span class="badge-status">${task.status}</span>
+        </div>
 
-        card.innerHTML=`
-            <div class="task-title">${task.title}</div>
+        <p class="text-muted mt-2">${task.description || "*No description*"}</p>
 
-            <div class="mt-2">
-                <span class="badge-priority-${task.priority.toLowerCase()}">
-                    ${task.priority}
-                </span>
-                <span class="badge-status">${task.status}</span>
-            </div>
-            <p class="text-muted mt-2">${task.description || "*No description*"}</p>
+        <p><strong>Due:</strong> ${
+            task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date"
+        }</p>
 
-            <p><strong>Due:</strong> ${
-                task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date"
-            }</p>
+        <div class="task-actions">
+            <button class="edit-btn" onclick="openEditModal(${task.id})">
+                <i class="bi bi-pencil-square"></i>
+            </button>
 
-            <div class="task-actions">
-                <button class="edit-btn" onclick="openEditModal(${task.id})">
-                    <i class="bi bi-pencil-square"></i>
-                </button>
+            <button class="complete-btn" onclick="markTaskComplete(${task.id}, this)">
+                <i class="bi bi-check2-circle"></i>
+            </button>
 
-                <button class="complete-btn" onclick="markTaskComplete(${task.id}, this)">
-                    <i class="bi bi-check2-circle"></i>
-                </button>
+            <button class="delete-btn" onclick="deleteTask(${task.id})">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
 
-                <button class="delete-btn" onclick="deleteTask(${task.id})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-            
-             <hr>
+        <hr>
 
-            <!-- COMMENTS SECTION -->
-            <div id="comments-${task.id}">
-                <em>Loading comments...</em>
-            </div>
+        <div id="comments-${task.id}">
+            <em>Loading comments...</em>
+        </div>
 
-            <div class="input-group mt-2">
-                <input id="comment-input-${task.id}" class="form-control" placeholder="Write a comment...">
+        <div class="input-group mt-2">
+            <input id="comment-input-${task.id}" class="form-control" placeholder="Write a comment...">
             <button class="btn btn-success" onclick="addComment(${task.id})">Post</button>
-            </div>
-        `;
-        container.appendChild(card);
+        </div>
+    `;
+
+    return card;
+}
+
+//rendering the grid cards
+function renderTasks(tasks) {
+    const activeContainer = document.getElementById("active-task-container")
+    const completedContainer = document.getElementById("completed-task-container")
+
+    activeContainer.innerHTML = ""
+    completedContainer.innerHTML = ""
+
+    const activeTasks = tasks.filter(t => t.status !== "Completed")
+    const completedTasks = tasks.filter(t => t.status === "Completed")
+
+    document.getElementById("completedCount").textContent = `(${completedTasks.length})`
+
+    activeTasks.forEach(task => {
+        activeContainer.appendChild(createTaskCard(task))
         loadComments(task.id)
-    })
+    });
+
+    completedTasks.forEach(task => {
+        completedContainer.appendChild(createTaskCard(task))
+        loadComments(task.id)
+    });
 }
 
 // Create Task
@@ -338,4 +355,63 @@ function deleteComment(commentId, taskId) {
         }
     })
     .then(() => loadComments(taskId));
+}
+
+//applying filters
+document.getElementById("applyFiltersBtn").addEventListener("click", applyFilters)
+document.getElementById("resetFiltersBtn").addEventListener("click", resetFilters)
+
+function applyFilters(){
+    const priority = document.getElementById("filterPriority").value
+    const status = document.getElementById("filterStatus").value
+    const from = document.getElementById("filterFrom").value
+    const to = document.getElementById("filterTo").value
+
+    const params = new URLSearchParams()
+
+    if(priority){
+        params.append("priority",priority)
+    }
+    if(status){
+        params.append("status",status)
+    }
+    if(from){
+        params.append("from",from)
+    }
+    if(to){
+        params.append("to",to)
+    }
+
+        fetch(`/api/tasks/filter?${params.toString()}`, {
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    })
+    .then(res => res.json())
+    .then(data => renderTasks(data.tasks))
+    .catch(err => console.error(err))
+
+}
+
+function resetFilters() {
+    document.getElementById("filterPriority").value = ""
+    document.getElementById("filterStatus").value = ""
+    document.getElementById("filterFrom").value = ""
+    document.getElementById("filterTo").value = ""
+
+    loadTasks()
+}
+
+
+function toggleCompleted() {
+    const container = document.getElementById("completed-task-container")
+    const arrow = document.getElementById("completedArrow")
+
+    container.classList.toggle("collapsed")
+
+    if (container.classList.contains("collapsed")) {
+        arrow.classList.replace("bi-chevron-up", "bi-chevron-down")
+    } else {
+        arrow.classList.replace("bi-chevron-down", "bi-chevron-up")
+    }
 }

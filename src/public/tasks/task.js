@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return "Good evening";
     }
 
-    greeting.textContent = `${getGreeting()}, ${name} — here are your tasks for today.`;
+    greeting.textContent = `${getGreeting()}, ${name} — here are your tasks.`;
 });
 
 
@@ -89,8 +89,6 @@ function createTaskCard(task) {
             day: "numeric",
             month: "long",
             year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
         }) : "No due date"
         }</p>
 

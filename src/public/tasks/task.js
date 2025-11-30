@@ -85,8 +85,25 @@ function createTaskCard(task) {
         <p class="text-muted mt-2">${task.description || "*No description*"}</p>
 
         <p><strong>Due:</strong> ${
-            task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date"
+            task.dueDate ? new Date(task.dueDate).toLocaleString("en-SG", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }) : "No due date"
         }</p>
+
+        <p><strong>Completed:</strong> ${
+            task.completedAt ? new Date(task.completedAt).toLocaleString("en-SG", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }) : "-"
+        }</p>
+
 
         <div class="task-actions">
             <button class="edit-btn" onclick="openEditModal(${task.id})">
@@ -225,6 +242,7 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
         priority: document.querySelector("#edit-priority").value,
         status: document.querySelector("#edit-status").value,
         categoryId: document.getElementById("edit-category").value || null,
+        completedAt:document.querySelector("#edit-status").value === "Completed"? new Date().toISOString(): null,
     };
 
     fetch(`/api/tasks/${taskId}`, {
@@ -279,7 +297,10 @@ function markTaskComplete(taskId, element) {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + localStorage.getItem("token")
         },
-        body: JSON.stringify({ status: "Completed" })
+        body: JSON.stringify({ 
+            status: "Completed",
+            completedAt: new Date().toISOString()
+        })
     })
     .then(() => {
         const card = element.closest(".task-card");
@@ -314,8 +335,7 @@ function loadComments(taskId){
             <div class="comment border rounded p-2 mb-2">
                 <strong>${c.user?.name || "User"}</strong>
                 <p class="mb-1">${c.content}</p>
-                <small class="text-muted">${new Date(c.createdAt).toLocaleString()}</small>
-
+                <small class="text-muted">${new Date(c.createdAt).toLocaleString("en-SG", {day: "numeric",month: "long",year: "numeric",hour: "2-digit",minute: "2-digit"})}</small>
                 <button class="btn btn-sm btn-danger float-end" onclick="deleteComment(${c.id}, ${taskId})">
                 Delete
                 </button>

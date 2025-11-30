@@ -50,6 +50,10 @@ module.exports.updateTask=function(taskId,userId,data){
         data.dueDate = new Date(data.dueDate).toISOString();
     }
 
+     if (data.completedAt) {
+        data.completedAt = new Date(data.completedAt).toISOString();
+    }
+
 
         return prisma.task.updateMany({
             where:{id:taskId,userId:userId},

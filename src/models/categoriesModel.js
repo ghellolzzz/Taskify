@@ -26,18 +26,36 @@ module.exports.createCategory = (data) => {
     });
 };
 
-module.exports.updateCategory = ({ id, name, color }) => {
+module.exports.updateCategory = ({ id, name, color, userId }) => {
     return prisma.category.update({
-        where: { id: Number(id) },
+        where: { 
+            id: Number(id),
+            userId: Number(userId)
+        },
         data: { 
             name,
             ...(color ? { color } : {}) // only update color if provided
         }
+    }).then(result => result)
+    .catch(err => {
+       
+        throw err;
     });
 };
 
-module.exports.deleteCategory = (id) => {
+module.exports.deleteCategory = (id, userId) => {
     return prisma.category.delete({
-        where: { id: Number(id) }
+        where: {
+            id: Number(id),
+            userId: Number(userId)
+         }
+    }).then(result => {
+        if (result.count === 0) {
+            throw new EMPTY_RESULT_ERROR("Category not found or access denied.");
+        }
+        return result;
+    })
+    .catch(err => {
+        throw err;
     });
 };

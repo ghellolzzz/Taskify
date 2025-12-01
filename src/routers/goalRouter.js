@@ -9,7 +9,7 @@ const { verifyToken } = require("../middleware/jwtMiddleware");
 router.post("/", verifyToken, goalController.create);
 router.get("/", verifyToken, goalController.retrieveAll);
 router.get("/:id", verifyToken, goalController.retrieveById);
-router.put("/:id", verifyToken, goalController.updateGoal);
+router.put("/:id", verifyToken, goalController.update);
 router.delete("/:id", verifyToken, goalController.delete);
 router.get("/stats/progress", verifyToken, goalController.progress);
 

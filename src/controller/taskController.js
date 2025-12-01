@@ -73,6 +73,23 @@ module.exports.delete=function(req,res){
         })
 }
 
+//filtering tasks
+module.exports.filter=function(req,res){
+    const userId = res.locals.userId;
+    const filters={
+        priority:req.query.priority || null,
+        status:req.query.status || null,
+        fromDate: req.query.fromDate || null,
+        toDate:req.query.toDate || null
+    }
+
+    return taskModel.filterTasks(userId,filters)
+        .then(tasks=>res.json({tasks}))
+        .catch(err=>{
+            res.status(500).json({error:err.message})
+        })
+}
+
 
 
 

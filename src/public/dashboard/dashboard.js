@@ -233,9 +233,7 @@ function loadIosCalendar() {
 document.addEventListener("DOMContentLoaded", loadIosCalendar);
 
 
-/* =======================
-   POMODORO TIMER
-
+/* ===== POMODORO TIMER ===== */
 let isRunning = false;
 let isBreak = false;
 let timer;

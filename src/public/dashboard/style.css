@@ -1,4 +1,15 @@
 /* ===== SIDEBAR ===== */
+body {
+    display: flex;
+    flex-direction: column;
+    background: #F6FFF9; /* soft mint white */
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
+}
+
+/* Sidebar */
 .sidebar{
     position:fixed;
     top:0;

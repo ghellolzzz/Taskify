@@ -235,7 +235,6 @@ document.addEventListener("DOMContentLoaded", loadIosCalendar);
 
 /* =======================
    POMODORO TIMER
-========================== */
 
 let isRunning = false;
 let isBreak = false;
@@ -306,3 +305,22 @@ document.getElementById("pomodoro-reset").addEventListener("click", resetTimer);
 
 // Load default display
 updateDisplay();
+// Logout functionality
+document.addEventListener("DOMContentLoaded", () => {
+    const logoutBtn = document.querySelector('.sidebar-footer a');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Clear all authentication data from localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('accountNo');
+            localStorage.removeItem('role');
+            localStorage.removeItem('memberId');
+            
+            // Redirect to login page
+            window.location.href = '../login.html';
+        });
+    }
+});

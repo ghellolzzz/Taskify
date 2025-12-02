@@ -28,7 +28,8 @@
     "migration:reset": "dotenv -e .env.development -- npx prisma migrate reset",
     "start": "dotenv -e .env.development -- node ./src/server.js",
     "test": "dotenv -e .env.test -- playwright test --config=configs/playwright.config.js",
-    "lint": "eslint -c configs/eslint.config.mjs ./src/*",
+    "lint": "eslint -c configs/eslint.config.mjs src/**/*.js"
+,
     "test-trace": "npm test -- --reporter=html --trace on"
   }
 }

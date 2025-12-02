@@ -6,19 +6,78 @@ module.exports.getCurrentUser = function(userId) {
     })
 };
 
-module.exports.getDashboardStats = function (userId) {
-  return Promise.all([
+module.exports.getTasksDueToday = function (userId) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  return prisma.task.count({
+    where: {
+      userId,
+      status: { not: "Completed" },
+      dueDate: {
+        gte: today,
+        lt: tomorrow
+      }
+    }
+  });
+};
+
+
+module.exports.getDashboardStats = async function (userId) {
+  // Run all count queries in parallel
+  const [total, completed, pending, inProgress] = await Promise.all([
     prisma.task.count({ where: { userId } }),
     prisma.task.count({ where: { userId, status: "Completed" } }),
     prisma.task.count({ where: { userId, status: "Pending" } }),
     prisma.task.count({ where: { userId, status: "In Progress" } }),
-  ])
-  .then(([total, completed, pending, inProgress]) => {
-    return {
-      total,
-      completed,
-      pending,
-      inProgress
-    };
-  });
+  ]);
+
+  // --------------------------------------
+  // Productivity Trend (last 7 days)
+  // --------------------------------------
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - 6);
+
+  let days = [];
+  let values = [];
+
+  for (let i = 0; i < 7; i++) {
+    let dayStart = new Date(startDate);
+    dayStart.setDate(startDate.getDate() + i);
+    dayStart.setHours(0,0,0,0);
+
+    let dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayStart.getDate() + 1);
+
+    const count = await prisma.task.count({
+      where: {
+        userId,
+        status: "Completed",
+        completedAt: {
+          gte: dayStart,
+          lt: dayEnd
+        }
+      }
+    });
+
+    days.push(dayStart.toLocaleDateString('en-US', { weekday: 'short' }));
+    values.push(count);
+  }
+
+  return {
+    total,
+    completed,
+    pending,
+    inProgress,
+    productivity: {
+      days,
+      values
+    }
+  };
 };

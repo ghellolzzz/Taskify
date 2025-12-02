@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { EMPTY_RESULT_ERROR } = require("../errors/errors");
+const { EMPTY_RESULT_ERROR } = require("../errors");
 
 module.exports.getAllCategories = (userId) => {
     return prisma.category.findMany({

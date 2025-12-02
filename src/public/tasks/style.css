@@ -18,70 +18,82 @@ body {
     color: #2E2E2E;
 }
 
-
-/* FILTER BAR CONTAINER */
+/* filter bar */
 .filter-bar {
     display: flex;
     align-items: flex-end;
-    gap: 1.5rem;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    padding: 1rem 1.5rem;
+    gap: 1.2rem;
+    background: #ffffff;
+    padding: 14px 20px;
     border-radius: 14px;
-    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.08);
-    margin-bottom: 25px;
+    border: 1px solid #e3e6e9;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
     flex-wrap: wrap;
 }
 
-/* FILTER ITEM */
 .filter-item {
     display: flex;
     flex-direction: column;
-    min-width: 180px;
+    min-width: 160px;
 }
 
 .filter-item label {
-    font-size: 0.82rem;
-    color: #555;
-    margin-bottom: 4px;
+    font-size: 0.8rem;
     font-weight: 600;
+    color: #444;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-/* INPUTS & SELECTS */
 .filter-bar .form-select,
 .filter-bar .form-control {
     border-radius: 10px;
-    padding: 8px 12px;
-    border: 1px solid #d9d9d9;
+    padding: 7px 12px;
+    font-size: 0.9rem;
+    border: 1px solid #d1d7dc;
+    background: #fafafa;
     transition: all 0.2s ease;
-    background-color: white;
 }
 
-.filter-bar select:focus,
-.filter-bar input:focus {
-    border-color: #4CAF50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+.filter-bar .form-select:focus,
+.filter-bar .form-control:focus {
+    border-color: #4DB96B;
+    box-shadow: 0 0 0 3px rgba(77, 185, 107, 0.25);
+    background: #ffffff;
 }
 
-/* BUTTONS */
+
 .filter-btn {
-    height: 42px;
+    height: 40px;
     padding: 0 18px;
-    border-radius: 10px;
     font-weight: 600;
+    border-radius: 10px;
+    margin-top: 26px; 
 }
 
 #applyFiltersBtn {
-    background-color: #4CAF50;
+    background-color: #48b364;
     border: none;
+    color: white;
+    transition: 0.2s ease;
 }
 
 #applyFiltersBtn:hover {
-    background-color: #3f9a45;
+    background-color: #3a9a52;
+}
+
+#resetFiltersBtn {
+    border: 2px solid #d1d7dc;
+    background: white;
+    color: #555;
+    transition: 0.2s ease;
 }
 
 #resetFiltersBtn:hover {
-    background-color: #eee;
+    background: #f2f2f2;
 }
 
 
@@ -281,6 +293,8 @@ padding: 4px 10px;
 
 .task-actions .edit-btn { color: #198754; }
 .task-actions .delete-btn { color: #dc3545; }
+
+
 
 /* Footer */
 .footer {

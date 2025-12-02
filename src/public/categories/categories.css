@@ -1,22 +1,12 @@
-body {
-    display: flex;
-    flex-direction: column;
-    background: #F6FFF9; /* soft mint white */
-    font-family: 'Inter', 'Poppins', sans-serif;
-    margin: 0;
-    padding: 0;
-    color: #2E2E2E;
-}
-
-/*side bar*/
+/* Sidebar */
 .sidebar{
     position:fixed;
     top:0;
     left:0;
     width:230px;
     height:100vh;
-    background: linear-gradient(#e9f5ee, #ffffff);
-    border-right: 1px solid #e0e6ed;
+    background: #ffffff;
+    border-right: 1px solid #e6e6e6;
     padding: 20px;
 }
 
@@ -26,7 +16,7 @@ body {
     align-items:center;
     gap:10px;
     font-weight:600;
-    color:#198754
+    color:#198754;
 }
 
 .sidebar ul li {
@@ -47,6 +37,18 @@ body {
 .sidebar a:hover {
     background: #e9f7ef;
     color: #198754;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.sidebar-footer a {
+    color: #535353;
+    text-decoration: none;
+    font-size: 1rem;
 }
 
 /* Main content layout */
@@ -212,9 +214,13 @@ body {
     background-color: rgba(0,0,0,0.15);
 }
 
-/* Footer */
-.footer {
-    text-align: center;
-    margin-top: 40px;
-    color: #6c757d;
+.color-swatch {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 5px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 2px rgba(0,0,0,0.2);
 }

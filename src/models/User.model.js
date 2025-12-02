@@ -59,17 +59,17 @@ module.exports.selectByEmail = (data, callback) => {
 
 module.exports.addUser = (data, callback) => {
     prisma.user.create({
-        data: {
+    data: {
             name: data.name,
             email: data.email,
             password: data.password,
-        },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            createdAt: true,
-        },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+    },
     })
         .then((user) => {
             // Return as array to match callback pattern

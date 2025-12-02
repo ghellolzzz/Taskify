@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return "Good evening";
     }
 
-    greeting.textContent = `${getGreeting()}, ${name} — here are your tasks for today.`;
+    greeting.textContent = `${getGreeting()}, ${name} — here are your tasks.`;
 });
 
 
@@ -18,6 +18,21 @@ document.getElementById("show-add-form").addEventListener("click",()=>{
     const card=document.getElementById("add-task-card");
     card.classList.toggle("d-none");
 })
+
+// Logout functionality
+document.querySelector('.sidebar-footer a')?.addEventListener("click", (e) => {
+    e.preventDefault();
+    // Clear all authentication data from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('accountNo');
+    localStorage.removeItem('role');
+    localStorage.removeItem('memberId');
+    
+    // Redirect to login page
+    window.location.href = '../login.html';
+});
 
 //fetch tasks
 document.addEventListener("DOMContentLoaded",loadTasks)
@@ -29,7 +44,7 @@ document.addEventListener("DOMContentLoaded",loadCategories);
 function loadCategories() {
     const userId = localStorage.getItem("userId");
 
-    fetch(`/api/categories/${userId}`, {
+    fetch(`/api/categories`, {
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("token")
         }
@@ -39,8 +54,8 @@ function loadCategories() {
         console.log(data)
         const dropdown = document.getElementById("category");
         dropdown.innerHTML = `<option value="">Select Category</option>`;
-
-        data.categories.forEach(cat => {
+        const categories = data || []  
+        categories.forEach(cat => {
             const option = document.createElement("option");
             option.value = cat.id;
             option.textContent = cat.name;
@@ -81,6 +96,18 @@ function createTaskCard(task) {
             </span>
             <span class="badge-status">${task.status}</span>
         </div>
+        <div class="mt-1">
+            <span class="badge-category" style="
+             background:${task.category?.color || '#ccc'};
+            padding:4px 10px;
+            border-radius:12px;
+            font-size:12px;
+            color:white;
+            display:inline-block;
+        ">
+        ${task.category?.name || "No category"}
+            </span>
+    </div>
 
         <p class="text-muted mt-2">${task.description || "*No description*"}</p>
 
@@ -89,8 +116,6 @@ function createTaskCard(task) {
             day: "numeric",
             month: "long",
             year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
         }) : "No due date"
         }</p>
 
@@ -114,7 +139,7 @@ function createTaskCard(task) {
                 <i class="bi bi-check2-circle"></i>
             </button>
 
-            <button class="delete-btn" onclick="deleteTask(${task.id})">
+            <button class="delete-btn float-end" onclick="deleteTask(${task.id})">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -167,7 +192,10 @@ document.getElementById("add-task-form").addEventListener("submit", function (e)
     description: description.value,
     dueDate: dueDate.value,
     priority: priority.value,
-    categoryId: document.getElementById("category").value || null
+   categoryId: document.getElementById("category").value
+    ? Number(document.getElementById("category").value)
+    : null
+
 };
 
 
@@ -241,7 +269,10 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
         dueDate: document.querySelector("#edit-date").value,
         priority: document.querySelector("#edit-priority").value,
         status: document.querySelector("#edit-status").value,
-        categoryId: document.getElementById("edit-category").value || null,
+        categoryId: document.getElementById("edit-category").value
+        ? Number(document.getElementById("edit-category").value)
+        : null,
+
         completedAt:document.querySelector("#edit-status").value === "Completed"? new Date().toISOString(): null,
     };
 
@@ -263,7 +294,7 @@ document.querySelector("#edit-task-form").addEventListener("submit", function (e
 function loadEditCategories(selectedId) {
    const userId = localStorage.getItem("userId");
 
-fetch(`/api/categories/${userId}`, {
+fetch(`/api/categories`, {
     headers: {
         "Authorization": "Bearer " + localStorage.getItem("token")
     }
@@ -273,8 +304,8 @@ fetch(`/api/categories/${userId}`, {
     .then(data => {
         const dropdown = document.getElementById("edit-category")
         dropdown.innerHTML = `<option value="">Select Category</option>`
-
-        data.categories.forEach(cat => {
+        const categories = data || []  
+        categories.forEach(cat => {
             const option = document.createElement("option")
             option.value = cat.id;
             option.textContent = cat.name;
@@ -331,16 +362,31 @@ function loadComments(taskId){
         }
 //renders each of the comments
 
-        container.innerHTML = data.comments.map(c => `
-            <div class="comment border rounded p-2 mb-2">
-                <strong>${c.user?.name || "User"}</strong>
-                <p class="mb-1">${c.content}</p>
-                <small class="text-muted">${new Date(c.createdAt).toLocaleString("en-SG", {day: "numeric",month: "long",year: "numeric",hour: "2-digit",minute: "2-digit"})}</small>
-                <button class="btn btn-sm btn-danger float-end" onclick="deleteComment(${c.id}, ${taskId})">
+       container.innerHTML = data.comments.map(c => `
+    <div class="comment border rounded p-2 mb-2">
+
+        <strong>${c.user?.name || "User"}</strong>
+        <p class="mb-1">${c.content}</p>
+
+        <div class="comment-footer d-flex justify-content-between align-items-center mt-1">
+            <small class="text-muted">
+                ${new Date(c.createdAt).toLocaleString("en-SG", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                })}
+            </small>
+
+            <button class="btn btn-sm btn-danger" onclick="deleteComment(${c.id}, ${taskId})">
                 Delete
-                </button>
+            </button>
+        </div>
+
     </div>
-    `).join("");
+`).join("")
+
 
     })
 }
@@ -381,37 +427,37 @@ function deleteComment(commentId, taskId) {
 document.getElementById("applyFiltersBtn").addEventListener("click", applyFilters)
 document.getElementById("resetFiltersBtn").addEventListener("click", resetFilters)
 
-function applyFilters(){
-    const priority = document.getElementById("filterPriority").value
-    const status = document.getElementById("filterStatus").value
-    const from = document.getElementById("filterFrom").value
-    const to = document.getElementById("filterTo").value
+function applyFilters() {
+    const priority = document.getElementById("filterPriority").value;
+    const status = document.getElementById("filterStatus").value;
+    const from = document.getElementById("filterFrom").value;
+    const to = document.getElementById("filterTo").value;
 
-    const params = new URLSearchParams()
+    const params = new URLSearchParams();
 
-    if(priority){
-        params.append("priority",priority)
+    if (priority){
+        params.append("priority", priority)
     }
-    if(status){
-        params.append("status",status)
+    if (status){
+        params.append("status", status)
     }
-    if(from){
-        params.append("from",from)
+    if (from){
+        params.append("fromDate", from)
     }
-    if(to){
-        params.append("to",to)
+    if (to){
+        params.append("toDate", to)
     }
 
-        fetch(`/api/tasks/filter?${params.toString()}`, {
+    fetch(`/api/tasks/filter?${params.toString()}`, {
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("token")
         }
     })
     .then(res => res.json())
     .then(data => renderTasks(data.tasks))
-    .catch(err => console.error(err))
-
+    .catch(err => console.error(err));
 }
+
 
 function resetFilters() {
     document.getElementById("filterPriority").value = ""

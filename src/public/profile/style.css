@@ -6,9 +6,9 @@
     left:0;
     width:230px;
     height:100vh;
-    background:#ffffff;
-    border-right:1px solid #e6e6e6; /* remove space in 1 px */
-    padding:20px 16px;
+    background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
+    padding: 20px;
     z-index:1000;
 }
 

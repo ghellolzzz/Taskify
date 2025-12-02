@@ -16,9 +16,12 @@ module.exports.retrieveAll= function(userId){
         where:{userId:userId},
         include:{
             comments:{
-                include:{user:true}
-            }
+                include:{user:true},
+                
+            },
+            category: true ,  // ⬅ ADD THIS
         },
+         
         orderBy:{dueDate:'asc'}//shows the tasks by upcoming to ltr
     })
 
@@ -31,9 +34,11 @@ module.exports.retrieveById=function(taskId,userId){
         include:{
             comments:{
                 include:{
-                    user:true
+                    user:true,
+        
                 }
-            }
+            },
+               category: true   // ⬅ ADD THIS
         }
     })
     .then(task=>{
@@ -113,7 +118,9 @@ if(filters.fromDate || filters.toDate){
         include:{
             comments:{
                 include:{user:true}
-            }
+
+            },
+            category: true   // ⬅ ADD THIS
         },
         orderBy:{dueDate:"asc"}
     })

@@ -1,4 +1,4 @@
-/*side bar*/
+/* Sidebar */
 .sidebar{
     position:fixed;
     top:0;
@@ -6,7 +6,8 @@
     width:230px;
     height:100vh;
     background: #ffffff;
-    border-right: 1 px solid #e6e6e6;
+    border-right: 1px solid #e6e6e6;
+    padding: 20px;
 }
 
 .sidebar .brand{
@@ -15,7 +16,7 @@
     align-items:center;
     gap:10px;
     font-weight:600;
-    color:#198754
+    color:#198754;
 }
 
 .sidebar ul li {
@@ -36,6 +37,18 @@
 .sidebar a:hover {
     background: #e9f7ef;
     color: #198754;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.sidebar-footer a {
+    color: #535353;
+    text-decoration: none;
+    font-size: 1rem;
 }
 
 /* Main content layout */
@@ -199,4 +212,15 @@
 
 .category-card button:hover {
     background-color: rgba(0,0,0,0.15);
+}
+
+.color-swatch {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 5px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 2px rgba(0,0,0,0.2);
 }

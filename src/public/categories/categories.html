@@ -96,6 +96,32 @@
         <!-- Category cards will be injected here by JS -->
     </div>
 
+<!-- Task table -->
+<section id="category-tasks-section" style="display:none; margin-top: 30px;">
+  <div class="tasks-card">
+    <div class="tasks-header">
+      <h2 id="selected-category-title"></h2>
+      <button id="backToCategoriesBtn" class="back-btn">Back to Categories</button>
+    </div>
+
+    <div class="table-container">
+      <table id="tasks-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Description</th>
+            <th>Due Date</th>
+          </tr>
+        </thead>
+        <tbody id="tasks-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
 
         <footer class="footer mt-4">
             <p>© 2025 Taskify. All rights reserved.</p>

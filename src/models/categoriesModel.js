@@ -60,3 +60,14 @@ module.exports.deleteCategory = (id, userId) => {
         throw err;
     });
 };
+
+module.exports.getTasksByCategory = (categoryId, userId) => {
+  return prisma.task.findMany({
+    where: {
+      categoryId: Number(categoryId),
+      userId: Number(userId)
+    }
+  })
+  .then(tasks => tasks)
+  .catch(err => { throw err });
+};

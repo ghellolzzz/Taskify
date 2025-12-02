@@ -1,3 +1,13 @@
+body {
+    display: flex;
+    flex-direction: column;
+    background: #F6FFF9; /* soft mint white */
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
+}
+
 /*side bar*/
 .sidebar{
     position:fixed;
@@ -5,8 +15,9 @@
     left:0;
     width:230px;
     height:100vh;
-    background: #ffffff;
-    border-right: 1 px solid #e6e6e6;
+    background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
+    padding: 20px;
 }
 
 .sidebar .brand{
@@ -199,4 +210,11 @@
 
 .category-card button:hover {
     background-color: rgba(0,0,0,0.15);
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #6c757d;
 }

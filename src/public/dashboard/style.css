@@ -5,10 +5,11 @@
     left:0;
     width:230px;
     height:100vh;
-    background: #ffffff;
-    border-right: 1px solid #e6e6e6;
+   background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
     padding: 20px;
 }
+
 
 .sidebar .brand{
     font-size:1.4rem;
@@ -54,8 +55,16 @@
 
 
 /* ===== MAIN DASHBOARD AREA ===== */
+body {
+    background: #F6FFF9; /* soft mint white */
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
+}
+
 .dashboard-wrapper {
-    font-family: Arial, sans-serif;
+    /* font-family: Arial, sans-serif; */
     display: grid;
     grid-template-columns: 1fr 300px; 
     gap: 25px;
@@ -142,6 +151,17 @@
     margin-bottom: 30px;
 }
 
+.stat-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-icon {
+    font-size: 48px;
+    color: #cbd5e1; /* soft gray-blue */
+    opacity: 0.9;
+}
 /* .stat-card {
     background: #f5fff7; 
     padding: 20px;
@@ -149,9 +169,6 @@
     border: 1px solid #d8f3dd;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     transition: 0.2s ease;
-
-
-
 } */
  .stat-card {
     background: #ffffff;
@@ -179,7 +196,7 @@
     border-left: 5px solid #ffca28;
 }
 
-.stat-card.inprogress {
+.stat-card.inProgress {
     border-left: 5px solid #a1a1a1;
 }
 
@@ -272,6 +289,92 @@
     color: #6B7280;
 }
 
+/* ===== RIGHT SIDE BAR ===== */
+
+/* ===== CALENDAR ===== */
+.ios-calendar-widget {
+    /* width: 310px;*/
+    height: 130px; 
+    background: white;
+    border-radius: 22px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+    padding-top: 15px;
+}
+
+.ios-cal-dayname {
+    font-size: 20px;
+    font-weight: 700;
+    color: #d32f2f; /* iOS red */
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.ios-cal-daynumber {
+    font-size: 55px;
+    font-weight: 700;
+    color: #1E1E1E;
+    line-height: 1;
+}
+
+
+
+
+/* ===== TIMER ===== */
+
+
+.pomodoro-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pomodoro-display {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #346f54;
+    margin: 15px 0;
+}
+
+.pomodoro-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pomodoro-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.pomodoro-btn.start {
+    background: #198754;
+    color: white;
+}
+
+.pomodoro-btn.pause {
+    background: #fbbf24;
+    color: white;
+}
+
+.pomodoro-btn.reset {
+    background: #ef4444;
+    color: white;
+}
+
+.pomodoro-status {
+    margin-top: 10px;
+    color: #64748B;
+    font-size: 1rem;
+}
 
 /* ===== FOOTER ===== */
 .footer {

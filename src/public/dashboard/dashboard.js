@@ -1,3 +1,5 @@
+// const { options } = require("pg/lib/defaults");
+
 /* ===== GREETING FUNCTION ===== */
 function getGreeting() {
     const now = new Date();
@@ -49,14 +51,25 @@ const quotes = [
     "Discipline is choosing what matters most.",
 ];
 
-/* ===== QUOTE OF THE DAY ===== */
-function getDailyQuote() {
-    const today = new Date();
-    const index = today.getDate() % quotes.length; 
-    return quotes[index];
-}
+/* ================================
+    QUOTE OF THE DAY FROM API
+================================ */
+function loadDailyQuote() {
+  fetch("/api/dashboard/quote")
+    .then(res => res.json())
+    .then(data => {
+      const quote = data.q;
+      const author = data.a;
 
-document.getElementById("daily-quote").innerText = getDailyQuote();
+      document.getElementById("daily-quote").innerText = `"${quote}" — ${author}`;
+    })
+    .catch(err => {
+      console.error("Quote API Error:", err);
+      document.getElementById("daily-quote").innerText = "Stay positive and keep moving forward!";
+    });
+}
+// Run on page load
+document.addEventListener("DOMContentLoaded", loadDailyQuote);
 
 /* ===== TASK DUE TODAY ===== */
 function loadTasksDueToday() {
@@ -168,6 +181,9 @@ function loadProductivityChart(days, values) {
         backgroundColor: "rgba(76, 175, 80, 0.2)",
         tension: 0.3
       }]
+    },
+    options:{
+
     }
   });
 }
@@ -199,3 +215,94 @@ function loadDashboardStats() {
 
 // Run on page load
 document.addEventListener("DOMContentLoaded", loadDashboardStats);
+
+/* ===== CALENDAR ===== */
+function loadIosCalendar() {
+    const today = new Date();
+
+    const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+    const dayName = dayNames[today.getDay()];
+    const dayNumber = today.getDate();
+
+    document.getElementById("iosCalDayName").innerText = dayName;
+    document.getElementById("iosCalDayNumber").innerText = dayNumber;
+}
+
+// Run on page load
+document.addEventListener("DOMContentLoaded", loadIosCalendar);
+
+
+/* =======================
+   POMODORO TIMER
+========================== */
+
+let isRunning = false;
+let isBreak = false;
+let timer;
+let timeLeft = 25 * 60; // 25 minutes
+
+const display = document.getElementById("pomodoro-display");
+const statusText = document.getElementById("pomodoro-status");
+
+function updateDisplay() {
+  let minutes = Math.floor(timeLeft / 60);
+  let seconds = timeLeft % 60;
+  display.innerText = `${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+function startTimer() {
+  if (isRunning) return;
+  isRunning = true;
+
+  timer = setInterval(() => {
+    timeLeft--;
+
+    updateDisplay();
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      isRunning = false;
+
+      if (!isBreak) {
+        // Switch to break
+        isBreak = true;
+        timeLeft = 5 * 60; // 5 min break
+        statusText.innerText = "Break Time 🍵";
+      } else {
+        // Switch to work session
+        isBreak = false;
+        timeLeft = 25 * 60;
+        statusText.innerText = "Focus Session 💪";
+      }
+
+      updateDisplay();
+      startTimer(); // auto start next cycle
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(timer);
+  isRunning = false;
+}
+
+function resetTimer() {
+  clearInterval(timer);
+  isRunning = false;
+
+  isBreak = false;
+  timeLeft = 25 * 60;
+  statusText.innerText = "Focus Session";
+  updateDisplay();
+}
+
+// Attach buttons
+document.getElementById("pomodoro-start").addEventListener("click", startTimer);
+document.getElementById("pomodoro-pause").addEventListener("click", pauseTimer);
+document.getElementById("pomodoro-reset").addEventListener("click", resetTimer);
+
+// Load default display
+updateDisplay();

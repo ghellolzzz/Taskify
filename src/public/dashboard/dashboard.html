@@ -52,23 +52,42 @@
         <!-- Stats Cards -->
         <div class="stats-container">
             <div class="stat-card total">
-                <h3>Total Tasks</h3>
-                <p class="number" id="totalTasks">0</p>
+                <div class="stat-content">
+                    <div>
+                        <h3>Total Tasks</h3>
+                        <p class="number" id="totalTasks">0</p>
+                    </div>
+                    <i class="bi bi-list-task stat-icon"></i>
+                </div>
             </div>
 
             <div class="stat-card completed">
-                <h3>Completed</h3>
-                <p class="number" id="completedTasks">0</p>
+                <div class="stat-content">
+                    <div>
+                        <h3>Completed</h3>
+                        <p class="number" id="completedTasks">0</p>
+                    </div>
+                    <i class="bi bi-check2-circle stat-icon"></i>
+                </div>
             </div>
-
-            <div class="stat-card inprogress">
-                <h3>In Progress</h3>
-                <p class="number" id="progressTasks">0</p>
+            <div class="stat-card inProgress">
+                <div class="stat-content">
+                    <div>
+                        <h3>In Progress</h3>
+                        <p class="number" id="progressTasks">0</p>
+                    </div>
+                    <i class="bi bi-hourglass-split stat-icon"></i>
+                </div>
             </div>
 
             <div class="stat-card pending">
-                <h3>Pending</h3>
-                <p class="number" id="pendingTasks">0</p>
+                <div class="stat-content">
+                    <div>
+                        <h3>Pending</h3>
+                        <p class="number" id="pendingTasks">0</p>
+                    </div>
+                    <i class="bi bi-clock-history stat-icon"></i>
+                </div>
             </div>
         </div>
 
@@ -93,9 +112,9 @@
     <!-- RIGHT SIDEBAR PLACEHOLDER -->
     <aside class="dashboard-right">
 
-        <div class="right-card">
-            <h4>Calendar</h4>
-            <div class="placeholder-box">Calendar Placeholder</div>
+        <div class="ios-calendar-widget right-card">
+            <div id="iosCalDayName" class="ios-cal-dayname">WED</div>
+            <div id="iosCalDayNumber" class="ios-cal-daynumber">28</div>
         </div>
 
         <div class="right-card">
@@ -107,6 +126,20 @@
             <h4>Reminders</h4>
             <div class="placeholder-box">Reminder Placeholder</div>
         </div>
+
+        <div class="pomodoro-card">
+    <h4>Pomodoro Timer</h4>
+
+    <div id="pomodoro-display" class="pomodoro-display">25:00</div>
+
+    <div class="pomodoro-controls">
+        <button id="pomodoro-start" class="pomodoro-btn start">Start</button>
+        <button id="pomodoro-pause" class="pomodoro-btn pause">Pause</button>
+        <button id="pomodoro-reset" class="pomodoro-btn reset">Reset</button>
+    </div>
+
+    <p id="pomodoro-status" class="pomodoro-status">Focus Session</p>
+    </div>
 
     </aside>
 

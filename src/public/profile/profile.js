@@ -92,10 +92,6 @@ function setupProfileUI(overview) {
   document.getElementById('tasksProgressBar').style.width =
     tasksPct + '%';
 
-  // Focus areas (categories)
-  const focusCardBody = document.querySelector(
-    '.card-body:has(#goalsMessage)'
-  ).parentElement.nextElementSibling; 
 
   const categoriesContainer = document.querySelector(
     '#categoriesContainer'

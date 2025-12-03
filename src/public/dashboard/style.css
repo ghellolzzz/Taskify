@@ -328,9 +328,53 @@ body {
     line-height: 1;
 }
 
+/* ===== REMINDER ===== */
+.dashboard-card {
+  padding: 1rem;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
+.section-header {
+  font-weight: 600;
+  margin-bottom: 6px;
+  margin-top: 6px;
+}
 
+.reminder-card {
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  color: #333;
+}
 
+.reminder-card strong {
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.reminder-card .reminder-time {
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+/* STATUS COLORS */
+.reminder-done {
+  background: #e6f7e9;
+  border-left: 4px solid #3bb162;
+}
+
+.reminder-upcoming {
+  background: #FFF9DB;
+  border-left: 4px solid #F2C94C;
+}
+
+.reminder-overdue {
+  background: #ffe7e7;
+  border-left: 4px solid #d9534f;
+}
 /* ===== TIMER ===== */
 
 
@@ -338,7 +382,7 @@ body {
     background: #ffffff;
     border-radius: 16px;
     padding: 20px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #dbdbdb;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     text-align: center;
     margin-top: 20px;

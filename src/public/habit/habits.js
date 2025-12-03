@@ -1,4 +1,4 @@
-// src/public/habits/habits.js
+// src/public/habit/habits.js
 
 function authHeaders(extra = {}) {
   const token = localStorage.getItem('token');

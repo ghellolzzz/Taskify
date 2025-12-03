@@ -17,6 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 // Static files (public HTML/JS/CSS)
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 app.use('/api/users', userRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/tasks', taskRouter);

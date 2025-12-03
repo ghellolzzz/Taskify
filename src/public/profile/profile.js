@@ -18,10 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   Promise.all([
-    fetch(`/api/profile/${userId}/overview`).then((res) => res.json()),
-    fetch(`/api/profile/${userId}/badges`).then((res) => res.json()),
-    fetch(`/api/profile/${userId}/activity`).then((res) => res.json()),
-  ])
+  fetch(`/api/profile/${userId}/overview`, { headers: authHeaders() }).then((r) => r.json()),
+  fetch(`/api/profile/${userId}/badges`, { headers: authHeaders() }).then((r) => r.json()),
+  fetch(`/api/profile/${userId}/activity`, { headers: authHeaders() }).then((r) => r.json()),
+])
+
     .then(([overview, badges, activity]) => {
       setupProfileUI(overview);
       setupBadgesUI(badges);
@@ -33,6 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Failed to load profile data:', err);
     });
 });
+
+function authHeaders(extra = {}) {
+  const token = localStorage.getItem('token');
+  return {
+    ...extra,
+    Authorization: 'Bearer ' + token,
+  };
+}
 
 /**
  * Populate identity, streak, stats, categories, chain.
@@ -49,9 +58,15 @@ function setupProfileUI(overview) {
   document.getElementById('profileBio').textContent =
     user.bio || 'Add a short bio to describe yourself.';
 
-  if (user.avatarUrl) {
-    document.getElementById('profileAvatar').src = user.avatarUrl;
-  }
+  const avatarImg = document.getElementById('profileAvatar');
+const DEFAULT_AVATAR = '/images/default-avatar.png';
+
+if (user.avatarUrl) {
+  avatarImg.src = user.avatarUrl;
+} else {
+  avatarImg.src = DEFAULT_AVATAR;
+}
+
 
   // Streak
   document.getElementById('streakCount').textContent = user.streakCount;
@@ -328,12 +343,11 @@ function setupThemeControls(user) {
 function saveProfileTheme(userId, partial) {
   fetch(`/api/profile/${userId}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...authHeaders({ 'Content-Type': 'application/json' }) },
     body: JSON.stringify(partial),
-  }).catch((err) => {
-    console.error('Failed to update theme settings:', err);
-  });
+  }).catch((err) => console.error('Failed to update theme settings:', err));
 }
+
 
 /**
  * Hook up Edit Profile modal to update name/bio/avatarUrl
@@ -343,49 +357,182 @@ function setupEditProfileModal(user) {
   const inputName = document.getElementById('editName');
   const inputBio = document.getElementById('editBio');
   const inputAvatarUrl = document.getElementById('editAvatarUrl');
+  const inputAvatarFile = document.getElementById('editAvatarFile');
+  const avatarImg = document.getElementById('profileAvatar');
+
+  const dropzone = document.getElementById('avatarDropzone');
+  const preview = document.getElementById('avatarPreview');
+  const btnChoose = document.getElementById('btnChooseAvatar');
+  const btnRemove = document.getElementById('btnRemoveAvatar');
 
   if (!form) return;
 
   // Pre-fill
   inputName.value = user.name || '';
   inputBio.value = user.bio || '';
-  inputAvatarUrl.value = user.avatarUrl || '';
+  if (inputAvatarUrl) inputAvatarUrl.value = user.avatarUrl || '';
 
+  // Show current avatar in preview if available
+  if (user.avatarUrl) {
+    preview.src = user.avatarUrl;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+
+  // Choose button opens file picker
+  btnChoose?.addEventListener('click', () => inputAvatarFile?.click());
+
+  // Dropzone click to open picker
+  dropzone?.addEventListener('click', (e) => {
+    // Prevent clicks on preview image from re-opening file dialog unnecessarily
+    if (e.target.id !== 'avatarPreview') {
+      inputAvatarFile?.click();
+    }
+  });
+
+  // Drag-drop behavior
+  ;['dragenter', 'dragover'].forEach((evt) =>
+    dropzone?.addEventListener(evt, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.classList.add('dragover');
+    })
+  );
+  ;['dragleave', 'drop'].forEach((evt) =>
+    dropzone?.addEventListener(evt, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    })
+  );
+  dropzone?.addEventListener('drop', (e) => {
+    if (!inputAvatarFile) return;
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    inputAvatarFile.files = e.dataTransfer.files; 
+    previewFile(file);
+  });
+
+  // Live preview on file select
+  inputAvatarFile?.addEventListener('change', () => {
+    const file = inputAvatarFile.files?.[0];
+    if (file) previewFile(file);
+  });
+
+  function previewFile(file) {
+  removeAvatar = false;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+
+ let removeAvatar = false;
+
+btnRemove?.addEventListener('click', () => {
+  removeAvatar = true;
+
+  // Clear modal preview only
+  if (preview) {
+    preview.src = '';
+    preview.style.display = 'none';
+  }
+
+  // Clear chosen file + URL in the form
+  if (inputAvatarFile) inputAvatarFile.value = '';
+  if (inputAvatarUrl) inputAvatarUrl.value = '';
+});
+
+
+
+  // Submit
   form.addEventListener('submit', (event) => {
     event.preventDefault();
 
-    const payload = {
-      name: inputName.value.trim(),
-      bio: inputBio.value.trim(),
-      avatarUrl: inputAvatarUrl.value.trim() || null,
-    };
+    const fd = new FormData();
+    fd.append('name', inputName.value.trim());
+    fd.append('bio', inputBio.value.trim());
 
-    fetch(`/api/profile/${user.id}`, {
+    if (removeAvatar) {
+      fd.append('removeAvatar', 'true');
+    } else {
+      // Optional URL (if both URL and file are provided, server uses file)
+      if (inputAvatarUrl && inputAvatarUrl.value.trim()) {
+        fd.append('avatarUrl', inputAvatarUrl.value.trim());
+      }
+      // File if chosen
+      if (inputAvatarFile && inputAvatarFile.files[0]) {
+        fd.append('avatar', inputAvatarFile.files[0]);
+      }
+    }
+
+            fetch(`/api/profile/${user.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers: authHeaders(), // only Authorization, browser sets multipart boundary
+      body: fd,
     })
-      .then((res) => res.json())
-      .then((updated) => {
-        // Update the header UI immediately
-        document.getElementById('profileName').textContent =
-          updated.name || user.name;
-        document.getElementById('profileBio').textContent =
-          updated.bio || 'Add a short bio to describe yourself.';
-        if (updated.avatarUrl) {
-          document.getElementById('profileAvatar').src = updated.avatarUrl;
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          // If Multer or any other backend error
+          const msg =
+            data.error ||
+            data.message ||
+            'Failed to update profile (upload error).';
+          throw new Error(msg);
         }
 
-        // Close modal
-        const modalEl = document.getElementById('editProfileModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        modal.hide();
+        return data;
       })
+      .then((updated) => {
+  // Update header UI with server-confirmed data
+  document.getElementById('profileName').textContent =
+    updated.name || user.name;
+  document.getElementById('profileBio').textContent =
+    updated.bio || 'Add a short bio to describe yourself.';
+
+  if (avatarImg) {
+    // If user explicitly removed avatar OR backend now has no avatarUrl → show placeholder
+    if (removeAvatar || !updated.avatarUrl) {
+      const placeholder = '/images/default-avatar.png';
+      avatarImg.src = placeholder;
+
+      if (preview) {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    } else {
+      // Normal case: backend says there is an avatar URL
+      const url = updated.avatarUrl + '?v=' + Date.now(); // cache-bust
+      avatarImg.src = url;
+      if (preview) {
+        preview.src = url;
+        preview.style.display = 'block';
+      }
+    }
+  }
+
+  // reset flag for next time you open modal
+  removeAvatar = false;
+
+  // Close modal
+  const modalEl = document.getElementById('editProfileModal');
+  const modal = bootstrap.Modal.getInstance(modalEl);
+  modal.hide();
+})
+
+
       .catch((err) => {
         console.error('Failed to update profile:', err);
+        alert(err.message || 'Failed to update profile. Please try again.');
       });
   });
 }
+
 
 // Logout functionality
 document.addEventListener("DOMContentLoaded", () => {

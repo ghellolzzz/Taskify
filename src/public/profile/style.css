@@ -394,3 +394,50 @@ body.profile-theme-dark .profile-tabs .nav-link.active {
   color: var(--accent-color);
   border-color: var(--accent-color);
 }
+
+/* Avatar uploader */
+.avatar-dropzone {
+  position: relative;
+  border: 2px dashed color-mix(in srgb, var(--accent-color) 55%, #cbd5e1);
+  border-radius: 14px;
+  background: #ffffff;
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+body.profile-theme-dark .avatar-dropzone {
+  background: rgba(15,23,42,0.85);
+  border-color: color-mix(in srgb, var(--accent-color) 40%, #475569);
+}
+
+.avatar-dropzone:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.avatar-dropzone.dragover {
+  background: color-mix(in srgb, var(--accent-color) 8%, #fff);
+}
+body.profile-theme-dark .avatar-dropzone.dragover {
+  background: color-mix(in srgb, var(--accent-color) 12%, #0b1220);
+}
+
+.avatar-preview {
+  display: none;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-color);
+}
+
+.avatar-dropzone-text {
+  text-align: center;
+  color: #475569;
+}
+body.profile-theme-dark .avatar-dropzone-text {
+  color: #94a3b8;
+}

@@ -161,3 +161,13 @@ model Quote {
   author    String?
 }
 
+//////////////////////////////////////////////////////
+// FEEDBACK TABLE 
+//////////////////////////////////////////////////////
+model Feedback {
+  id          Int      @id @default(autoincrement())
+
+  type        String   @db.VarChar(50) // example: it can store BUG or FEATURE_REQUEST
+  description String   @db.VarChar(1000)
+  createdAt   DateTime @default(now())
+}

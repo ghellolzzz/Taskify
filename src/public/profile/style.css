@@ -1,363 +1,445 @@
-/* ===== Sidebar (existing, with tiny fix) ===== */
+/* =========================================================
+   PROFILE PAGE STYLES – Taskify
+   Light/Dark theme + Accent-aware UI
+   ========================================================= */
 
-.sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    width:230px;
-    height:100vh;
+/* ---------- Global + Accent Variable ---------- */
+
+:root {
+  /* Default accent, overridden by JS (user.accentColor) */
+  --accent-color: #198754;
+}
+
+/* Global base */
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #2e2e2e;
+  background: #f6fff9; /* soft mint */
+}
+
+/* Explicit light theme class (used by JS) */
+body.profile-theme-light {
+  background: #f6fff9;
+  color: #2e2e2e;
+}
+
+/* Main layout */
+.main-content {
+  margin-left: 230px;
+  min-height: 100vh;
+  background: transparent;
+}
+
+@media (max-width: 991.98px) {
+  .main-content {
+    margin-left: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .sidebar {
+    display: none; /* could be offcanvas later */
+  }
+}
+
+.profile-page {
+  max-width: 1200px;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
     background: linear-gradient(#e9f5ee, #ffffff);
     border-right: 1px solid #e0e6ed;
-    padding: 20px;
-    z-index:1000;
+    padding: 20px 16px;
+
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; 
 }
 
-.sidebar .brand{
-    font-size:1.4rem;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-weight:600;
-    color:#198754;
+
+.sidebar .brand {
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #198754;
 }
 
-.sidebar ul li{
-    list-style:none;
-    margin:15px 0;
+.sidebar ul li {
+  list-style: none;
+  margin: 15px 0;
 }
 
-.sidebar a{
-    text-decoration:none;
-    font-size:1rem;
-    padding:10px 8px;
-    color:#535353;
-    display:block;
-    border-radius:8px;
-    transition:background-color 0.15s ease,color 0.15s ease;
+.sidebar a {
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 10px 8px;
+  color: #535353;
+  display: block;
+  border-radius: 8px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .sidebar a.active,
-.sidebar a:hover{
-    background:#e9f7ef;
-    color:#198754;
+.sidebar a:hover {
+  background: #e9f7ef;
+  color: #198754;
 }
 
-.sidebar-footer{
-    position:absolute;
-    bottom:20px;
-    left:16px;
-    right:16px;
+.sidebar-footer {
+    margin-top: auto;   /* push footer to bottom naturally */
+    padding-top: 20px;
 }
 
-/* ===== Footer (existing) ===== */
+/* ---------- Footer ---------- */
 
-.footer{
-    text-align:center;
-    margin-top:40px;
-    color:#6c757d;
-    font-size:0.85rem;
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  color: #6c757d;
+  font-size: 0.85rem;
 }
 
-/* ===== Profile page layout ===== */
+/* =========================================================
+   CARDS & CORE PROFILE UI
+   ========================================================= */
 
-:root{
-    --accent-color:#198754; /* default, will be updated from JS using user.accentColor */
+.profile-card {
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.03);
+  background: #ffffff;
 }
 
-/* DARK THEME UPGRADE */
+/* Remove the thick white banner feeling on headers in both themes */
+.profile-card .card-header,
+.card-header {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+/* Identity block */
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-color);
+}
+
+.profile-name {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+/* Streak + mini stats */
+.streak-flame {
+  font-size: 2.2rem;
+}
+
+.streak-count {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.mini-stat {
+  font-size: 0.85rem;
+}
+
+/* 7-day chain (shared for both themes) */
+.chain-day {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  margin-right: 4px;
+  background: #e9ecef;
+  transition: background-color 0.15s ease, transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.chain-day.active {
+  background: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+/* ---------- Badges ---------- */
+
+.achievement-card {
+  border-radius: 12px;
+  padding: 0.7rem;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #ffffff;
+  transition: box-shadow 0.15s ease, transform 0.15s ease,
+    background-color 0.15s;
+}
+
+.achievement-card:hover {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+  background: #f8fff9;
+}
+
+.achievement-card.locked {
+  opacity: 0.55;
+}
+
+.achievement-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: color-mix(in srgb, var(--accent-color) 10%, #f0fdf4);
+  color: var(--accent-color);
+  font-size: 1.4rem;
+}
+
+/* ---------- Activity Heatmap ---------- */
+
+.activity-heatmap {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.heat-cell {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #e9ecef;
+}
+
+/* Light theme – accent-based levels */
+.heat-cell.level-1 {
+  background: color-mix(in srgb, var(--accent-color) 25%, #e9ecef);
+}
+.heat-cell.level-2 {
+  background: color-mix(in srgb, var(--accent-color) 50%, #e9ecef);
+}
+.heat-cell.level-3 {
+  background: color-mix(in srgb, var(--accent-color) 80%, #e9ecef);
+}
+
+/* ---------- Theme swatches ---------- */
+
+.theme-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #dee2e6;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+}
+
+.theme-swatch.active {
+  border-color: var(--accent-color);
+}
+
+/* ---------- Tabs ---------- */
+
+.profile-tabs .nav-link {
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6c757d;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+}
+
+.profile-tabs .nav-link.active {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background: transparent;
+}
+
+/* =========================================================
+   DARK THEME OVERRIDES
+   ========================================================= */
+
 body.profile-theme-dark {
-    background-color: #0d1117;   /* deep navy */
-    color: #e2e8f0;              /* soft white */
+  background: radial-gradient(
+    circle at top left,
+    #151a2f,
+    #0a0f1c 60%,
+    #06080f 100%
+  );
+  color: #e2e8f0;
 }
 
-/* Sidebar */
+/* Sidebar – glassy + glow */
 body.profile-theme-dark .sidebar {
-    background-color: #0f172a;
-    border-right: 1px solid #1e293b;
+  background: rgba(14, 18, 27, 0.92);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
 }
 
 body.profile-theme-dark .sidebar a {
-    color: #cbd5e1;
+  color: #cbd5e1;
 }
 
 body.profile-theme-dark .sidebar a:hover,
 body.profile-theme-dark .sidebar a.active {
-    background: rgba(255,255,255,0.08);
-    color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent-color);
 }
 
-/* Cards */
-body.profile-theme-dark .card.profile-card {
-    background-color: #1f2937;   /* dark surface */
-    border-color: #2d3748;
-    color: #e2e8f0;
+/* Cards – glassmorphism */
+body.profile-theme-dark .profile-card {
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  color: #e2e8f0;
 }
 
-/* Tabs */
-body.profile-theme-dark .profile-tabs .nav-link {
-    color: #94a3b8;
+/* Ensure all generic cards used in profile are dark */
+body.profile-theme-dark .card {
+  background-color: #111827 !important;
+  border-color: #1f2937 !important;
 }
 
-body.profile-theme-dark .profile-tabs .nav-link.active {
-    color: var(--accent-color);
-    border-color: var(--accent-color);
-}
-
-/* Progress bars */
-body.profile-theme-dark .progress {
-    background-color: #2d3748;
-}
-
-body.profile-theme-dark .progress-bar {
-    background-color: var(--accent-color) !important;
-}
-
-/* Category bars */
-body.profile-theme-dark .progress-bar.bg-success {
-    background-color: var(--accent-color) !important;
+body.profile-theme-dark .card-header {
+  background-color: transparent !important;
+  border-color: transparent !important;
 }
 
 /* Muted text */
 body.profile-theme-dark .text-muted {
-    color: #94a3b8 !important;
+  color: #94a3b8 !important;
 }
 
-/* 7 day chain */
+/* Tabs in dark mode – still accent driven */
+body.profile-theme-dark .profile-tabs .nav-link {
+  color: #94a3b8;
+}
+
+/* Progress bars (goals + tasks) */
+body.profile-theme-dark .progress {
+  background-color: #1f2937;
+}
+
+body.profile-theme-dark .progress-bar,
+body.profile-theme-dark .progress-bar.bg-success {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-color) 80%, #4b5563),
+    var(--accent-color)
+  ) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-color) 65%, transparent);
+}
+
+/* 7-day chain in dark theme – accent aware + glow */
 body.profile-theme-dark .chain-day {
-    background: #2d3748;
+  background: #1f2937;
 }
 
 body.profile-theme-dark .chain-day.active {
-    background: var(--accent-color);
+  background: var(--accent-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-color) 80%, transparent);
 }
 
-/* Heatmap */
+/* Heatmap in dark theme – accent aware */
 body.profile-theme-dark .heat-cell {
-    background: #2d3748;
+  background: #1f2937;
 }
 
-body.profile-theme-dark .heat-cell.level-1 { background: rgba(25,135,84,0.3); }
-body.profile-theme-dark .heat-cell.level-2 { background: rgba(25,135,84,0.5); }
-body.profile-theme-dark .heat-cell.level-3 { background: rgba(25,135,84,0.8); }
-
-/* Theme cards */
-body.profile-theme-dark .theme-swatch {
-    border-color: #334155;
+body.profile-theme-dark .heat-cell.level-1 {
+  background: color-mix(in srgb, var(--accent-color) 30%, #1f2937);
+}
+body.profile-theme-dark .heat-cell.level-2 {
+  background: color-mix(in srgb, var(--accent-color) 60%, #1f2937);
+}
+body.profile-theme-dark .heat-cell.level-3 {
+  background: color-mix(in srgb, var(--accent-color) 90%, #1f2937);
 }
 
-
-.main-content{
-    margin-left:230px;          /* space for sidebar */
-    min-height:100vh;
-    background:#f3f4f6;
+/* Achievement cards in dark mode */
+body.profile-theme-dark .achievement-card {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(148, 163, 184, 0.3);
 }
 
-body.profile-theme-dark .main-content {
-    background: #0d1117; /* deep navy dark */
-}
-
-/* Optional: if you want a subtle top bar spacing */
-.profile-page{
-    max-width:1200px;
-}
-
-/* Cards & UI elements */
-
-.profile-card{
-    border-radius:14px;
-    border:1px solid #e5e7eb;
-    box-shadow:0 8px 24px rgba(15,23,42,0.03);
-}
-
-.profile-avatar{
-    width:80px;
-    height:80px;
-    border-radius:50%;
-    object-fit:cover;
-    border:3px solid var(--accent-color);
-}
-
-.profile-name{
-    font-size:1.35rem;
-    font-weight:600;
-}
-
-.streak-flame{
-    font-size:2.2rem;
-}
-
-.streak-count{
-    font-size:1.75rem;
-    font-weight:700;
-    color:var(--accent-color);
-}
-
-.mini-stat{
-    font-size:0.85rem;
-}
-
-/* Last 7 days chain */
-
-.chain-day{
-    width:18px;
-    height:18px;
-    border-radius:6px;
-    margin-right:4px;
-    background:#e9ecef;
-    transition:background-color 0.15s ease,transform 0.15s ease;
-}
-
-.chain-day.active{
-    background:var(--accent-color);
-    transform:translateY(-1px);
-}
-
-/* Badges */
-
-.achievement-card{
-    border-radius:12px;
-    padding:0.7rem;
-    border:1px solid #e5e7eb;
-    display:flex;
-    align-items:center;
-    gap:0.65rem;
-    background:#ffffff;
-    transition:box-shadow 0.15s ease,transform 0.15s ease,background-color 0.15s;
-}
-
-.achievement-card:hover{
-    box-shadow:0 8px 24px rgba(15,23,42,0.08);
-    transform:translateY(-1px);
-    background:#f8fff9;
-}
-
-.achievement-card.locked{
-    opacity:0.55;
-}
-
-.achievement-icon{
-    width:36px;
-    height:36px;
-    border-radius:50%;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    background-color:rgba(25,135,84,0.08);
-    color:var(--accent-color);
-    font-size:1.4rem;
-}
-
-/* Activity heatmap */
-
-.activity-heatmap{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:4px;
-}
-
-.heat-cell{
-    width:18px;
-    height:18px;
-    border-radius:4px;
-    background:#e9ecef;
-}
-
-.heat-cell.level-1{background:#d1e7dd;}
-.heat-cell.level-2{background:#a3cfbb;}
-.heat-cell.level-3{background:#75b798;}
-
-/* Theme swatches */
-
-.theme-swatch{
-    width:26px;
-    height:26px;
-    border-radius:50%;
-    border:2px solid #dee2e6;
-    cursor:pointer;
-    outline:none;
-    padding:0;
-}
-
-.theme-swatch.active{
-    border-color:var(--accent-color);
-}
-
-/* Tabs */
-
-.profile-tabs .nav-link{
-    border:none;
-    border-bottom:2px solid transparent;
-    color:#6c757d;
-    padding:0.5rem 1rem;
-    font-size:0.95rem;
-}
-
-.profile-tabs .nav-link.active{
-    color:#198754;
-    border-color:#198754;
-    background:transparent;
-}
-
-/* Responsive tweaks */
-
-@media (max-width:991.98px){
-    .main-content{
-        margin-left:0;
-        padding-left:1rem;
-        padding-right:1rem;
-    }
-    .sidebar{
-        display:none; /* or convert to offcanvas if you want */
-    }
-}
-
-/* ===== NEXT-GEN GLOW THEME ===== */
-
-body.profile-theme-dark {
-    background: radial-gradient(circle at top left, #151a2f, #0a0f1c 60%, #06080f 100%);
-    color:#e2e8f0;
-}
-
-/* Sidebar glow */
-body.profile-theme-dark .sidebar {
-    background:rgba(14,18,27,0.92);
-    backdrop-filter: blur(12px);
-    border-right:1px solid rgba(255,255,255,0.05);
-    box-shadow: 4px 0 20px rgba(0,0,0,0.4);
-}
-
-/* Main cards glassmorphism */
-body.profile-theme-dark .profile-card {
-    background:rgba(255,255,255,0.04);
-    backdrop-filter:blur(14px);
-    border:1px solid rgba(255,255,255,0.1);
-    box-shadow:0 8px 20px rgba(0,0,0,0.35);
-}
-
-/* Purple glow accent */
-body.profile-theme-dark .profile-tabs .nav-link.active {
-    color:#a78bfa;
-    border-color:#a78bfa;
+body.profile-theme-dark .achievement-card:hover {
+  background: color-mix(in srgb, var(--accent-color) 15%, #020617);
 }
 
 body.profile-theme-dark .achievement-icon {
-    background:rgba(167,139,250,0.15);
-    color:#c4b5fd;
+  background: color-mix(in srgb, var(--accent-color) 25%, #020617);
+  color: var(--accent-color);
 }
 
-/* Modern blue-purple progress bars */
-body.profile-theme-dark .progress-bar {
-    background: linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7) !important;
-    box-shadow:0 0 10px rgba(139,92,246,0.6);
+/* Theme swatches in dark mode */
+body.profile-theme-dark .theme-swatch {
+  border-color: #334155;
 }
 
-/* Heatmap glow */
-body.profile-theme-dark .heat-cell.level-1{ background:#4c1d95; }
-body.profile-theme-dark .heat-cell.level-2{ background:#6d28d9; }
-body.profile-theme-dark .heat-cell.level-3{ background:#8b5cf6; }
+/* Make tab active underline + text still accent colored in dark */
+body.profile-theme-dark .profile-tabs .nav-link.active {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
 
-/* 7-day chain glowing blocks */
-body.profile-theme-dark .chain-day.active {
-    background:linear-gradient(135deg,#6d28d9,#8b5cf6);
-    box-shadow:0 0 8px rgba(139,92,246,0.75);
+/* Avatar uploader */
+.avatar-dropzone {
+  position: relative;
+  border: 2px dashed color-mix(in srgb, var(--accent-color) 55%, #cbd5e1);
+  border-radius: 14px;
+  background: #ffffff;
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+body.profile-theme-dark .avatar-dropzone {
+  background: rgba(15,23,42,0.85);
+  border-color: color-mix(in srgb, var(--accent-color) 40%, #475569);
+}
+
+.avatar-dropzone:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.avatar-dropzone.dragover {
+  background: color-mix(in srgb, var(--accent-color) 8%, #fff);
+}
+body.profile-theme-dark .avatar-dropzone.dragover {
+  background: color-mix(in srgb, var(--accent-color) 12%, #0b1220);
+}
+
+.avatar-preview {
+  display: none;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-color);
+}
+
+.avatar-dropzone-text {
+  text-align: center;
+  color: #475569;
+}
+body.profile-theme-dark .avatar-dropzone-text {
+  color: #94a3b8;
 }

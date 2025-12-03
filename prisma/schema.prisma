@@ -22,8 +22,8 @@ model User {
   bio         String?
   streakCount Int          @default(0)
   lastActive  DateTime?
-  theme       String?      // "light" or "dark"
-  accentColor String?      // e.g. #4FD1C5
+  theme       String?      
+  accentColor String?      
 
   // Relations
   tasks       Task[]
@@ -32,6 +32,9 @@ model User {
   goals       Goal[]
   calendar    CalendarTask[]
   badges      UserBadge[]
+  reminders   Reminder[]
+  habits      Habit[]
+  feedback    Feedback[]
 
   @@map("users")
 }
@@ -41,7 +44,7 @@ model User {
 //////////////////////////////////////////////////////
 model Badge {
   id          Int      @id @default(autoincrement())
-  code        String   @unique     // "ROOKIE", "STREAK_7"
+  code        String   @unique
   name        String
   description String
   icon        String?
@@ -83,25 +86,26 @@ model Category {
 }
 
 //////////////////////////////////////////////////////
-// TASK TABLE (Main Feature)
+// TASK TABLE
 //////////////////////////////////////////////////////
 model Task {
   id          Int          @id @default(autoincrement())
   title       String
   description String?
-  status      String        @default("Pending")     // Pending, Completed
-  priority    String        @default("Medium")      // Low, Medium, High
+  status      String        @default("Pending")
+  priority    String        @default("Medium")
   dueDate     DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  completedAt DateTime?    
+  completedAt DateTime?
 
   userId      Int
   categoryId  Int?
 
   user        User          @relation(fields: [userId], references: [id])
   category    Category?     @relation(fields: [categoryId], references: [id])
-  comments    Comment[]    
+  comments    Comment[]
+  reminders   Reminder[]
 
   @@map("tasks")
 }
@@ -123,7 +127,7 @@ model Comment {
 }
 
 //////////////////////////////////////////////////////
-// GOAL TABLE (User Motivation)
+// GOAL TABLE
 //////////////////////////////////////////////////////
 model Goal {
   id          Int      @id @default(autoincrement())
@@ -131,6 +135,7 @@ model Goal {
   description String?
   completed   Boolean  @default(false)
   createdAt   DateTime @default(now())
+  category    GoalCategory?
   userId      Int
 
   user        User     @relation(fields: [userId], references: [id])
@@ -138,12 +143,21 @@ model Goal {
   @@map("goals")
 }
 
+enum GoalCategory {
+  Finance
+  Health
+  PersonalGrowth
+  Career
+  Education
+  Fitness
+}
+
 //////////////////////////////////////////////////////
-// CALENDAR TASK TABLE (for daily planning)
+// CALENDAR TASK TABLE
 //////////////////////////////////////////////////////
 model CalendarTask {
   id        Int      @id @default(autoincrement())
-  date      DateTime // Represents yyyy-mm-dd
+  date      DateTime
   content   String
   userId    Int
 
@@ -153,7 +167,7 @@ model CalendarTask {
 }
 
 //////////////////////////////////////////////////////
-// QUOTES TABLE 
+// QUOTES TABLE
 //////////////////////////////////////////////////////
 model Quote {
   id        Int      @id @default(autoincrement())
@@ -162,12 +176,68 @@ model Quote {
 }
 
 //////////////////////////////////////////////////////
-// FEEDBACK TABLE 
+// HABITS TABLE
+//////////////////////////////////////////////////////
+model Habit {
+  id            Int        @id @default(autoincrement())
+  userId        Int
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  color         String?
+  targetPerWeek Int?
+  isArchived    Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+
+  logs          HabitLog[]
+}
+
+model HabitLog {
+  id        Int      @id @default(autoincrement())
+  habitId   Int
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+}
+
+//////////////////////////////////////////////////////
+// REMINDER TABLE 
+//////////////////////////////////////////////////////
+model Reminder {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  taskId     Int?
+
+  title      String
+  notes      String?
+
+  remindAt   DateTime
+  isDone     Boolean   @default(false)
+  repeatType String?
+
+  createdAt  DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  task    Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("reminders")
+}
+
+//////////////////////////////////////////////////////
+// FEEDBACK TABLE
 //////////////////////////////////////////////////////
 model Feedback {
   id          Int      @id @default(autoincrement())
-
-  type        String   @db.VarChar(50) // example: it can store BUG or FEATURE_REQUEST
+  type        String   @db.VarChar(50)
   description String   @db.VarChar(1000)
   createdAt   DateTime @default(now())
+  userId      Int?
+
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@map("feedback")
 }
+

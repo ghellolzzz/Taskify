@@ -6,6 +6,7 @@ module.exports.createFeedback = (data) => {
         data: {
             type: data.type,
             description: data.description,
+            ...(data.userId ? { userId: data.userId } : {})
         }
     })
     .then((result) => {

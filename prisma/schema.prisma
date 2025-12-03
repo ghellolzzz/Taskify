@@ -33,6 +33,7 @@ model User {
   calendar    CalendarTask[]
   badges      UserBadge[]
   reminders   Reminder[]
+  feedback    Feedback[]
 
   @@map("users")
 }
@@ -196,4 +197,19 @@ model Reminder {
   task    Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("reminders")
+}
+
+//////////////////////////////////////////////////////
+// FEEDBACK TABLE 
+//////////////////////////////////////////////////////
+model Feedback {
+  id          Int      @id @default(autoincrement())
+  // Stores the feedback category as a string (e.g., "BUG", "FEATURE_REQUEST")
+  type        String   @db.VarChar(50) 
+  description String   @db.VarChar(1000)
+  createdAt   DateTime @default(now())
+  userId      Int?
+  user    User?    @relation(fields: [userId], references: [id])
+
+  @@map("feedback")
 }

@@ -12,7 +12,6 @@ const commentsRouter = require("./routers/commentsRouter.js");
 const reminderRouter = require("./routers/reminderRouter.js");
 const calendarRouter = require('./routers/calendarRouter');
 const goalRouter = require("./routers/goalRouter.js");;
-const commentsRouter = require("./routers/commentsRouter.js")
 const feedbackRouter= require('./routers/feedbackRoutes.js');
 
 const app = express();

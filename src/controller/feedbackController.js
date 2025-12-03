@@ -12,7 +12,7 @@ module.exports.submitFeedback = function (req, res) {
     const data = { 
         type, 
         description, 
-        userId
+        ...(userId ? { userId: Number(userId) } : {})
     };
 
     return feedbackModel.createFeedback(data)

@@ -142,3 +142,10 @@
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
+/* Styling to center the footer content */
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #6c757d;
+}

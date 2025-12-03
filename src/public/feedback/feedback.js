@@ -16,6 +16,21 @@ function getLoggedInUserId() {
  return userIdElement ? parseInt(userIdElement.value) : null;
 }
 
+// Logout functionality
+document.querySelector('.sidebar-footer a')?.addEventListener("click", (e) => {
+    e.preventDefault();
+    // Clear all authentication data from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('accountNo');
+    localStorage.removeItem('role');
+    localStorage.removeItem('memberId');
+    
+    // Redirect to login page
+    window.location.href = '../login.html';
+});
+
 // --- CORE FUNCTIONALITY ---
 
 function submitFeedback(event) {

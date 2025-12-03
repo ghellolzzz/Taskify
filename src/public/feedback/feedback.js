@@ -29,7 +29,7 @@ function submitFeedback(event) {
     const data = {
         type: form.type.value,
         description: form.description.value,
-        // userId: getLoggedInUserId() // Include this line if you track user IDs and uncomment the function above
+        userId: getLoggedInUserId() // Include this line if you track user IDs and uncomment the function above
     };
 
     // Disable button and clear previous message
@@ -37,12 +37,12 @@ function submitFeedback(event) {
     submitBtn.textContent = 'Submitting...';
     feedbackMessage.style.display = 'none';
 
+    // 💡 FIX: Define headers in a variable explicitly before the fetch call
+    const headers = getAuthHeaders();
+
     fetch('/api/feedback', {
         method: 'POST',
-        headers: {
-            // Merges the Authorization header from getAuthHeaders() with Content-Type
-            ...getAuthHeaders(), 
-        },
+        headers: headers, // Use the pre-defined headers variable
         body: JSON.stringify(data)
     })
     .then(res => {

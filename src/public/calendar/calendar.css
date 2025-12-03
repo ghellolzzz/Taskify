@@ -317,6 +317,275 @@ body {
     font-weight: 700;
 }
 
+/* Drag and Drop */
+.calendar-day.drag-over {
+    background: #d4edda;
+    border-color: #198754;
+    border-width: 2px;
+}
+
+.task-item[draggable="true"] {
+    cursor: grab;
+}
+
+.task-item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+/* Priority Suggestions */
+.suggestions-btn {
+    background: #ffc107;
+    border: none;
+    color: #333;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.suggestions-btn:hover {
+    background: #e0a800;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+.priority-suggestions-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+    border: 2px solid #157347;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 650px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0 12px 40px rgba(25, 135, 84, 0.4);
+    z-index: 1000;
+    /* Hide scrollbars but keep functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.priority-suggestions-panel::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.priority-suggestions-panel::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    backdrop-filter: blur(2px);
+}
+
+.suggestions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.suggestions-header h3 {
+    margin: 0;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.suggestions-header h3 i {
+    color: white;
+}
+
+.close-suggestions {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.close-suggestions:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: rotate(90deg);
+}
+
+.suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-right: 5px;
+}
+
+.empty-suggestions {
+    text-align: center;
+    padding: 50px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.empty-suggestions i {
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+.empty-suggestions p {
+    line-height: 1.6;
+    max-width: 400px;
+}
+
+.suggestion-item {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.suggestion-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.suggestion-item.applied {
+    opacity: 0.8;
+    background: rgba(144, 238, 144, 0.15);
+}
+
+.suggestion-item.applied:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.suggestion-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.suggestion-content strong {
+    display: block;
+    color: white;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.suggestion-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+}
+
+.suggestion-details i {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+.current-priority {
+    color: #fff;
+    font-weight: 700;
+    padding: 4px 10px;
+    background: rgba(220, 53, 69, 0.3);
+    border: 1px solid rgba(220, 53, 69, 0.5);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.suggested-priority {
+    color: #fff;
+    font-weight: 700;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.suggestion-reason {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+.apply-suggestion-btn {
+    background: white;
+    border: none;
+    color: #198754;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.apply-suggestion-btn:hover {
+    background: #f8f9fa;
+    color: #157347;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.apply-suggestion-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.apply-suggestion-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.apply-suggestion-btn:active {
+    transform: translateY(0);
+}
+
 /* Footer */
 .footer {
     text-align: center;

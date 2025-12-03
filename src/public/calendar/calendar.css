@@ -18,8 +18,6 @@ body {
     background: linear-gradient(#e9f5ee, #ffffff);
     border-right: 1px solid #e0e6ed;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
 }
 
 .sidebar .brand {
@@ -29,10 +27,6 @@ body {
     gap: 10px;
     font-weight: 600;
     color: #198754;
-}
-
-.sidebar ul {
-    flex: 1;
 }
 
 .sidebar ul li {

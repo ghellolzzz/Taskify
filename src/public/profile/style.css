@@ -53,16 +53,20 @@ body.profile-theme-light {
 /* ---------- Sidebar ---------- */
 
 .sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 230px;
-  height: 100vh;
-  background: #ffffff;
-  border-right: 1px solid #e6e6e6;
-  padding: 20px 16px;
-  z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+    background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
+    padding: 20px 16px;
+
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; 
 }
+
 
 .sidebar .brand {
   font-size: 1.4rem;
@@ -95,10 +99,8 @@ body.profile-theme-light {
 }
 
 .sidebar-footer {
-  position: absolute;
-  bottom: 20px;
-  left: 16px;
-  right: 16px;
+    margin-top: auto;   /* push footer to bottom naturally */
+    padding-top: 20px;
 }
 
 /* ---------- Footer ---------- */

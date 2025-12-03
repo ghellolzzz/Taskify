@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => {
             console.error('Error loading tasks:', err);
             tasks = [];
+            // Still render calendar even if tasks fail to load
             if (currentView === 'month') {
                 renderMonthView();
             } else {
@@ -317,21 +318,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const dayElement = e.currentTarget;
         
-        // Don't allow dropping on other-month days
-        if (dayElement.classList.contains('other-month')) {
+        // Reset dragged task helper
+        const resetDraggedTask = () => {
             if (draggedTask.element) {
                 draggedTask.element.style.opacity = '1';
             }
             draggedTask = null;
+        };
+
+        // Don't allow dropping on other-month days
+        if (dayElement.classList.contains('other-month')) {
+            resetDraggedTask();
             return;
         }
 
         const dayNumber = dayElement.querySelector('.day-number');
         if (!dayNumber) {
-            if (draggedTask.element) {
-                draggedTask.element.style.opacity = '1';
-            }
-            draggedTask = null;
+            resetDraggedTask();
             return;
         }
 
@@ -344,10 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTaskDueDate(draggedTask.id, newDate);
         
         // Reset dragged task
-        if (draggedTask.element) {
-            draggedTask.element.style.opacity = '1';
-        }
-        draggedTask = null;
+        resetDraggedTask();
     }
 
     // Update task due date via API
@@ -380,81 +380,78 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Load priority suggestions
-    function loadPrioritySuggestions() {
+    // Fetch priority suggestions from API
+    function fetchPrioritySuggestions(showEmptyState = false) {
         const dateStr = formatDateForComparison(currentDate);
-        console.log('[Frontend] Loading priority suggestions for date:', dateStr);
         
-        fetch(`/api/calendar/tasks/priority-suggestions?date=${dateStr}`, {
+        return fetch(`/api/calendar/tasks/priority-suggestions?date=${dateStr}`, {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
         })
         .then(res => {
-            console.log('[Frontend] Priority suggestions response status:', res.status);
             if (!res.ok) {
                 return res.json().then(errData => {
-                    console.error('[Frontend] API error:', errData);
                     throw new Error(errData.error || `HTTP error! status: ${res.status}`);
                 });
             }
             return res.json();
         })
         .then(data => {
-            console.log('[Frontend] Priority suggestions response data:', data);
-            console.log('[Frontend] Number of suggestions:', data.suggestions ? data.suggestions.length : 0);
             if (data.error) {
                 throw new Error(data.error);
             }
-            if (data.suggestions && data.suggestions.length > 0) {
-                console.log('[Frontend] Showing suggestions:', data.suggestions);
-                showPrioritySuggestions(data.suggestions);
-            } else {
-                console.log('[Frontend] No suggestions found, showing empty state');
-                showPrioritySuggestions([]); // Show empty state
-            }
-        })
-        .catch(err => {
-            console.error('[Frontend] Error loading priority suggestions:', err);
-            // Show error in panel instead of alert
-            showPrioritySuggestionsError(err.message || 'Failed to load priority suggestions');
+            return data.suggestions || [];
         });
+    }
+
+    // Load priority suggestions
+    function loadPrioritySuggestions() {
+        fetchPrioritySuggestions(true)
+            .then(suggestions => {
+                showPrioritySuggestions(suggestions);
+            })
+            .catch(err => {
+                console.error('Error loading priority suggestions:', err);
+                showPrioritySuggestionsError(err.message || 'Failed to load priority suggestions');
+            });
     }
 
     // Check for priority suggestions and show modal only if suggestions exist
     function checkAndShowPrioritySuggestions() {
-        const dateStr = formatDateForComparison(currentDate);
-        console.log('[Frontend] Checking for priority suggestions on page load');
-        
-        fetch(`/api/calendar/tasks/priority-suggestions?date=${dateStr}`, {
-            headers: {
-                'Authorization': 'Bearer ' + token
-            }
-        })
-        .then(res => {
-            if (!res.ok) {
-                return res.json().then(errData => {
-                    console.error('[Frontend] API error:', errData);
-                    return { suggestions: [] };
-                });
-            }
-            return res.json();
-        })
-        .then(data => {
-            console.log('[Frontend] Priority suggestions check:', data.suggestions ? data.suggestions.length : 0, 'suggestions found');
-            // Only show modal if there are actual suggestions
-            if (data.suggestions && data.suggestions.length > 0) {
-                console.log('[Frontend] Showing priority suggestions modal automatically');
-                showPrioritySuggestions(data.suggestions);
-            } else {
-                console.log('[Frontend] No suggestions, not showing modal');
-            }
-        })
-        .catch(err => {
-            console.error('[Frontend] Error checking priority suggestions:', err);
-            // Don't show error modal on page load, just log it
-        });
->>>>>>> 06671817376681a3da3ae9f40c4f2ead32a3ecbe
+        fetchPrioritySuggestions()
+            .then(suggestions => {
+                // Only show modal if there are actual suggestions
+                if (suggestions && suggestions.length > 0) {
+                    showPrioritySuggestions(suggestions);
+                }
+            })
+            .catch(err => {
+                // Don't show error modal on page load, just log it
+                console.error('Error checking priority suggestions:', err);
+            });
+    }
+
+    // Create panel header
+    function createPanelHeader() {
+        const header = document.createElement('div');
+        header.className = 'suggestions-header';
+        header.innerHTML = `
+            <h3><i class="bi bi-lightbulb"></i> Priority Suggestions</h3>
+            <button class="close-suggestions" id="close-suggestions"><i class="bi bi-x"></i></button>
+        `;
+        return header;
+    }
+
+    // Create empty state HTML
+    function createEmptyStateHTML(message = 'No priority suggestions at this time.', subMessage = 'All your tasks have appropriate priorities based on their due dates.') {
+        return `
+            <div class="empty-suggestions">
+                <i class="bi bi-check-circle" style="font-size: 3rem; color: #90EE90; margin-bottom: 15px;"></i>
+                <p style="font-size: 1.1rem; color: white; margin: 0;">${message}</p>
+                <p style="font-size: 0.9rem; color: white; margin-top: 10px;">${subMessage}</p>
+            </div>
+        `;
     }
 
     // Show error in suggestions panel
@@ -467,14 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const panel = document.createElement('div');
         panel.id = 'priority-suggestions-panel';
         panel.className = 'priority-suggestions-panel';
-        
-        const header = document.createElement('div');
-        header.className = 'suggestions-header';
-        header.innerHTML = `
-            <h3><i class="bi bi-lightbulb"></i> Priority Suggestions</h3>
-            <button class="close-suggestions" id="close-suggestions"><i class="bi bi-x"></i></button>
-        `;
-        panel.appendChild(header);
+        panel.appendChild(createPanelHeader());
 
         const errorDiv = document.createElement('div');
         errorDiv.className = 'empty-suggestions';
@@ -502,27 +492,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const panel = document.createElement('div');
         panel.id = 'priority-suggestions-panel';
         panel.className = 'priority-suggestions-panel';
-        
-        const header = document.createElement('div');
-        header.className = 'suggestions-header';
-        header.innerHTML = `
-            <h3><i class="bi bi-lightbulb"></i> Priority Suggestions</h3>
-            <button class="close-suggestions" id="close-suggestions"><i class="bi bi-x"></i></button>
-        `;
-        panel.appendChild(header);
+        panel.appendChild(createPanelHeader());
 
         const suggestionsList = document.createElement('div');
         suggestionsList.className = 'suggestions-list';
         
         if (suggestions.length === 0) {
-            const emptyState = document.createElement('div');
-            emptyState.className = 'empty-suggestions';
-            emptyState.innerHTML = `
-                <i class="bi bi-check-circle" style="font-size: 3rem; color: #90EE90; margin-bottom: 15px;"></i>
-                <p style="font-size: 1.1rem; color: white; margin: 0;">No priority suggestions at this time.</p>
-                <p style="font-size: 0.9rem; color: white; margin-top: 10px;">All your tasks have appropriate priorities based on their due dates.</p>
-            `;
-            suggestionsList.appendChild(emptyState);
+            suggestionsList.innerHTML = createEmptyStateHTML();
         } else {
             suggestions.forEach(suggestion => {
                 const suggestionItem = document.createElement('div');
@@ -561,27 +537,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 const button = e.currentTarget || e.target.closest('.apply-suggestion-btn');
                 const taskId = parseInt(button.dataset.taskId);
                 const newPriority = button.dataset.priority;
-                console.log('[Frontend] Applying suggestion:', { taskId, newPriority });
                 applyPrioritySuggestion(taskId, newPriority, button);
             });
         });
     }
 
+    // Reset button state
+    function resetButtonState(button, enabled = true) {
+        button.disabled = !enabled;
+        button.style.opacity = enabled ? '1' : '0.6';
+        button.style.cursor = enabled ? 'pointer' : 'not-allowed';
+    }
+
     // Apply priority suggestion
     function applyPrioritySuggestion(taskId, newPriority, button) {
-        console.log('[Frontend] Updating task priority:', taskId, 'to', newPriority);
-        
         if (!button) {
             button = document.querySelector(`.apply-suggestion-btn[data-task-id="${taskId}"]`);
             if (!button) return;
         }
         
         // Disable the button to prevent multiple clicks
-        button.disabled = true;
-        button.style.opacity = '0.6';
-        button.style.cursor = 'not-allowed';
+        resetButtonState(button, false);
         
->>>>>>> 06671817376681a3da3ae9f40c4f2ead32a3ecbe
         fetch(`/api/tasks/${taskId}`, {
             method: 'PUT',
             headers: {
@@ -592,24 +569,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 priority: newPriority
             })
         })
-        .then(res => {
-            console.log('[Frontend] Update response status:', res.status);
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
-            console.log('[Frontend] Update response data:', data);
             if (data.error) {
                 console.error('Error updating priority:', data.error);
                 alert('Failed to update priority: ' + data.error);
-                // Re-enable button on error
-                button.disabled = false;
-                button.style.opacity = '1';
-                button.style.cursor = 'pointer';
+                resetButtonState(button, true);
             } else {
                 // Mark this suggestion as applied with a checkmark
                 const suggestionItem = button.closest('.suggestion-item');
                 if (suggestionItem) {
-                    // Replace the button with a checkmark
                     button.innerHTML = '<i class="bi bi-check-circle-fill" style="color: #90EE90; font-size: 1.2rem;"></i> Applied';
                     button.style.background = 'rgba(144, 238, 144, 0.2)';
                     button.style.color = '#90EE90';
@@ -626,10 +595,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => {
             console.error('Error updating priority:', err);
             alert('Failed to update priority: ' + err.message);
-            // Re-enable button on error
-            button.disabled = false;
-            button.style.opacity = '1';
-            button.style.cursor = 'pointer';
+            resetButtonState(button, true);
         });
     }
 
@@ -645,23 +611,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (allButtons.length > 0 && allButtons.length === appliedButtons.length) {
             const suggestionsList = panel.querySelector('.suggestions-list');
             if (suggestionsList) {
-                suggestionsList.innerHTML = `
-                    <div class="empty-suggestions">
-                        <i class="bi bi-check-circle" style="font-size: 3rem; color: #90EE90; margin-bottom: 15px;"></i>
-                        <p style="font-size: 1.1rem; color: white; margin: 0;">No priority suggestions at this time.</p>
-                        <p style="font-size: 0.9rem; color: white; margin-top: 10px;">All your tasks have appropriate priorities based on their due dates.</p>
-                    </div>
-                `;
+                suggestionsList.innerHTML = createEmptyStateHTML();
             }
         }
     }
 
-    // Reload suggestions after task update
-    function reloadSuggestions() {
-        setTimeout(() => {
-            checkAndShowPrioritySuggestions();
-        }, 500);
-    }
     // Add button to show priority suggestions
     function addSuggestionsButton() {
         const existingBtn = document.getElementById('show-suggestions-btn');
@@ -679,44 +633,6 @@ document.addEventListener("DOMContentLoaded", () => {
         calendarHeader.appendChild(btn);
     }
 
-<<<<<<< HEAD
-    // Check for priority suggestions and show modal only if suggestions exist
-    function checkAndShowPrioritySuggestions() {
-        const dateStr = formatDateForComparison(currentDate);
-        console.log('[Frontend] Checking for priority suggestions on page load');
-        
-        fetch(`/api/calendar/tasks/priority-suggestions?date=${dateStr}`, {
-            headers: {
-                'Authorization': 'Bearer ' + token
-            }
-        })
-        .then(res => {
-            if (!res.ok) {
-                return res.json().then(errData => {
-                    console.error('[Frontend] API error:', errData);
-                    return { suggestions: [] };
-                });
-            }
-            return res.json();
-        })
-        .then(data => {
-            console.log('[Frontend] Priority suggestions check:', data.suggestions ? data.suggestions.length : 0, 'suggestions found');
-            // Only show modal if there are actual suggestions
-            if (data.suggestions && data.suggestions.length > 0) {
-                console.log('[Frontend] Showing priority suggestions modal automatically');
-                showPrioritySuggestions(data.suggestions);
-            } else {
-                console.log('[Frontend] No suggestions, not showing modal');
-            }
-        })
-        .catch(err => {
-            console.error('[Frontend] Error checking priority suggestions:', err);
-            // Don't show error modal on page load, just log it
-        });
-    }
-
-=======
->>>>>>> 06671817376681a3da3ae9f40c4f2ead32a3ecbe
     // Logout functionality
     document.querySelector('.sidebar-footer a')?.addEventListener('click', (e) => {
         e.preventDefault();

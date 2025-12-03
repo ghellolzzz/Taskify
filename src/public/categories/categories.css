@@ -152,6 +152,34 @@ body {
     color: #555;
 }
 
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+/* Category Card */
+/* Individual Category Card */
+.category-card {
+    background-color: #fff; 
+    border-radius: 20px;    /* rounded corners */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* soft shadow */
+    border-radius: 20px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.category-card i {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: #333;
+    color: var(--category-color, #333);
+}
+
 /* Edit/Delete Buttons */
 .category-card .btn-container {
     margin-top: 10px;
@@ -193,6 +221,86 @@ body {
     cursor: pointer;
     border: 1px solid #ccc;
     box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+/*Display tasks*/
+.tasks-card {
+  width: 95%;
+  max-width: 1100px;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 15px;
+  /* Dynamic border and shadow */
+  border: 2px solid var(--category-color, #198754);
+  box-shadow: 0 0 18px rgba(var(--category-color-rgb, 25, 135, 84), 0.18);
+}
+
+.tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tasks-header h2 {
+  /* Dynamic header text color */
+  color: var(--category-color, #198754);
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.back-btn {
+  padding: 10px 20px;
+  /* Dynamic button background */
+  background: var(--category-color, #198754);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: 0.25s;
+}
+.back-btn:hover {
+  /* Keeps the fixed hover color for simplicity */
+  background: #146c43;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+#tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#tasks-table thead {
+  /* Dynamic table header background */
+  background: var(--category-color, #198754);
+}
+
+#tasks-table th {
+  color: #ffffff;
+  padding: 14px 12px;
+  font-weight: 700;
+  text-align: left;
+  font-size: 1rem;
+}
+
+#tasks-table td {
+  padding: 14px 12px;
+  /* Dynamic cell text color */
+  color: var(--category-color, #198754);
+  /* Dynamic transparent border line */
+  border-bottom: 1px solid rgba(var(--category-color-rgb, 25, 135, 84), 0.25);
+  font-size: 0.95rem;
+}
+
+#tasks-table tbody tr:hover {
+  /* Dynamic transparent hover background */
+  background: rgba(var(--category-color-rgb, 25, 135, 84), 0.08);
+  transition: 0.25s;
 }
 
 .footer {

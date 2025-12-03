@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentDate = new Date();
     let currentView = 'month'; // 'month' or 'year'
     let tasks = [];
+    let draggedTask = null;
 
     const monthYearTitle = document.getElementById('current-month-year');
     const calendarGrid = document.getElementById('calendar-grid');
@@ -122,6 +123,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     taskItem.className = `task-item ${task.priority.toLowerCase()}-priority ${task.status === 'Completed' ? 'completed' : ''}`;
                     taskItem.textContent = task.title;
                     taskItem.title = task.title + (task.description ? ': ' + task.description : '');
+                    taskItem.draggable = task.status !== 'Completed'; // Only allow dragging incomplete tasks
+                    taskItem.dataset.taskId = task.id;
+                    
+                    // Drag event handlers
+                    if (task.status !== 'Completed') {
+                        taskItem.addEventListener('dragstart', handleTaskDragStart);
+                        taskItem.style.cursor = 'grab';
+                    }
+                    
                     tasksList.appendChild(taskItem);
                 });
 
@@ -134,6 +144,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 dayElement.appendChild(tasksList);
+            }
+
+            // Make calendar day a drop zone (only for current month days)
+            if (!dayElement.classList.contains('other-month')) {
+                dayElement.addEventListener('dragover', handleDragOver);
+                dayElement.addEventListener('drop', handleTaskDrop);
+                dayElement.addEventListener('dragenter', handleDragEnter);
+                dayElement.addEventListener('dragleave', handleDragLeave);
             }
 
             calendarGrid.appendChild(dayElement);
@@ -263,6 +281,402 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Drag and drop handlers
+    function handleTaskDragStart(e) {
+        draggedTask = {
+            id: parseInt(e.target.dataset.taskId),
+            element: e.target
+        };
+        e.target.style.opacity = '0.5';
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+        if (draggedTask) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+    }
+
+    function handleDragEnter(e) {
+        if (draggedTask) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+    }
+
+    function handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleTaskDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        
+        if (!draggedTask) return;
+
+        const dayElement = e.currentTarget;
+        
+        // Don't allow dropping on other-month days
+        if (dayElement.classList.contains('other-month')) {
+            if (draggedTask.element) {
+                draggedTask.element.style.opacity = '1';
+            }
+            draggedTask = null;
+            return;
+        }
+
+        const dayNumber = dayElement.querySelector('.day-number');
+        if (!dayNumber) {
+            if (draggedTask.element) {
+                draggedTask.element.style.opacity = '1';
+            }
+            draggedTask = null;
+            return;
+        }
+
+        const day = parseInt(dayNumber.textContent);
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const newDate = new Date(year, month, day);
+        
+        // Update task due date
+        updateTaskDueDate(draggedTask.id, newDate);
+        
+        // Reset dragged task
+        if (draggedTask.element) {
+            draggedTask.element.style.opacity = '1';
+        }
+        draggedTask = null;
+    }
+
+    // Update task due date via API
+    function updateTaskDueDate(taskId, newDate) {
+        const dateISO = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()).toISOString();
+        
+        fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                dueDate: dateISO
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error updating task:', data.error);
+                alert('Failed to update task: ' + data.error);
+            } else {
+                // Reload tasks to reflect the change
+                loadTasks();
+            }
+        })
+        .catch(err => {
+            console.error('Error updating task:', err);
+            alert('Failed to update task');
+        });
+    }
+
+    // Load priority suggestions
+    function loadPrioritySuggestions() {
+        const dateStr = formatDateForComparison(currentDate);
+        console.log('[Frontend] Loading priority suggestions for date:', dateStr);
+        
+        fetch(`/api/calendar/tasks/priority-suggestions?date=${dateStr}`, {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+        .then(res => {
+            console.log('[Frontend] Priority suggestions response status:', res.status);
+            if (!res.ok) {
+                return res.json().then(errData => {
+                    console.error('[Frontend] API error:', errData);
+                    throw new Error(errData.error || `HTTP error! status: ${res.status}`);
+                });
+            }
+            return res.json();
+        })
+        .then(data => {
+            console.log('[Frontend] Priority suggestions response data:', data);
+            console.log('[Frontend] Number of suggestions:', data.suggestions ? data.suggestions.length : 0);
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            if (data.suggestions && data.suggestions.length > 0) {
+                console.log('[Frontend] Showing suggestions:', data.suggestions);
+                showPrioritySuggestions(data.suggestions);
+            } else {
+                console.log('[Frontend] No suggestions found, showing empty state');
+                showPrioritySuggestions([]); // Show empty state
+            }
+        })
+        .catch(err => {
+            console.error('[Frontend] Error loading priority suggestions:', err);
+            // Show error in panel instead of alert
+            showPrioritySuggestionsError(err.message || 'Failed to load priority suggestions');
+        });
+    }
+
+    // Check for priority suggestions and show modal only if suggestions exist
+    function checkAndShowPrioritySuggestions() {
+        const dateStr = formatDateForComparison(currentDate);
+        console.log('[Frontend] Checking for priority suggestions on page load');
+        
+        fetch(`/api/calendar/tasks/priority-suggestions?date=${dateStr}`, {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+        .then(res => {
+            if (!res.ok) {
+                return res.json().then(errData => {
+                    console.error('[Frontend] API error:', errData);
+                    return { suggestions: [] };
+                });
+            }
+            return res.json();
+        })
+        .then(data => {
+            console.log('[Frontend] Priority suggestions check:', data.suggestions ? data.suggestions.length : 0, 'suggestions found');
+            // Only show modal if there are actual suggestions
+            if (data.suggestions && data.suggestions.length > 0) {
+                console.log('[Frontend] Showing priority suggestions modal automatically');
+                showPrioritySuggestions(data.suggestions);
+            } else {
+                console.log('[Frontend] No suggestions, not showing modal');
+            }
+        })
+        .catch(err => {
+            console.error('[Frontend] Error checking priority suggestions:', err);
+            // Don't show error modal on page load, just log it
+        });
+    }
+
+    // Show error in suggestions panel
+    function showPrioritySuggestionsError(errorMessage) {
+        const existingPanel = document.getElementById('priority-suggestions-panel');
+        if (existingPanel) {
+            existingPanel.remove();
+        }
+
+        const panel = document.createElement('div');
+        panel.id = 'priority-suggestions-panel';
+        panel.className = 'priority-suggestions-panel';
+        
+        const header = document.createElement('div');
+        header.className = 'suggestions-header';
+        header.innerHTML = `
+            <h3><i class="bi bi-lightbulb"></i> Priority Suggestions</h3>
+            <button class="close-suggestions" id="close-suggestions"><i class="bi bi-x"></i></button>
+        `;
+        panel.appendChild(header);
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'empty-suggestions';
+        errorDiv.innerHTML = `
+            <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: white; margin-bottom: 15px; opacity: 0.9;"></i>
+            <p style="font-size: 1.1rem; color: white; margin: 0; font-weight: 600;">Error Loading Suggestions</p>
+            <p style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.9); margin-top: 10px;">${errorMessage}</p>
+        `;
+        panel.appendChild(errorDiv);
+        document.querySelector('.main-content').appendChild(panel);
+
+        document.getElementById('close-suggestions').addEventListener('click', () => {
+            panel.remove();
+        });
+    }
+
+    // Show priority suggestions in a modal/panel
+    function showPrioritySuggestions(suggestions) {
+        // Remove existing suggestions panel if any
+        const existingPanel = document.getElementById('priority-suggestions-panel');
+        if (existingPanel) {
+            existingPanel.remove();
+        }
+
+        const panel = document.createElement('div');
+        panel.id = 'priority-suggestions-panel';
+        panel.className = 'priority-suggestions-panel';
+        
+        const header = document.createElement('div');
+        header.className = 'suggestions-header';
+        header.innerHTML = `
+            <h3><i class="bi bi-lightbulb"></i> Priority Suggestions</h3>
+            <button class="close-suggestions" id="close-suggestions"><i class="bi bi-x"></i></button>
+        `;
+        panel.appendChild(header);
+
+        const suggestionsList = document.createElement('div');
+        suggestionsList.className = 'suggestions-list';
+        
+        if (suggestions.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-suggestions';
+            emptyState.innerHTML = `
+                <i class="bi bi-check-circle" style="font-size: 3rem; color: #90EE90; margin-bottom: 15px;"></i>
+                <p style="font-size: 1.1rem; color: white; margin: 0;">No priority suggestions at this time.</p>
+                <p style="font-size: 0.9rem; color: white; margin-top: 10px;">All your tasks have appropriate priorities based on their due dates.</p>
+            `;
+            suggestionsList.appendChild(emptyState);
+        } else {
+            suggestions.forEach(suggestion => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'suggestion-item';
+                suggestionItem.innerHTML = `
+                    <div class="suggestion-content">
+                        <strong>${suggestion.taskTitle}</strong>
+                        <div class="suggestion-details">
+                            <span class="current-priority">Current: ${suggestion.currentPriority}</span>
+                            <i class="bi bi-arrow-right"></i>
+                            <span class="suggested-priority">Suggested: ${suggestion.suggestedPriority}</span>
+                        </div>
+                        <div class="suggestion-reason">${suggestion.reason}</div>
+                    </div>
+                    <button class="apply-suggestion-btn" data-task-id="${suggestion.taskId}" data-priority="${suggestion.suggestedPriority}">
+                        Apply
+                    </button>
+                `;
+                suggestionsList.appendChild(suggestionItem);
+            });
+        }
+
+        panel.appendChild(suggestionsList);
+        document.querySelector('.main-content').appendChild(panel);
+
+        // Close button handler
+        document.getElementById('close-suggestions').addEventListener('click', () => {
+            panel.remove();
+        });
+
+        // Apply suggestion handlers
+        document.querySelectorAll('.apply-suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const button = e.currentTarget || e.target.closest('.apply-suggestion-btn');
+                const taskId = parseInt(button.dataset.taskId);
+                const newPriority = button.dataset.priority;
+                console.log('[Frontend] Applying suggestion:', { taskId, newPriority });
+                applyPrioritySuggestion(taskId, newPriority);
+            });
+        });
+    }
+
+    // Apply priority suggestion
+    function applyPrioritySuggestion(taskId, newPriority) {
+        console.log('[Frontend] Updating task priority:', taskId, 'to', newPriority);
+        
+        // Find the button that was clicked
+        const button = document.querySelector(`.apply-suggestion-btn[data-task-id="${taskId}"]`);
+        if (!button) return;
+        
+        // Disable the button to prevent multiple clicks
+        button.disabled = true;
+        button.style.opacity = '0.6';
+        button.style.cursor = 'not-allowed';
+        
+        fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                priority: newPriority
+            })
+        })
+        .then(res => {
+            console.log('[Frontend] Update response status:', res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log('[Frontend] Update response data:', data);
+            if (data.error) {
+                console.error('Error updating priority:', data.error);
+                alert('Failed to update priority: ' + data.error);
+                // Re-enable button on error
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            } else {
+                // Mark this suggestion as applied with a checkmark
+                const suggestionItem = button.closest('.suggestion-item');
+                if (suggestionItem) {
+                    // Replace the button with a checkmark
+                    button.innerHTML = '<i class="bi bi-check-circle-fill" style="color: #90EE90; font-size: 1.2rem;"></i> Applied';
+                    button.style.background = 'rgba(144, 238, 144, 0.2)';
+                    button.style.color = '#90EE90';
+                    suggestionItem.classList.add('applied');
+                }
+                
+                // Reload tasks in the background
+                loadTasks();
+                
+                // Check if all suggestions have been applied
+                checkAllSuggestionsApplied();
+            }
+        })
+        .catch(err => {
+            console.error('Error updating priority:', err);
+            alert('Failed to update priority: ' + err.message);
+            // Re-enable button on error
+            button.disabled = false;
+            button.style.opacity = '1';
+            button.style.cursor = 'pointer';
+        });
+    }
+
+    // Check if all suggestions have been applied and show empty state if so
+    function checkAllSuggestionsApplied() {
+        const panel = document.getElementById('priority-suggestions-panel');
+        if (!panel) return;
+        
+        const allButtons = panel.querySelectorAll('.apply-suggestion-btn');
+        const appliedButtons = panel.querySelectorAll('.apply-suggestion-btn:disabled');
+        
+        // If all buttons are disabled (applied), show empty state
+        if (allButtons.length > 0 && allButtons.length === appliedButtons.length) {
+            const suggestionsList = panel.querySelector('.suggestions-list');
+            if (suggestionsList) {
+                suggestionsList.innerHTML = `
+                    <div class="empty-suggestions">
+                        <i class="bi bi-check-circle" style="font-size: 3rem; color: #90EE90; margin-bottom: 15px;"></i>
+                        <p style="font-size: 1.1rem; color: white; margin: 0;">No priority suggestions at this time.</p>
+                        <p style="font-size: 0.9rem; color: white; margin-top: 10px;">All your tasks have appropriate priorities based on their due dates.</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    // Reload suggestions after task update
+    function reloadSuggestions() {
+        setTimeout(() => {
+            checkAndShowPrioritySuggestions();
+        }, 500);
+    }
+
+    // Add button to show priority suggestions
+    function addSuggestionsButton() {
+        const existingBtn = document.getElementById('show-suggestions-btn');
+        if (existingBtn) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'show-suggestions-btn';
+        btn.className = 'suggestions-btn';
+        btn.innerHTML = '<i class="bi bi-lightbulb"></i> Priority Suggestions';
+        btn.addEventListener('click', () => {
+            loadPrioritySuggestions();
+        });
+        
+        const calendarHeader = document.querySelector('.calendar-header');
+        calendarHeader.appendChild(btn);
+    }
+
     // Logout functionality
     document.querySelector('.sidebar-footer a')?.addEventListener('click', (e) => {
         e.preventDefault();
@@ -277,5 +691,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initial load
     loadTasks();
+    addSuggestionsButton();
+    // Check for suggestions on page load, but only show modal if suggestions exist
+    checkAndShowPrioritySuggestions();
 });
 

@@ -9,7 +9,9 @@
     "express": "^4.19.2",
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.13.0"
+    "multer": "^2.0.2",
+    "pg": "^8.13.0",
+    "serve-favicon": "^2.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
@@ -28,8 +30,7 @@
     "migration:reset": "dotenv -e .env.development -- npx prisma migrate reset",
     "start": "dotenv -e .env.development -- node ./src/server.js",
     "test": "dotenv -e .env.test -- playwright test --config=configs/playwright.config.js",
-    "lint": "eslint -c configs/eslint.config.mjs src/**/*.js"
-,
+    "lint": "eslint -c configs/eslint.config.mjs src/**/*.js",
     "test-trace": "npm test -- --reporter=html --trace on"
   }
 }

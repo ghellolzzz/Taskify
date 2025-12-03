@@ -8,7 +8,10 @@ const taskRouter = require('./routers/taskRouter.js');
 const dashboardRouter = require('./routers/dashboardRouter');
 const categoryRouter = require('./routers/categoriesRoutes');
 const profileRouter = require('./routers/Profile.router.js');
-const commentsRouter = require("./routers/commentsRouter.js")
+const commentsRouter = require("./routers/commentsRouter.js");
+const reminderRouter = require("./routers/reminderRouter.js");
+const calendarRouter = require('./routers/calendarRouter');
+const goalRouter = require("./routers/goalRouter.js");
 
 const app = express();
 app.use(express.json());
@@ -17,12 +20,17 @@ app.use(express.urlencoded({ extended: true }));
 // Static files (public HTML/JS/CSS)
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 app.use('/api/users', userRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/tasks', taskRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/profile', profileRouter);
 app.use("/api/comments", commentsRouter);
+app.use("/api/reminders", reminderRouter);
+app.use('/api/calendar', calendarRouter);
+app.use("/api/goals", goalRouter);
 
 app.get('/.well-known/appspecific/*', (req, res) => {
   res.status(204).end();

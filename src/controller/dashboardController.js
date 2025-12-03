@@ -37,3 +37,35 @@ module.exports.getDashboard = function (req, res) {
 };
 
 
+module.exports.getDashboardReminders = async function (req, res) {
+  const userId = res.locals.userId;
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  try {
+    // Fetch Today + Upcoming (next 3 days)
+    const today = await dashboardModel.getTodayList(userId, todayStart, todayEnd);
+    const upcoming = await dashboardModel.getUpcoming(userId, todayEnd);
+
+    // Attach status for frontend use
+    const withStatus = (rem) => {
+      const dt = new Date(rem.remindAt);
+
+      if (rem.isDone) return { ...rem, status: "Done" };
+      if (dt < now) return { ...rem, status: "Overdue" };
+      return { ...rem, status: "Upcoming" };
+    };
+
+    res.json({
+      today: today.map(withStatus),
+      upcoming: upcoming.map(withStatus)
+    });
+
+  } catch (err) {
+    console.error("Dashboard reminders error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

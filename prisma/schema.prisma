@@ -32,6 +32,7 @@ model User {
   goals       Goal[]
   calendar    CalendarTask[]
   badges      UserBadge[]
+  reminders   Reminder[]
 
   @@map("users")
 }
@@ -102,6 +103,7 @@ model Task {
   user        User          @relation(fields: [userId], references: [id])
   category    Category?     @relation(fields: [categoryId], references: [id])
   comments    Comment[]    
+  reminders   Reminder[]
 
   @@map("tasks")
 }
@@ -172,3 +174,26 @@ model Quote {
   author    String?
 }
 
+//////////////////////////////////////////////////////
+// REMINDER TABLE 
+//////////////////////////////////////////////////////
+model Reminder {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  taskId     Int?      
+
+  title      String
+  notes      String?
+
+  remindAt   DateTime  // When the reminder triggers
+  isDone     Boolean   @default(false)
+
+  repeatType String?   // "none", "daily", "weekly", "monthly"
+
+  createdAt  DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  task    Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("reminders")
+}

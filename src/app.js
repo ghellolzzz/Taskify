@@ -8,7 +8,8 @@ const taskRouter = require('./routers/taskRouter.js');
 const dashboardRouter = require('./routers/dashboardRouter');
 const categoryRouter = require('./routers/categoriesRoutes');
 const profileRouter = require('./routers/Profile.router.js');
-const commentsRouter = require("./routers/commentsRouter.js"); 
+const commentsRouter = require("./routers/commentsRouter.js");
+const reminderRouter = require("./routers/reminderRouter.js");
 const calendarRouter = require('./routers/calendarRouter');
 const goalRouter = require("./routers/goalRouter.js");
 
@@ -27,6 +28,7 @@ app.use('/api/tasks', taskRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/profile', profileRouter);
 app.use("/api/comments", commentsRouter);
+app.use("/api/reminders", reminderRouter);
 app.use('/api/calendar', calendarRouter);
 app.use("/api/goals", goalRouter);
 

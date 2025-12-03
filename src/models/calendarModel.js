@@ -58,8 +58,14 @@ module.exports.getPrioritySuggestions = function(userId, date) {
                     reason = 'Due tomorrow';
                 }
             } else if (daysUntilDue <= 3) {
-                // Due in 2-3 days - should be at least Medium
-                if (currentPriority === 'Low') {
+                // Due in 2-3 days - should be High
+                if (currentPriority !== 'High') {
+                    suggestedPriority = 'High';
+                    reason = `Due in ${daysUntilDue} days`;
+                }
+            } else if (daysUntilDue >= 4 && daysUntilDue <= 7) {
+                // Due in 4-7 days - should be Medium
+                if (currentPriority !== 'Medium') {
                     suggestedPriority = 'Medium';
                     reason = `Due in ${daysUntilDue} days`;
                 }

@@ -131,12 +131,23 @@ model Goal {
   description String?
   completed   Boolean  @default(false)
   createdAt   DateTime @default(now())
+  category    GoalCategory?
   userId      Int
 
   user        User     @relation(fields: [userId], references: [id])
 
   @@map("goals")
 }
+
+enum GoalCategory {
+  Finance
+  Health
+  PersonalGrowth
+  Career
+  Education
+  Fitness
+}
+
 
 //////////////////////////////////////////////////////
 // CALENDAR TASK TABLE (for daily planning)

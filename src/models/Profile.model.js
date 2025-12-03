@@ -49,30 +49,26 @@ async function getProfileOverview(userId) {
   const weekStart = addDays(todayStart, -6); // last 7 days (today inclusive)
 
   const tasks = user.tasks || [];
-
   const completedTasks = tasks.filter((t) => t.status === 'Completed');
 
-  const tasksToday = completedTasks.filter(
-    (t) => t.updatedAt >= todayStart
-  ).length;
+  // ✅ Count ALL tasks created today / this week (not just completed)
+  const tasksToday = tasks.filter((t) => t.createdAt >= todayStart).length;
 
-  const tasksWeek = completedTasks.filter(
-    (t) => t.updatedAt >= weekStart
-  ).length;
+  const tasksWeek = tasks.filter((t) => t.createdAt >= weekStart).length;
 
-  // Range stats (for the "Last 7 days" bar)
+  // ✅ Range stats (for "Last 7 days" task completion bar)
   const tasksInRange = tasks.filter((t) => t.createdAt >= weekStart);
   const tasksCompletedRange = completedTasks.filter(
     (t) => t.updatedAt >= weekStart
   ).length;
   const tasksTotalRange = tasksInRange.length;
 
-  // Goals
+  // Goals (if you actually use goals; otherwise this will be 0/0)
   const goals = user.goals || [];
   const goalsDone = goals.filter((g) => g.completed).length;
   const goalsTotal = goals.length;
 
-  // Categories breakdown
+  // Category breakdown
   const categories = (user.categories || []).map((cat) => ({
     id: cat.id,
     name: cat.name,
@@ -80,7 +76,7 @@ async function getProfileOverview(userId) {
     taskCount: (cat.tasks || []).length,
   }));
 
-  // Last 7 days chain
+  // Build last 7-day chain based on COMPLETED tasks
   const chain = [];
   for (let i = 6; i >= 0; i--) {
     const dayStart = addDays(todayStart, -i);
@@ -94,6 +90,16 @@ async function getProfileOverview(userId) {
     });
   }
 
+  // ✅ Compute streak from the chain (consecutive active days up to today)
+  let streakCount = 0;
+  for (let i = chain.length - 1; i >= 0; i--) {
+    if (chain[i].active) {
+      streakCount++;
+    } else {
+      break;
+    }
+  }
+
   return {
     user: {
       id: user.id,
@@ -102,7 +108,8 @@ async function getProfileOverview(userId) {
       createdAt: user.createdAt,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
-      streakCount: user.streakCount,
+      // ✅ use computed streak instead of DB field
+      streakCount,
       lastActive: user.lastActive,
       theme: user.theme,
       accentColor: user.accentColor,
@@ -120,6 +127,7 @@ async function getProfileOverview(userId) {
   };
 }
 
+
 /**
  * Badges for profile:
  * {
@@ -130,16 +138,84 @@ async function getProfileOverview(userId) {
 async function getProfileBadges(userId) {
   const numericId = Number(userId);
 
-  const [allBadges, userBadges] = await Promise.all([
-    prisma.badge.findMany(),
-    prisma.userBadge.findMany({
+  // Reuse overview to get streak, stats, categories
+  const overview = await getProfileOverview(userId);
+  const { user, categories } = overview;
+  const streak = user.streakCount || 0;
+
+  // Lifetime task counts
+  const [totalTasks, completedTasksTotal] = await Promise.all([
+    prisma.task.count({
       where: { userId: numericId },
-      include: { badge: true },
-      orderBy: { awardedAt: 'desc' },
+    }),
+    prisma.task.count({
+      where: { userId: numericId, status: 'Completed' },
     }),
   ]);
 
-  const unlocked = userBadges.map((ub) => ({
+  const categoriesUsed = categories.filter((c) => (c.taskCount || 0) > 0).length;
+
+  // 1) Get all badge definitions + current user badges
+  const [allBadges, userBadges] = await Promise.all([
+    prisma.badge.findMany(), // rows from "badges"
+    prisma.userBadge.findMany({
+      where: { userId: numericId },
+      include: { badge: true },
+    }),
+  ]);
+
+  const existingCodes = new Set(userBadges.map((ub) => ub.badge.code));
+
+  // Helper: find badge definition by code
+  const findBadge = (code) => allBadges.find((b) => b.code === code);
+
+  // Helper: track which new user_badges we need to insert
+  const toCreate = [];
+
+  function maybeAward(code, condition) {
+    if (!condition) return;
+
+    // Badge must exist in DB
+    const badge = findBadge(code);
+    if (!badge) {
+      console.warn(`Badge with code "${code}" not found in DB`);
+      return;
+    }
+
+    // Don't duplicate if user already has it
+    if (existingCodes.has(code)) return;
+
+    toCreate.push({
+      userId: numericId,
+      badgeId: badge.id,
+    });
+  }
+
+  // 2) Define your conditions based on DB codes
+  // Make sure these codes match what you seeded: "ROOKIE", "STREAK_3", etc.
+  maybeAward('ROOKIE', totalTasks >= 1);      // first task created
+  maybeAward('STREAK_3', streak >= 3);        // 3-day streak
+
+  // maybeAward('STREAK_7', streak >= 7);
+  // maybeAward('TASKS_10', completedTasksTotal >= 10);
+  // maybeAward('CATEGORIES_3', categoriesUsed >= 3);
+
+  // 3) Insert any new user_badges
+  if (toCreate.length > 0) {
+    await prisma.userBadge.createMany({
+      data: toCreate,
+      skipDuplicates: true,
+    });
+  }
+
+  // 4) Fetch final user badges (including newly created ones) for UI
+  const finalUserBadges = await prisma.userBadge.findMany({
+    where: { userId: numericId },
+    include: { badge: true },
+    orderBy: { awardedAt: 'desc' },
+  });
+
+  const unlocked = finalUserBadges.map((ub) => ({
     code: ub.badge.code,
     name: ub.badge.name,
     description: ub.badge.description,
@@ -160,6 +236,7 @@ async function getProfileBadges(userId) {
 
   return { unlocked, locked };
 }
+
 
 /**
  * Activity heatmap + recent events:

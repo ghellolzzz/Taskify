@@ -27,14 +27,8 @@ module.exports.getPrioritySuggestions = function(userId, date) {
     .then(tasks => {
         const suggestions = [];
         
-        console.log(`[Priority Suggestions] Found ${tasks.length} tasks to analyze`);
-        console.log(`[Priority Suggestions] Today is: ${today.toISOString()}`);
-        
         tasks.forEach(task => {
-            if (!task.dueDate) {
-                console.log(`[Priority Suggestions] Task "${task.title}" has no due date, skipping`);
-                return;
-            }
+            if (!task.dueDate) return;
             
             const dueDate = new Date(task.dueDate);
             dueDate.setHours(0, 0, 0, 0);
@@ -44,42 +38,35 @@ module.exports.getPrioritySuggestions = function(userId, date) {
             let suggestedPriority = currentPriority;
             let reason = '';
             
-            console.log(`[Priority Suggestions] Task "${task.title}": Due ${dueDate.toISOString()}, Days until due: ${daysUntilDue}, Current priority: ${currentPriority}`);
-            
             // Priority suggestion logic
             if (daysUntilDue < 0) {
                 // Overdue - should be High
                 if (currentPriority !== 'High') {
                     suggestedPriority = 'High';
                     reason = `Task is overdue (${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? '' : 's'} ago)`;
-                    console.log(`[Priority Suggestions] Suggestion: ${currentPriority} -> ${suggestedPriority} (${reason})`);
                 }
             } else if (daysUntilDue === 0) {
                 // Due today - should be High
                 if (currentPriority !== 'High') {
                     suggestedPriority = 'High';
                     reason = 'Due today';
-                    console.log(`[Priority Suggestions] Suggestion: ${currentPriority} -> ${suggestedPriority} (${reason})`);
                 }
             } else if (daysUntilDue === 1) {
                 // Due tomorrow - should be High
                 if (currentPriority !== 'High') {
                     suggestedPriority = 'High';
                     reason = 'Due tomorrow';
-                    console.log(`[Priority Suggestions] Suggestion: ${currentPriority} -> ${suggestedPriority} (${reason})`);
                 }
             } else if (daysUntilDue <= 3) {
                 // Due in 2-3 days - should be at least Medium
                 if (currentPriority === 'Low') {
                     suggestedPriority = 'Medium';
                     reason = `Due in ${daysUntilDue} days`;
-                    console.log(`[Priority Suggestions] Suggestion: ${currentPriority} -> ${suggestedPriority} (${reason})`);
                 }
             } else if (daysUntilDue > 7 && currentPriority === 'High') {
                 // Due in more than a week but marked High - could be Medium
                 suggestedPriority = 'Medium';
                 reason = `Due in ${daysUntilDue} days - consider lowering priority`;
-                console.log(`[Priority Suggestions] Suggestion: ${currentPriority} -> ${suggestedPriority} (${reason})`);
             }
             
             if (suggestedPriority !== currentPriority) {
@@ -95,7 +82,6 @@ module.exports.getPrioritySuggestions = function(userId, date) {
             }
         });
         
-        console.log(`[Priority Suggestions] Generated ${suggestions.length} suggestions`);
         return suggestions;
     })
     .catch(err => { throw err; });

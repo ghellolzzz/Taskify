@@ -192,7 +192,7 @@ model HabitLog {
   id        Int      @id @default(autoincrement())
   habitId   Int
   habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
-  date      DateTime // we store this as the start-of-day for that date
+  date      DateTime @db.Date
   completed Boolean  @default(true)
   createdAt DateTime @default(now())
 

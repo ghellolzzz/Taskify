@@ -1,0 +1,119 @@
+/* src/public/habits/style.css */
+
+/* Page layout tweaks */
+.habits-page {
+  max-width: 1200px;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+/* Reuse profile-card for base look; habits-card is just a semantic helper */
+.habits-card {
+  /* no extra styles yet; uses .profile-card from profile/style.css */
+}
+
+/* Table */
+.habits-table th,
+.habits-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.habits-table thead tr:nth-child(1) th {
+  border-bottom: none;
+}
+
+.habits-table thead tr:nth-child(2) th {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.is-today-header {
+  color: var(--accent-color);
+}
+
+/* Habit row visuals */
+.habit-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+}
+
+.habit-title {
+  font-size: 0.95rem;
+}
+
+/* Check-in buttons */
+.habit-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid #dee2e6;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
+.habit-dot:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.habit-dot.is-complete {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.2);
+}
+
+.habit-dot.is-today {
+  box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.35);
+}
+
+/* Colour swatches in modal */
+.habit-color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid #dee2e6;
+  cursor: pointer;
+  padding: 0;
+}
+
+.habit-color-swatch.active {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.3);
+}
+
+/* Dark mode tweaks */
+body.profile-theme-dark .habits-table thead tr:nth-child(2) th {
+  color: #94a3b8;
+}
+
+body.profile-theme-dark .habit-dot {
+  border-color: #1f2937;
+  background-color: #020617;
+}
+
+body.profile-theme-dark .habit-dot:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+body.profile-theme-dark .habit-dot.is-complete {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 70%, transparent);
+}
+
+body.profile-theme-dark .habit-color-swatch {
+  border-color: #1f2937;
+}

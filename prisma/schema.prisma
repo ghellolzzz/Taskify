@@ -32,8 +32,8 @@ model User {
   goals       Goal[]
   calendar    CalendarTask[]
   badges      UserBadge[]
+  reminders   Reminder[]
   habits      Habit[]
-
   @@map("users")
 }
 
@@ -103,6 +103,7 @@ model Task {
   user        User          @relation(fields: [userId], references: [id])
   category    Category?     @relation(fields: [categoryId], references: [id])
   comments    Comment[]    
+  reminders   Reminder[]
 
   @@map("tasks")
 }
@@ -173,15 +174,17 @@ model Quote {
   author    String?
 }
 
-
+//////////////////////////////////////////////////////
+// HABITS TABLE 
+//////////////////////////////////////////////////////
 model Habit {
   id            Int        @id @default(autoincrement())
   userId        Int
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   title         String
-  description   String?    // optional, for future expansion
-  color         String?    // hex/accent colour for UI badge
-  targetPerWeek Int?       // how many days per week user aims to complete (1–7)
+  description   String?
+  color         String?
+  targetPerWeek Int?
   isArchived    Boolean    @default(false)
   createdAt     DateTime   @default(now())
 
@@ -196,5 +199,29 @@ model HabitLog {
   completed Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  @@unique([habitId, date]) // one check-in per habit per day
+  @@unique([habitId, date])
+}
+
+//////////////////////////////////////////////////////
+// REMINDER TABLE 
+//////////////////////////////////////////////////////
+model Reminder {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  taskId     Int?
+
+  title      String
+  notes      String?
+
+  remindAt   DateTime
+  isDone     Boolean   @default(false)
+
+  repeatType String?
+
+  createdAt  DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  task    Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("reminders")
 }

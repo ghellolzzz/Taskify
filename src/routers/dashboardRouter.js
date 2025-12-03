@@ -11,6 +11,7 @@ router.get("/quote", dashboardController.getQuote);
 router.get("/today", verifyToken, dashboardController.getDueToday);
 // GET /api/dashboard
 router.get('/', verifyToken, dashboardController.getDashboard);
-
+// GET reminders
+router.get('/reminders', verifyToken, dashboardController.getDashboardReminders);
 
 module.exports = router;

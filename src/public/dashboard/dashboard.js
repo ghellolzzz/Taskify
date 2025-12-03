@@ -232,7 +232,73 @@ function loadIosCalendar() {
 // Run on page load
 document.addEventListener("DOMContentLoaded", loadIosCalendar);
 
+/* ===== REMINDERS ===== */
+function getReminderClass(status) {
+  switch (status.toLowerCase()) {
+    case "done": return "reminder-done";
+    case "overdue": return "reminder-overdue";
+    default: return "reminder-upcoming";
+  }
+}
+function renderDashboardReminders(data) {
+  const todayBox = document.querySelector("#dashTodayReminders .reminder-list");
+  const upcomingBox = document.querySelector("#dashUpcomingReminders .reminder-list");
 
+  todayBox.innerHTML = "";
+  upcomingBox.innerHTML = "";
+
+  const formatTime = (d) =>
+    new Date(d).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+  // Today Reminders
+  data.today.forEach(r => {
+    const cssClass = getReminderClass(r.status);
+    todayBox.innerHTML += `
+      <div class="reminder-card ${cssClass}">
+        <strong>${r.title}</strong>
+        <div class="reminder-time">${r.status} • ${formatTime(r.remindAt)}</div>
+      </div>
+    `;
+  });
+
+  // Upcoming Reminders
+  data.upcoming.forEach(r => {
+    const cssClass = getReminderClass(r.status);
+    upcomingBox.innerHTML += `
+      <div class="reminder-card ${cssClass}">
+        <strong>${r.title}</strong>
+        <div class="reminder-time">${formatDate(r.remindAt)} • ${formatTime(r.remindAt)}</div>
+      </div>
+    `;
+  });
+}
+
+function loadDashboardReminders() {
+  const token = localStorage.getItem("token");
+  fetch("/api/dashboard/reminders", {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    }
+  })
+    .then(res => res.json())
+    .then(data => renderDashboardReminders(data))
+    .catch(err => console.error("Error loading dashboard reminders:", err));
+}
+// Run on page load
+document.addEventListener("DOMContentLoaded", loadDashboardReminders());
 /* ===== POMODORO TIMER ===== */
 let isRunning = false;
 let isBreak = false;

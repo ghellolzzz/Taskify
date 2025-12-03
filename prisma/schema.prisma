@@ -240,3 +240,4 @@ model Feedback {
 
   @@map("feedback")
 }
+

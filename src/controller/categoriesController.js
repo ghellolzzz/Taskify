@@ -38,3 +38,20 @@ module.exports.deleteCategory = function (req, res) {
         .then(result => res.status(200).json({ message: "Deleted successfully" }))
         .catch(err => res.status(500).json({ message: err.message }));
 };
+
+module.exports.getTasksByCategory = (req, res) => {
+  const categoryId = req.params.id;
+  const userId = res.locals.userId;
+
+  categoriesModel.getTasksByCategory(categoryId, userId)
+    .then(tasks => {
+      return res.status(200).json({
+        success: true,
+        tasks
+      });
+    })
+    .catch(err => {
+      console.error("Error fetching tasks by category:", err);
+      return res.status(500).json({ error: "Failed to load tasks." });
+    });
+};

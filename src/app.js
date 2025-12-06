@@ -2,18 +2,20 @@
 const express = require('express');
 const createError = require('http-errors');
 
-const userRouter = require('./routers/User.router');
 const path = require('path');
+
+// Routers
+const userRouter = require('./routers/User.router');
 const taskRouter = require('./routers/taskRouter.js');
 const dashboardRouter = require('./routers/dashboardRouter');
 const categoryRouter = require('./routers/categoriesRoutes');
 const profileRouter = require('./routers/Profile.router.js');
-
-const commentsRouter = require("./routers/commentsRouter.js");
+const commentsRouter = require('./routers/commentsRouter.js');
 const reminderRouter = require("./routers/reminderRouter.js");
 const calendarRouter = require('./routers/calendarRouter');
 const goalRouter = require("./routers/goalRouter.js");
 const habitRouter = require('./routers/Habit.router.js');
+const feedbackRouter = require('./routers/feedbackRoutes.js');
 
 const app = express();
 app.use(express.json());
@@ -30,10 +32,11 @@ app.use('/api/tasks', taskRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/profile', profileRouter);
 app.use("/api/comments", commentsRouter);
-app.use("/api/goals", goalRouter);
-app.use('/api/habits', habitRouter);
 app.use("/api/reminders", reminderRouter);
 app.use('/api/calendar', calendarRouter);
+app.use("/api/goals", goalRouter);
+app.use('/api/habits', habitRouter);
+app.use("/api/feedback", feedbackRouter);
 
 app.get('/.well-known/appspecific/*', (req, res) => {
   res.status(204).end();

@@ -17,6 +17,9 @@ router.post('/', habitController.create);
 // PATCH /api/habits/:habitId → update habit metadata
 router.patch('/:habitId', habitController.updateMeta);
 
+// DELETE /api/habits/:habitId/hard → permanent delete
+router.delete('/:habitId/hard', habitController.hardDelete);
+
 // DELETE /api/habits/:habitId → archive habit
 router.delete('/:habitId', habitController.archive);
 

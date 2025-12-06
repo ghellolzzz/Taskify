@@ -5,8 +5,8 @@
     left:0;
     width:230px;
     height:100vh;
-    background: #ffffff;
-    border-right: 1px solid #e6e6e6;
+   background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
     padding: 20px;
 }
 
@@ -52,10 +52,19 @@
 }
 
 /* Main content layout */
+body {
+    display: flex;
+    flex-direction: column;
+    background: #F6FFF9; /* soft mint white */
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
+}
+
 .main-content {
     margin-left: 230px;
     padding: 30px;
-    background: #ffffff;
     min-height: 100vh;
     color: #111;
     font-family: "Inter", sans-serif;
@@ -98,66 +107,16 @@
 .categories-grid {
     margin-top: 35px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 25px;
-}
-
-/* Individual Category Card */
-.category-card {
-    background-color: #00b894; /* default green */
-    border-radius: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-    text-align: center;
-}
-
-/* Rest of the styles remain same for icon, title, task count, buttons */
-
-
-.category-card:hover {
-    transform: translateY(-8px);
-    background: #f1f1f1;
-}
-
-/* Icons */
-.category-card i {
-    font-size: 2.5rem;
-    color: #1DB954;
-    margin-bottom: 12px;
-}
-
-/* Text */
-.category-card h4 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-    color: #111;
-}
-
-.category-card p {
-    color: #555;
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-/* Categories Grid */
-.categories-grid {
-    display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 20px;
     padding: 20px 0;
 }
 
-/* Category Card */
+/* Individual Category Card */
 .category-card {
     background-color: #fff; 
-    border-radius: 20px;    /* rounded corners */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* soft shadow */
+    border-radius: 20px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -177,7 +136,7 @@
 .category-card i {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    color: #333;
+    color: var(--category-color, #333);
 }
 
 /* Title */
@@ -193,6 +152,34 @@
     color: #555;
 }
 
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+/* Category Card */
+/* Individual Category Card */
+.category-card {
+    background-color: #fff; 
+    border-radius: 20px;    /* rounded corners */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* soft shadow */
+    border-radius: 20px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.category-card i {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: #333;
+    color: var(--category-color, #333);
+}
+
 /* Edit/Delete Buttons */
 .category-card .btn-container {
     margin-top: 10px;
@@ -201,7 +188,7 @@
 }
 
 .category-card button {
-    background-color: rgba(0,0,0,0.05);
+    background-color: rgba(0, 0, 0, 0.05);
     border: none;
     border-radius: 12px;
     padding: 5px 12px;
@@ -214,6 +201,17 @@
     background-color: rgba(0,0,0,0.15);
 }
 
+.category-card .btn-danger {
+    background-color: #dc3545; /* Solid Bootstrap Red */
+    color: white; /* Ensure text is white */
+    font-weight: 600; /* Bolder text helps visibility */
+    border: 1px solid #dc3545; /* Ensure border is also solid red */
+}
+
+.category-card .btn-danger:hover {
+    background-color: #c82333; /* Slightly darker red on hover */
+}
+
 .color-swatch {
     display: inline-block;
     width: 24px;
@@ -223,4 +221,90 @@
     cursor: pointer;
     border: 1px solid #ccc;
     box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+/*Display tasks*/
+.tasks-card {
+  width: 95%;
+  max-width: 1100px;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 15px;
+  /* Dynamic border and shadow */
+  border: 2px solid var(--category-color, #198754);
+  box-shadow: 0 0 18px rgba(var(--category-color-rgb, 25, 135, 84), 0.18);
+}
+
+.tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tasks-header h2 {
+  /* Dynamic header text color */
+  color: var(--category-color, #198754);
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.back-btn {
+  padding: 10px 20px;
+  /* Dynamic button background */
+  background: var(--category-color, #198754);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: 0.25s;
+}
+.back-btn:hover {
+  /* Keeps the fixed hover color for simplicity */
+  background: #146c43;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+#tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#tasks-table thead {
+  /* Dynamic table header background */
+  background: var(--category-color, #198754);
+}
+
+#tasks-table th {
+  color: #ffffff;
+  padding: 14px 12px;
+  font-weight: 700;
+  text-align: left;
+  font-size: 1rem;
+}
+
+#tasks-table td {
+  padding: 14px 12px;
+  /* Dynamic cell text color */
+  color: var(--category-color, #198754);
+  /* Dynamic transparent border line */
+  border-bottom: 1px solid rgba(var(--category-color-rgb, 25, 135, 84), 0.25);
+  font-size: 0.95rem;
+}
+
+#tasks-table tbody tr:hover {
+  /* Dynamic transparent hover background */
+  background: rgba(var(--category-color-rgb, 25, 135, 84), 0.08);
+  transition: 0.25s;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #6c757d;
 }

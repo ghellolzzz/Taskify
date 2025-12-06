@@ -83,15 +83,17 @@
               <div class="table-responsive">
                 <table class="table align-middle habits-table">
                   <thead>
-                    <tr>
-                      <th>Habit</th>
-                      <th class="text-center">Target</th>
-                      <th class="text-center" colspan="7">Week</th>
-                    </tr>
-                    <tr id="habitsWeekHeaderRow">
-                      <!-- JS: day labels here -->
-                    </tr>
-                  </thead>
+  <tr>
+    <th>Habit</th>
+    <th class="text-center">Target</th>
+    <th class="text-center" colspan="7">Week</th>
+    <th class="text-end">Actions</th>
+  </tr>
+  <tr id="habitsWeekHeaderRow">
+    <!-- JS: day labels here -->
+  </tr>
+</thead>
+
                   <tbody id="habitsTableBody">
                     <!-- JS: habit rows here -->
                   </tbody>
@@ -155,6 +157,25 @@
               </p>
             </div>
           </div>
+                    <div class="card profile-card habits-card mt-3" id="archivedHabitsCard">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Archived habits</h6>
+                <span
+                  class="badge rounded-pill text-bg-light small"
+                  id="archivedCountBadge"
+                >
+                  0
+                </span>
+              </div>
+              <p class="small text-muted mb-2">
+                Habits you've paused but might revive later.
+              </p>
+              <div id="archivedHabitsList" class="archived-habits-list small">
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -258,6 +279,46 @@
       </div>
     </div>
   </div>
+
+  <!-- Delete Habit Modal -->
+<div class="modal fade" id="habitDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete habit</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p id="habitDeleteMessage" class="mb-1"></p>
+        <small class="text-muted">
+          This will permanently remove the habit and its history. This action cannot be undone.
+        </small>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          id="habitDeleteConfirmBtn"
+          class="btn btn-danger"
+        >
+          Delete habit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
   <!-- Bootstrap JS -->
   <script

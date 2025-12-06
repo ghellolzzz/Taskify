@@ -10,6 +10,8 @@ function authHeaders(extra = {}) {
 
 let currentBoard = null;
 let pendingDeleteHabit = null; // { id, title, rowEl }
+let editingHabitId = null;
+
 
 document.addEventListener('DOMContentLoaded', () => {
   // Handle logout like other pages
@@ -28,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setupColourSwatches();
+  setupHabitCreateButton();
   setupHabitForm();
   setupDeleteModal();
   loadHabitsBoard();
@@ -160,7 +163,7 @@ function renderHabitsBoard(board) {
           <span class="badge bg-light text-dark small">${targetLabel}</span>
         </td>
         ${daysHtml}
-        <td class="text-end">
+                <td class="text-end">
           <div class="dropdown habit-actions-dropdown">
             <button
               class="btn btn-sm btn-light habit-actions-toggle"
@@ -171,6 +174,16 @@ function renderHabitsBoard(board) {
               <i class="bi bi-three-dots-vertical"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <button
+                  class="dropdown-item habit-edit-btn"
+                  type="button"
+                  data-habit-id="${habit.id}"
+                >
+                  <i class="bi bi-pencil-square me-2"></i> Edit habit
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
               <li>
                 <button
                   class="dropdown-item habit-archive-btn"
@@ -209,7 +222,7 @@ function renderHabitsBoard(board) {
     });
   });
 
-  // Archive buttons
+    // Archive buttons
   tbody.querySelectorAll('.habit-archive-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const habitId = btn.dataset.habitId;
@@ -228,7 +241,19 @@ function renderHabitsBoard(board) {
     });
   });
 
+  // Edit buttons
+  tbody.querySelectorAll('.habit-edit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.dataset.habitId;
+      const habit = findHabitById(habitId);
+      if (habit) {
+        openHabitEditModal(habit);
+      }
+    });
+  });
+
   renderArchivedHabits(archivedHabits);
+
   // Week range label
   const weekRangeLabel = document.getElementById('weekRangeLabel');
   if (weekRangeLabel) {
@@ -247,6 +272,71 @@ function renderHabitsBoard(board) {
   // Sidebar stats
   updateSidebarStats(summary);
 }
+
+function findHabitById(habitId) {
+  if (!currentBoard || !Array.isArray(currentBoard.habits)) return null;
+  const idNum = Number(habitId);
+  return currentBoard.habits.find((h) => h.id === idNum) || null;
+}
+
+function openHabitEditModal(habit) {
+  setHabitModalMode('edit', habit);
+  resetHabitFormFields(habit);
+
+  const modalEl = document.getElementById('habitModal');
+  if (!modalEl) return;
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
+}
+
+function setHabitModalMode(mode, habit) {
+  const titleEl = document.getElementById('habitModalTitle');
+  const submitBtn = document.getElementById('habitModalSubmitBtn');
+  const idInput = document.getElementById('habitId');
+
+  if (mode === 'edit' && habit) {
+    editingHabitId = habit.id;
+    if (idInput) idInput.value = habit.id;
+    if (titleEl) titleEl.textContent = 'Edit habit';
+    if (submitBtn) submitBtn.textContent = 'Save changes';
+  } else {
+    editingHabitId = null;
+    if (idInput) idInput.value = '';
+    if (titleEl) titleEl.textContent = 'New habit';
+    if (submitBtn) submitBtn.textContent = 'Create habit';
+  }
+}
+
+function resetHabitFormFields(habit) {
+  const titleInput = document.getElementById('habitTitle');
+  const targetInput = document.getElementById('habitTargetPerWeek');
+  const colorInput = document.getElementById('habitColor');
+  const swatches = document.querySelectorAll('.habit-color-swatch');
+
+  if (habit) {
+    if (titleInput) titleInput.value = habit.title || '';
+    if (targetInput) {
+      targetInput.value =
+        habit.targetPerWeek !== null && habit.targetPerWeek !== undefined
+          ? String(habit.targetPerWeek)
+          : '';
+    }
+    if (colorInput) colorInput.value = habit.color || '#198754';
+
+    swatches.forEach((sw) => {
+      sw.classList.toggle('active', sw.dataset.color === colorInput.value);
+    });
+  } else {
+    if (titleInput) titleInput.value = '';
+    if (targetInput) targetInput.value = '';
+    if (colorInput) colorInput.value = '#198754';
+
+    swatches.forEach((sw, idx) => {
+      sw.classList.toggle('active', idx === 0);
+    });
+  }
+}
+
 
 function renderArchivedHabits(archivedHabits) {
   const listEl = document.getElementById('archivedHabitsList');
@@ -499,6 +589,18 @@ function setupColourSwatches() {
   });
 }
 
+function setupHabitCreateButton() {
+  const btn = document.getElementById('habitNewBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    // Reset modal to "create" mode
+    setHabitModalMode('create');
+    resetHabitFormFields(null);
+  });
+}
+
+
 function setupHabitForm() {
   const form = document.getElementById('habitForm');
   if (!form) return;
@@ -521,8 +623,12 @@ function setupHabitForm() {
       return;
     }
 
-        fetch('/api/habits', {
-      method: 'POST',
+    const isEdit = !!editingHabitId;
+    const url = isEdit ? `/api/habits/${editingHabitId}` : '/api/habits';
+    const method = isEdit ? 'PATCH' : 'POST';
+
+    fetch(url, {
+      method,
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload),
     })
@@ -534,7 +640,10 @@ function setupHabitForm() {
         }
 
         if (!res.ok) {
-          throw new Error('Failed to create habit. HTTP ' + res.status);
+          throw new Error(
+            (isEdit ? 'Failed to update habit. HTTP ' : 'Failed to create habit. HTTP ') +
+              res.status
+          );
         }
 
         return res.json();
@@ -545,26 +654,23 @@ function setupHabitForm() {
         currentBoard = board;
         renderHabitsBoard(board);
 
-        // Reset form
+        // Reset form back into "create" mode for next time
         form.reset();
-        if (colorInput) colorInput.value = '#198754';
-        document
-          .querySelectorAll('.habit-color-swatch')
-          .forEach((s) => s.classList.remove('active'));
-        const firstSwatch = document.querySelector('.habit-color-swatch');
-        if (firstSwatch) firstSwatch.classList.add('active');
+        setHabitModalMode('create');
+        resetHabitFormFields(null);
 
         // Close modal
         const modalEl = document.getElementById('habitModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
-        modal.hide();
+        if (modal) modal.hide();
       })
       .catch((err) => {
-        console.error('Failed to create habit:', err);
-        alert('Failed to create habit. Please try again.');
+        console.error(isEdit ? 'Failed to update habit:' : 'Failed to create habit:', err);
+        alert(isEdit ? 'Failed to update habit. Please try again.' : 'Failed to create habit. Please try again.');
       });
   });
 }
+
 
 // --- Delete habit modal wiring ---
 

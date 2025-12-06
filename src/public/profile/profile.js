@@ -17,18 +17,24 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  Promise.all([
-  fetch(`/api/profile/${userId}/overview`, { headers: authHeaders() }).then((r) => r.json()),
-  fetch(`/api/profile/${userId}/badges`, { headers: authHeaders() }).then((r) => r.json()),
-  fetch(`/api/profile/${userId}/activity`, { headers: authHeaders() }).then((r) => r.json()),
-])
-
-    .then(([overview, badges, activity]) => {
+    Promise.all([
+    fetch(`/api/profile/${userId}/overview`, { headers: authHeaders() }).then((r) => r.json()),
+    fetch(`/api/profile/${userId}/badges`,   { headers: authHeaders() }).then((r) => r.json()),
+    fetch(`/api/profile/${userId}/activity`, { headers: authHeaders() }).then((r) => r.json()),
+    // NEW: load habits board to show snapshot in Profile
+    fetch('/api/habits',                     { headers: authHeaders() }).then((r) => r.json()),
+  ])
+    .then(([overview, badges, activity, habitsBoard]) => {
       setupProfileUI(overview);
       setupBadgesUI(badges);
       setupActivityUI(activity);
       setupThemeControls(overview.user);
       setupEditProfileModal(overview.user);
+
+      // NEW: habits snapshot
+      if (habitsBoard && habitsBoard.summary) {
+        setupHabitsSummaryUI(habitsBoard.summary);
+      }
     })
     .catch((err) => {
       console.error('Failed to load profile data:', err);
@@ -157,6 +163,70 @@ if (user.avatarUrl) {
     ).textContent = `Active ${activeCount} of the last 7 days.`;
   }
 }
+
+/**
+ * Show habits info in the Profile → Overview "Habits snapshot" card.
+ * summary comes from Habit.model getHabitsBoard(userId).summary
+ */
+function setupHabitsSummaryUI(summary) {
+  const summaryLineEl = document.getElementById('habitsSummaryLine');
+  const todayBarEl    = document.getElementById('habitsTodayProgressBar');
+  const weeklyMsgEl   = document.getElementById('habitsWeeklyMessage');
+  const streakEl      = document.getElementById('habitsStreakHighlight');
+
+  if (!summaryLineEl || !todayBarEl || !weeklyMsgEl || !streakEl) return;
+
+  const totalHabits    = summary.totalHabits    ?? 0;
+  const activeHabits   = summary.activeHabits   ?? 0;
+  const archivedCount  = summary.archivedCount  ?? 0;
+  const todayTotal     = summary.todayTotal     ?? 0;
+  const todayCompleted = summary.todayCompleted ?? 0;
+  const weeklyPct      = summary.avgWeeklyCompletion ?? 0;
+  const longest        = summary.longestStreakHabit || null;
+
+  // No active habits yet
+  if (totalHabits === 0 || activeHabits === 0) {
+    summaryLineEl.textContent =
+      'No active habits yet. Create your first one in the Habits Lab.';
+    todayBarEl.style.width = '0%';
+    weeklyMsgEl.textContent = '';
+    streakEl.textContent = 'Your first habit streak is waiting 🔥';
+    return;
+  }
+
+  // Today % bar
+  const todayPct =
+    todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
+
+  summaryLineEl.textContent =
+    `${todayCompleted} of ${todayTotal} habits completed today · ` +
+    `${activeHabits} active, ${archivedCount} archived`;
+
+  todayBarEl.style.width = `${todayPct}%`;
+
+  // Weekly consistency message
+  if (weeklyPct === 0) {
+    weeklyMsgEl.textContent =
+      'Your week is still blank — tiny actions will fill it up.';
+  } else if (weeklyPct < 60) {
+    weeklyMsgEl.textContent =
+      `Weekly consistency: ${weeklyPct}% – you’re building momentum.`;
+  } else {
+    weeklyMsgEl.textContent =
+      `Weekly consistency: ${weeklyPct}% – great discipline this week 🔥`;
+  }
+
+  // Longest habit streak
+  if (longest && longest.streak > 0) {
+    const daysLabel = longest.streak === 1 ? 'day' : 'days';
+    streakEl.innerHTML =
+      `Best streak: <strong>${longest.title}</strong> – ${longest.streak} ${daysLabel}.`;
+  } else {
+    streakEl.textContent =
+      'No habit streaks yet — your first one is waiting 🔥';
+  }
+}
+
 
 /**
  * Populate badges tab.

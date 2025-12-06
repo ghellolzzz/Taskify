@@ -241,82 +241,124 @@
                     <div class="tab-content">
 
                         <!-- OVERVIEW -->
-                        <section
-                          class="tab-pane fade show active"
-                          id="overview"
-                          role="tabpanel"
-                          aria-labelledby="overview-tab"
-                        >
-                            <div class="row g-3">
-                                <!-- Goals -->
-                                <div class="col-md-6">
-                                    <div class="card profile-card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title mb-1">Goals progress</h6>
-                                            <p class="small text-muted mb-2">
-                                                <span id="goalsCompleted">2</span> of
-                                                <span id="goalsTotal">5</span> goals completed
-                                            </p>
-                                            <div class="progress mb-2" style="height: 8px;">
-                                                <div
-                                                  id="goalsProgressBar"
-                                                  class="progress-bar bg-success"
-                                                  role="progressbar"
-                                                  style="width: 40%;"
-                                                ></div>
-                                            </div>
-                                            <p class="small mb-0" id="goalsMessage">
-                                                You’re getting closer. Keep going!
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                        <!-- OVERVIEW -->
+<section
+  class="tab-pane fade show active"
+  id="overview"
+  role="tabpanel"
+  aria-labelledby="overview-tab"
+>
+  <div class="row g-3">
+    <!-- Goals -->
+    <div class="col-md-6">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-1">Goals progress</h6>
+          <p class="small text-muted mb-2">
+            <span id="goalsCompleted">2</span> of
+            <span id="goalsTotal">5</span> goals completed
+          </p>
+          <div class="progress mb-2" style="height: 8px;">
+            <div
+              id="goalsProgressBar"
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: 40%;"
+            ></div>
+          </div>
+          <p class="small mb-0" id="goalsMessage">
+            You’re getting closer. Keep going!
+          </p>
+        </div>
+      </div>
+    </div>
 
-                                <!-- Tasks -->
-                                <div class="col-md-6">
-                                    <div class="card profile-card h-100">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <h6 class="card-title mb-0">Task completion</h6>
-                                                <div class="small text-muted">
-                                                    <span id="tasksRangeLabel">Last 7 days</span>
-                                                </div>
-                                            </div>
-                                            <p class="small text-muted mb-1">
-                                                <span id="tasksCompletedRange">18</span> completed of
-                                                <span id="tasksTotalRange">24</span> tasks
-                                            </p>
-                                            <div class="progress mb-2" style="height: 8px;">
-                                                <div
-                                                  id="tasksProgressBar"
-                                                  class="progress-bar bg-success"
-                                                  role="progressbar"
-                                                  style="width: 75%;"
-                                                ></div>
-                                            </div>
-                                            <p class="small mb-0" id="tasksMessage">
-                                                Strong week! You’re above your usual average.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+    <!-- Tasks -->
+    <div class="col-md-6">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h6 class="card-title mb-0">Task completion</h6>
+            <div class="small text-muted">
+              <span id="tasksRangeLabel">Last 7 days</span>
+            </div>
+          </div>
+          <p class="small text-muted mb-1">
+            <span id="tasksCompletedRange">18</span> completed of
+            <span id="tasksTotalRange">24</span> tasks
+          </p>
+          <div class="progress mb-2" style="height: 8px;">
+            <div
+              id="tasksProgressBar"
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: 75%;"
+            ></div>
+          </div>
+          <p class="small mb-0" id="tasksMessage">
+            Strong week! You’re above your usual average.
+          </p>
+        </div>
+      </div>
+    </div>
 
-                                <!-- Categories breakdown -->
-                                <div class="col-12">
-                                    <div class="card profile-card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <h6 class="card-title mb-0">Focus areas</h6>
-                                                <span class="small text-muted">by category</span>
-                                            </div>
-                                                 <div id="categoriesContainer"></div>
+    <!-- Habits snapshot (NEW) -->
+    <div class="col-md-6">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h6 class="card-title mb-0">Habits snapshot</h6>
+            <a
+              href="../habit/habits.html"
+              class="small text-success text-decoration-none"
+            >
+              Open Habits Lab →
+            </a>
+          </div>
 
-                                            <!-- More categories via JS -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
+          <!-- Today summary -->
+          <p class="small text-muted mb-1" id="habitsSummaryLine">
+            <!-- e.g. "2 of 5 habits completed today · 3 active, 1 archived" -->
+          </p>
+
+          <div class="progress mb-2" style="height: 8px;">
+            <div
+              id="habitsTodayProgressBar"
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: 0%;"
+            ></div>
+          </div>
+
+          <!-- Weekly consistency -->
+          <p class="small mb-1" id="habitsWeeklyMessage">
+            <!-- e.g. "Weekly consistency: 64%" -->
+          </p>
+
+          <!-- Longest streak -->
+          <p class="small mb-0" id="habitsStreakHighlight">
+            <!-- e.g. "Best streak: Drink water – 5 days" -->
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories breakdown -->
+    <div class="col-12">
+      <div class="card profile-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="card-title mb-0">Focus areas</h6>
+            <span class="small text-muted">by category</span>
+          </div>
+          <div id="categoriesContainer"></div>
+          <!-- More categories via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
                         <!-- BADGES -->
                         <section

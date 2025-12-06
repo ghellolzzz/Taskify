@@ -1,5 +1,7 @@
 // src/models/Profile.model.js
 const prisma = require('./prismaClient');
+const habitModel = require('./Habit.model');
+
 
 /**
  * Utility: get start of day (local)
@@ -143,6 +145,26 @@ async function getProfileBadges(userId) {
   const { user, categories } = overview;
   const streak = user.streakCount || 0;
 
+    //pull habits summary from Habits board
+  let activeHabits = 0;
+  let totalHabits = 0;
+  let habitLongestStreak = 0;
+
+  try {
+    const board = await habitModel.getHabitsBoard(userId);
+    const habitSummary = board?.summary || {};
+
+    activeHabits = habitSummary.activeHabits || 0;
+    totalHabits = habitSummary.totalHabits || 0;
+    habitLongestStreak =
+      (habitSummary.longestStreakHabit &&
+        habitSummary.longestStreakHabit.streak) ||
+      0;
+  } catch (err) {
+    console.warn('Failed to load habits summary for badges:', err.message);
+  }
+
+
   // Lifetime task counts
   const [totalTasks, completedTasksTotal] = await Promise.all([
     prisma.task.count({
@@ -191,10 +213,13 @@ async function getProfileBadges(userId) {
     });
   }
 
-  // 2) Define your conditions based on DB codes
-  // Make sure these codes match what you seeded: "ROOKIE", "STREAK_3", etc.
+
   maybeAward('ROOKIE', totalTasks >= 1);      // first task created
   maybeAward('STREAK_3', streak >= 3);        // 3-day streak
+
+  maybeAward('HABIT_STARTER',  totalHabits >= 1);          // created first habit
+  maybeAward('HABIT_ACTIVE_3', activeHabits >= 3);         // 3+ active habits
+  maybeAward('HABIT_STREAK_3', habitLongestStreak >= 3);   // 3-day habit streak
 
   // maybeAward('STREAK_7', streak >= 7);
   // maybeAward('TASKS_10', completedTasksTotal >= 10);

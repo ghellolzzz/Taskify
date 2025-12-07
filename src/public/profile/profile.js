@@ -1,5 +1,14 @@
 // /src/public/js/profile.js
 
+
+// Global state for activity tab filters
+const profileActivityState = {
+  full: null,          // { heatmap, recent }
+  currentFilter: 'all', // 'all' | 'tasks' | 'goals' | 'habits' | 'calendar' | 'reminders'
+  heatmapDays: 28       // 7 | 28 | 90 (default 28)
+
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   // Enable Bootstrap tooltips on badges once DOM is ready
   const tooltipTriggerList = [].slice.call(
@@ -31,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
       setupThemeControls(overview.user);
       setupEditProfileModal(overview.user);
 
-      // NEW: habits snapshot
       if (habitsBoard && habitsBoard.summary) {
         setupHabitsSummaryUI(habitsBoard.summary);
       }
@@ -341,47 +349,180 @@ function setupBadgesUI(badges) {
 }
 
 /**
- * Populate activity tab.
+ * Populate activity tab (heatmap + recent activity with filters).
  * activity = { heatmap: [], recent: [] }
  */
 function setupActivityUI(activity) {
-  const { heatmap, recent } = activity;
+  // Store full activity data in global state
+  profileActivityState.full = activity;
+  profileActivityState.currentFilter = 'all';
+  profileActivityState.heatmapDays = 28; // default visible range
+
+  // Setup controls
+  setupActivityFilters();
+  setupActivityRangeControls();
+
+  // Initial render
+  renderActivityHeatmap();
+  renderRecentActivityList();
+}
+
+
+/**
+ * Render the 28-day heatmap.
+ */
+function renderActivityHeatmap() {
+  const state = profileActivityState;
+  const allDays = state.full?.heatmap || [];
+  const days = state.heatmapDays || 28;
 
   const heatmapContainer = document.getElementById('activityHeatmap');
-  if (heatmapContainer) {
-    heatmapContainer.innerHTML = '';
-    heatmap.forEach((day) => {
-      const cell = document.createElement('div');
-      cell.classList.add('heat-cell');
-      if (day.level && day.level > 0) {
-        cell.classList.add(`level-${day.level}`);
-      }
-      heatmapContainer.appendChild(cell);
+  if (!heatmapContainer) return;
+
+  // Take the LAST N days from the full 90-day array
+  const subset = allDays.slice(-days);
+
+  heatmapContainer.innerHTML = '';
+  subset.forEach((day) => {
+    const cell = document.createElement('div');
+    cell.classList.add('heat-cell');
+    if (day.level && day.level > 0) {
+      cell.classList.add(`level-${day.level}`);
+    }
+    heatmapContainer.appendChild(cell);
+  });
+}
+
+/**
+ * Attach click handlers to filter chips.
+ * data-filter values: all | tasks | goals | habits | calendar
+ */
+function setupActivityFilters() {
+  const filtersContainer = document.getElementById('activityFilters');
+  if (!filtersContainer) return;
+
+  const buttons = filtersContainer.querySelectorAll('button[data-filter]');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter || 'all';
+      profileActivityState.currentFilter = filter;
+
+      // Toggle .active class
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Re-render list
+      renderRecentActivityList();
     });
-  }
+  });
+}
+
+/**
+ * Attach click handlers to range buttons (7d / 28d / 90d).
+ */
+function setupActivityRangeControls() {
+  const rangeContainer = document.getElementById('activityRange');
+  const labelEl = document.getElementById('activityRangeLabel');
+  if (!rangeContainer) return;
+
+  const buttons = rangeContainer.querySelectorAll('button[data-range]');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = parseInt(btn.dataset.range, 10) || 28;
+      profileActivityState.heatmapDays = value;
+
+      // Toggle active state on buttons
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Update helper text
+      if (labelEl) {
+        labelEl.textContent =
+          `Showing last ${value} days. Darker squares mean more tasks completed that day.`;
+      }
+
+      // Re-render the heatmap using the new range
+      renderActivityHeatmap();
+    });
+  });
+}
+
+
+/**
+ * Render the recent activity list based on the current filter.
+ */
+function renderRecentActivityList() {
+  const state = profileActivityState;
+  if (!state.full) return;
 
   const recentList = document.getElementById('recentActivityList');
-  if (recentList) {
-    recentList.innerHTML = '';
-    recent.forEach((event) => {
-      const li = document.createElement('li');
-      li.classList.add('list-group-item');
+  if (!recentList) return;
 
-      let emoji = '📌';
-      if (event.type === 'TASK_COMPLETED') emoji = '✅';
-      else if (event.type === 'TASK_CREATED') emoji = '📝';
-      else if (event.type === 'GOAL_COMPLETED') emoji = '🎯';
-      else if (event.type === 'CALENDAR_NOTE') emoji = '📅';
+  const { recent } = state.full;
+  const filter = state.currentFilter || 'all';
 
-      const when = new Date(event.createdAt).toLocaleString();
-      li.innerHTML = `
-        ${emoji} ${event.label}
-        <span class="text-muted">· ${when}</span>
-      `;
-      recentList.appendChild(li);
+  // Filter mapping:
+  // - tasks    → TASK_COMPLETED, TASK_CREATED
+  // - goals    → GOAL_COMPLETED
+  // - habits   → HABIT_LOGGED
+  // - calendar → CALENDAR_NOTE
+  let filtered = recent;
+
+    if (filter !== 'all') {
+    filtered = recent.filter((event) => {
+      switch (filter) {
+        case 'tasks':
+          return (
+            event.type === 'TASK_COMPLETED' ||
+            event.type === 'TASK_CREATED'
+          );
+        case 'goals':
+          return event.type === 'GOAL_COMPLETED';
+        case 'habits':
+          return event.type === 'HABIT_LOGGED';
+        case 'calendar':
+          return event.type === 'CALENDAR_NOTE';
+        case 'reminders':
+          return event.type === 'REMINDER';
+        default:
+          return true;
+      }
     });
   }
+
+
+  // Rebuild list
+  recentList.innerHTML = '';
+  filtered.forEach((event) => {
+    const li = document.createElement('li');
+    li.classList.add('list-group-item');
+
+    let emoji = '📌';
+    if (event.type === 'TASK_COMPLETED') emoji = '✅';
+    else if (event.type === 'TASK_CREATED') emoji = '📝';
+    else if (event.type === 'GOAL_COMPLETED') emoji = '🎯';
+    else if (event.type === 'CALENDAR_NOTE') emoji = '📅';
+    else if (event.type === 'HABIT_LOGGED') emoji = '🔁';
+    else if (event.type === 'REMINDER') emoji = '⏰';
+
+    const when = new Date(event.createdAt).toLocaleString();
+    li.innerHTML = `
+      ${emoji} ${event.label}
+      <span class="text-muted">· ${when}</span>
+    `;
+    recentList.appendChild(li);
+  });
+
+  // Empty-state UX (optional)
+  if (filtered.length === 0) {
+    const li = document.createElement('li');
+    li.classList.add('list-group-item', 'text-muted');
+    li.textContent = 'No activity for this filter yet.';
+    recentList.appendChild(li);
+  }
 }
+
 
 /**
  * Setup theme & accent controls that persist via PUT /api/profile/:userId

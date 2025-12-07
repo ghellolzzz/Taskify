@@ -261,4 +261,38 @@ body {
     }
 }
 
+/* -----------------------------------------
+   Accent-aware outline buttons (filters, etc.)
+   ----------------------------------------- */
+
+.btn-outline-success {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success.active,
+.btn-outline-success:active,
+.show > .btn-outline-success.dropdown-toggle {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #ffffff;
+}
+
+/* Keep them transparent by default in dark mode (until active/hover) */
+body.profile-theme-dark .btn-outline-success {
+  background-color: transparent;
+}
+
+/* -----------------------------------------
+   Dark theme list groups inside profile cards
+   ----------------------------------------- */
+
+body.profile-theme-dark .profile-card .list-group,
+body.profile-theme-dark .profile-card .list-group-item {
+  background-color: #111827;
+  border-color: #1f2937;
+  color: #e2e8f0;
+}
 

@@ -341,7 +341,7 @@ async function getProfileBadges(userId) {
 /**
  * Activity heatmap + recent events:
  * {
- *   heatmap: [{ date, count, level }],
+ *   heatmap: [{ date, count, level }],   // last 90 days
  *   recent:  [{ type, label, createdAt }]
  * }
  */
@@ -349,40 +349,66 @@ async function getProfileActivity(userId) {
   const numericId = Number(userId);
   const now = new Date();
   const todayStart = startOfDay(now);
-  const startRange = addDays(todayStart, -27); // last 28 days
 
-  // Tasks in last 28 days
-  const tasks = await prisma.task.findMany({
-    where: {
-      userId: numericId,
-      updatedAt: { gte: startRange },
-    },
-    orderBy: { updatedAt: 'desc' },
-  });
+  // We always fetch last 90 days; UI can choose 7 / 28 / 90
+  const TOTAL_DAYS = 90;
+  const startRange = addDays(todayStart, -(TOTAL_DAYS - 1)); // inclusive
 
-  // Goals (completed only)
-  const goals = await prisma.goal.findMany({
-    where: {
-      userId: numericId,
-      completed: true,
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 10,
-  });
+  // Pull everything in parallel
+  const [tasks, goals, calendar, habitLogs, reminders] = await Promise.all([
+    // Tasks in last 90 days
+    prisma.task.findMany({
+      where: {
+        userId: numericId,
+        updatedAt: { gte: startRange },
+      },
+      orderBy: { updatedAt: 'desc' },
+    }),
 
-  // Calendar notes for timeline
-  const calendar = await prisma.calendarTask.findMany({
-    where: {
-      userId: numericId,
-      date: { gte: startRange },
-    },
-    orderBy: { date: 'desc' },
-    take: 10,
-  });
+    // Goals (completed only)
+    prisma.goal.findMany({
+      where: {
+        userId: numericId,
+        completed: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
 
-  // Build heatmap: count completed tasks per day
+    // Calendar notes for timeline
+    prisma.calendarTask.findMany({
+      where: {
+        userId: numericId,
+        date: { gte: startRange },
+      },
+      orderBy: { date: 'desc' },
+      take: 10,
+    }),
+
+    // Habit logs in last 90 days (with habit titles)
+    prisma.habitLog.findMany({
+      where: {
+        habit: { userId: numericId },
+        date: { gte: startRange },
+      },
+      include: { habit: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+
+    // Reminders in last 90 days
+    prisma.reminder.findMany({
+      where: {
+        userId: numericId,
+        createdAt: { gte: startRange },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
+  ]);
+
+  // ---------- Heatmap: based on COMPLETED TASKS ----------
   const heatmap = [];
-  for (let i = 27; i >= 0; i--) {
+  for (let i = TOTAL_DAYS - 1; i >= 0; i--) {
     const dayStart = addDays(todayStart, -i);
     const dayEnd = addDays(dayStart, 1);
 
@@ -406,10 +432,11 @@ async function getProfileActivity(userId) {
     });
   }
 
-  // Recent activity timeline: tasks + goals + calendar
+  // ---------- Recent activity timeline ----------
   const events = [];
 
-  tasks.slice(0, 15).forEach((t) => {
+  // Tasks → created / completed
+  tasks.forEach((t) => {
     if (t.status === 'Completed') {
       events.push({
         type: 'TASK_COMPLETED',
@@ -425,6 +452,7 @@ async function getProfileActivity(userId) {
     }
   });
 
+  // Goals → completed
   goals.forEach((g) => {
     events.push({
       type: 'GOAL_COMPLETED',
@@ -433,6 +461,7 @@ async function getProfileActivity(userId) {
     });
   });
 
+  // Calendar notes
   calendar.forEach((c) => {
     events.push({
       type: 'CALENDAR_NOTE',
@@ -441,11 +470,29 @@ async function getProfileActivity(userId) {
     });
   });
 
-  // Sort newest first & keep top 15
+  // Habits → logged checks
+  habitLogs.forEach((log) => {
+    const habitTitle = log.habit?.title || 'Habit';
+    events.push({
+      type: 'HABIT_LOGGED',
+      label: `Logged habit "${habitTitle}"`,
+      createdAt: log.createdAt, // when user actually clicked
+    });
+  });
+
+  // Reminders
+  reminders.forEach((r) => {
+    events.push({
+      type: 'REMINDER',
+      label: `Reminder: "${r.title}"`,
+      createdAt: r.remindAt || r.createdAt,
+    });
+  });
+
+  // Sort newest first & keep top 15 mixed events
   events.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
-
   const recent = events.slice(0, 15);
 
   return {

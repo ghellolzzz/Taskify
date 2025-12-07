@@ -139,6 +139,46 @@ async function main() {
 
   console.log("✓ Calendar tasks seeded");
   console.log("🎉 Seed completed!");
+
+    // ==========================================
+  // 8. HABITS + HABIT LOGS (demo data)
+  // ==========================================
+  const makeUtcDate = (offsetDays) => {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() - offsetDays);
+    return d;
+  };
+
+  let demoHabit = await prisma.habit.findFirst({
+    where: { userId: alice.id, title: "Drink water" },
+  });
+
+  if (!demoHabit) {
+    demoHabit = await prisma.habit.create({
+      data: {
+        userId: alice.id,
+        title: "Drink water",
+        description: "Drink 8 cups of water daily",
+        color: "#0d6efd",
+        targetPerWeek: 5,
+      },
+    });
+  }
+
+  await prisma.habitLog.createMany({
+    data: [
+      { habitId: demoHabit.id, date: makeUtcDate(0), completed: true },
+      { habitId: demoHabit.id, date: makeUtcDate(1), completed: true },
+      { habitId: demoHabit.id, date: makeUtcDate(2), completed: true },
+      { habitId: demoHabit.id, date: makeUtcDate(4), completed: true },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log("✓ Habits & habit logs seeded");
+  console.log("🎉 Seed completed!");
+
 }
 
 main()

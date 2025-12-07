@@ -2,7 +2,6 @@
 const prisma = require('./prismaClient');
 const habitModel = require('./Habit.model');
 
-
 /**
  * Utility: get start of day (local)
  */
@@ -20,9 +19,22 @@ function addDays(date, offset) {
 /**
  * Returns:
  * {
- *   user: { id, name, email, createdAt, avatarUrl, bio, streakCount, lastActive, theme, accentColor },
- *   stats: { tasksToday, tasksWeek, goalsDone, goalsTotal, tasksCompletedRange, tasksTotalRange },
- *   categories: [{ id, name, color, taskCount }],
+ *   user: {
+ *     id, name, email, createdAt, avatarUrl, bio,
+ *     streakCount, lastActive, theme, accentColor
+ *   },
+ *   stats: {
+ *     tasksToday, tasksWeek,
+ *     goalsDone, goalsTotal,
+ *     tasksCompletedRange, tasksTotalRange,
+ *     productivity: {
+ *       score, completedThisWeek, overdueThisWeek,
+ *       level, label, message
+ *     }
+ *   },
+ *   categories: [{
+ *     id, name, color, taskCount, percentage
+ *   }], // sorted by taskCount desc, then name asc
  *   chain: [{ date, active }]
  * }
  */
@@ -55,7 +67,6 @@ async function getProfileOverview(userId) {
 
   // ✅ Count ALL tasks created today / this week (not just completed)
   const tasksToday = tasks.filter((t) => t.createdAt >= todayStart).length;
-
   const tasksWeek = tasks.filter((t) => t.createdAt >= weekStart).length;
 
   // ✅ Range stats (for "Last 7 days" task completion bar)
@@ -65,20 +76,41 @@ async function getProfileOverview(userId) {
   ).length;
   const tasksTotalRange = tasksInRange.length;
 
-  // Goals (if you actually use goals; otherwise this will be 0/0)
+  // Goals
   const goals = user.goals || [];
   const goalsDone = goals.filter((g) => g.completed).length;
   const goalsTotal = goals.length;
 
-  // Category breakdown
-  const categories = (user.categories || []).map((cat) => ({
+  // ---------- Category breakdown (with percentage + sorting) ----------
+  const categoriesWithCounts = (user.categories || []).map((cat) => ({
     id: cat.id,
     name: cat.name,
     color: cat.color,
     taskCount: (cat.tasks || []).length,
   }));
 
-  // Build last 7-day chain based on COMPLETED tasks
+  const totalTasksAcrossCategories = categoriesWithCounts.reduce(
+    (sum, cat) => sum + cat.taskCount,
+    0
+  );
+
+  const categories = categoriesWithCounts
+    .map((cat) => ({
+      ...cat,
+      percentage:
+        totalTasksAcrossCategories > 0
+          ? Math.round((cat.taskCount / totalTasksAcrossCategories) * 100)
+          : 0,
+    }))
+    .sort((a, b) => {
+      // Sort by taskCount desc, then name asc
+      if (b.taskCount === a.taskCount) {
+        return a.name.localeCompare(b.name);
+      }
+      return b.taskCount - a.taskCount;
+    });
+
+  // ---------- Build last 7-day chain based on COMPLETED tasks ----------
   const chain = [];
   for (let i = 6; i >= 0; i--) {
     const dayStart = addDays(todayStart, -i);
@@ -102,6 +134,50 @@ async function getProfileOverview(userId) {
     }
   }
 
+  // ---------- Productivity score ----------
+  // Completed tasks this week (based on updatedAt)
+  const tasksCompletedThisWeek = completedTasks.filter(
+    (t) => t.updatedAt >= weekStart
+  ).length;
+
+  // Overdue tasks this week (if you have a dueDate field)
+  const overdueTasksThisWeek = tasks.filter((t) => {
+    if (!t.dueDate) return false;
+    const due = new Date(t.dueDate);
+    return (
+      due < now &&
+      t.status !== 'Completed' &&
+      t.createdAt >= weekStart
+    );
+  }).length;
+
+  // Productivity score formula
+  const productivityScore =
+    tasksCompletedThisWeek * 2 - overdueTasksThisWeek * 3;
+
+  // Simple level + message (for UI)
+  let productivityLevel = 'neutral';
+  let productivityLabel = 'You are on track this week.';
+  let productivityMessage =
+    'Complete more tasks and keep overdue items low to boost your score.';
+
+  if (productivityScore >= 10) {
+    productivityLevel = 'good';
+    productivityLabel = 'Great work – very productive week!';
+    productivityMessage =
+      'You are completing many tasks and keeping overdue items low.';
+  } else if (productivityScore <= -1) {
+    productivityLevel = 'bad';
+    productivityLabel = 'Needs attention – too many overdue tasks.';
+    productivityMessage =
+      'Try to finish overdue tasks first to bring your score back up.';
+  } else if (productivityScore >= 1 && productivityScore < 10) {
+    productivityLevel = 'ok';
+    productivityLabel = 'Decent progress – you can still push a bit more.';
+    productivityMessage =
+      'A few more completed tasks will turn this into a great week.';
+  }
+
   return {
     user: {
       id: user.id,
@@ -110,7 +186,6 @@ async function getProfileOverview(userId) {
       createdAt: user.createdAt,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
-      // ✅ use computed streak instead of DB field
       streakCount,
       lastActive: user.lastActive,
       theme: user.theme,
@@ -123,12 +198,19 @@ async function getProfileOverview(userId) {
       goalsTotal,
       tasksCompletedRange,
       tasksTotalRange,
+      productivity: {
+        score: productivityScore,
+        completedThisWeek: tasksCompletedThisWeek,
+        overdueThisWeek: overdueTasksThisWeek,
+        level: productivityLevel,
+        label: productivityLabel,
+        message: productivityMessage,
+      },
     },
     categories,
     chain,
   };
 }
-
 
 /**
  * Badges for profile:
@@ -145,7 +227,7 @@ async function getProfileBadges(userId) {
   const { user, categories } = overview;
   const streak = user.streakCount || 0;
 
-    //pull habits summary from Habits board
+  // pull habits summary from Habits board
   let activeHabits = 0;
   let totalHabits = 0;
   let habitLongestStreak = 0;
@@ -163,7 +245,6 @@ async function getProfileBadges(userId) {
   } catch (err) {
     console.warn('Failed to load habits summary for badges:', err.message);
   }
-
 
   // Lifetime task counts
   const [totalTasks, completedTasksTotal] = await Promise.all([
@@ -213,17 +294,12 @@ async function getProfileBadges(userId) {
     });
   }
 
-
   maybeAward('ROOKIE', totalTasks >= 1);      // first task created
   maybeAward('STREAK_3', streak >= 3);        // 3-day streak
 
   maybeAward('HABIT_STARTER',  totalHabits >= 1);          // created first habit
   maybeAward('HABIT_ACTIVE_3', activeHabits >= 3);         // 3+ active habits
   maybeAward('HABIT_STREAK_3', habitLongestStreak >= 3);   // 3-day habit streak
-
-  // maybeAward('STREAK_7', streak >= 7);
-  // maybeAward('TASKS_10', completedTasksTotal >= 10);
-  // maybeAward('CATEGORIES_3', categoriesUsed >= 3);
 
   // 3) Insert any new user_badges
   if (toCreate.length > 0) {
@@ -261,7 +337,6 @@ async function getProfileBadges(userId) {
 
   return { unlocked, locked };
 }
-
 
 /**
  * Activity heatmap + recent events:

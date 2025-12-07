@@ -113,6 +113,43 @@ if (user.avatarUrl) {
   document.getElementById('tasksProgressBar').style.width =
     tasksPct + '%';
 
+        // --- Weekly Productivity card ---
+  const prod = stats.productivity || {};
+
+  const scoreEl      = document.getElementById('prodScoreValue');
+  const chipEl       = document.getElementById('prodScoreChip');
+  const labelEl      = document.getElementById('prodLabel');
+  const breakdownEl  = document.getElementById('prodBreakdown');
+
+  if (scoreEl && chipEl && labelEl && breakdownEl) {
+    const score      = prod.score ?? 0;
+    const completed  = prod.completedThisWeek ?? 0;
+    const overdue    = prod.overdueThisWeek ?? 0;
+    const level      = prod.level || 'neutral';
+    const labelText  = prod.label ||
+      'You are on track this week.';
+    const message    = prod.message ||
+      'Complete more tasks and keep overdue items low to boost your score.';
+
+    scoreEl.textContent = score;
+    labelEl.textContent = labelText;
+    breakdownEl.textContent =
+      `✅ ${completed} tasks completed · ⚠️ ${overdue} overdue`;
+
+    chipEl.classList.remove(
+      'prod-chip-good',
+      'prod-chip-ok',
+      'prod-chip-bad',
+      'prod-chip-neutral'
+    );
+
+    let chipClass = 'prod-chip-neutral';
+    if (level === 'good') chipClass = 'prod-chip-good';
+    else if (level === 'ok') chipClass = 'prod-chip-ok';
+    else if (level === 'bad') chipClass = 'prod-chip-bad';
+
+    chipEl.classList.add(chipClass);
+  }
 
   const categoriesContainer = document.querySelector(
     '#categoriesContainer'

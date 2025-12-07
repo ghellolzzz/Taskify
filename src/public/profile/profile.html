@@ -278,11 +278,13 @@
       <div class="card profile-card h-100">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <h6 class="card-title mb-0">Task completion</h6>
-            <div class="small text-muted">
-              <span id="tasksRangeLabel">Last 7 days</span>
-            </div>
-          </div>
+  <h6 class="card-title mb-0">Task completion</h6>
+  <div class="small text-muted">
+  <span id="tasksRangeLabel">Last 7 days</span>
+</div>
+
+</div>
+
           <p class="small text-muted mb-1">
             <span id="tasksCompletedRange">18</span> completed of
             <span id="tasksTotalRange">24</span> tasks
@@ -301,6 +303,40 @@
         </div>
       </div>
     </div>
+        <!-- Weekly Productivity (EXPLAINED) -->
+    <div class="col-md-6">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <div>
+              <h6 class="card-title mb-0">Weekly productivity</h6>
+              <small class="text-muted">
+                Based on completed and overdue tasks this week
+              </small>
+            </div>
+            <span
+              id="prodScoreChip"
+              class="badge rounded-pill prod-chip-neutral"
+            >
+              <span id="prodScoreValue">0</span>
+            </span>
+          </div>
+
+          <p class="small mb-1" id="prodLabel">
+            You are on track this week.
+          </p>
+
+          <p class="small text-muted mb-1" id="prodBreakdown">
+            ✅ 0 tasks completed · ⚠️ 0 overdue
+          </p>
+
+          <p class="xsmall text-muted mb-0">
+            Score = (Completed × 2) − (Overdue × 3). Higher is better.
+          </p>
+        </div>
+      </div>
+    </div>
+
 
     <!-- Habits snapshot (NEW) -->
     <div class="col-md-6">

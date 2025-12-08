@@ -1,25 +1,28 @@
+require('dotenv').config({ path: '.env.development' });
+
 const prisma = require('../src/models/prismaClient');
 const bcrypt = require('bcrypt');
 
 async function main() {
-  console.log(" Seeding Taskify data...");
+  console.log("Seeding Taskify data...");
 
   // ==========================================
   // 1. USERS (with hashed passwords)
   // ==========================================
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash("password123", saltRounds);
-  
-  const users = await prisma.user.createMany({
+
+  await prisma.user.createMany({
     data: [
-      { name: "Alice", email: "alice@example.com", password: hashedPassword },
-      { name: "Bob", email: "bob@example.com", password: hashedPassword },
-      { name: "Charlie", email: "charlie@example.com", password: hashedPassword },
+      { name: "Alice",  email: "alice@example.com",   password: hashedPassword },
+      { name: "Bob",    email: "bob@example.com",     password: hashedPassword },
+      { name: "Charlie",email: "charlie@example.com", password: hashedPassword },
     ],
+    skipDuplicates: true
   });
 
   const allUsers = await prisma.user.findMany();
-  console.log("Users seeded");
+  console.log("✓ Users seeded");
 
   // ==========================================
   // 2. CATEGORIES (for every user)
@@ -27,14 +30,15 @@ async function main() {
   for (const user of allUsers) {
     await prisma.category.createMany({
       data: [
-        { name: "Work", color: "#1E90FF", userId: user.id },
+        { name: "Work",     color: "#1E90FF", userId: user.id },
         { name: "Personal", color: "#32CD32", userId: user.id },
       ],
+      skipDuplicates: true
     });
   }
-  console.log(" Categories seeded");
+  console.log("✓ Categories seeded");
 
-  // Get Alice for sample tasks
+  // Alice for sample tasks
   const alice = await prisma.user.findFirst({
     where: { email: "alice@example.com" },
   });
@@ -64,9 +68,10 @@ async function main() {
         categoryId: aliceWorkCategory.id,
       },
     ],
+    skipDuplicates: true  
   });
 
-  console.log(" Tasks seeded");
+  console.log("✓ Tasks seeded");
 
   // ==========================================
   // 4. COMMENTS
@@ -81,9 +86,9 @@ async function main() {
       taskId: task.id,
       userId: alice.id,
     },
-  });
+  }).catch(() => {}); 
 
-  console.log(" Comments seeded");
+  console.log("✓ Comments seeded");
 
   // ==========================================
   // 5. GOALS
@@ -93,27 +98,33 @@ async function main() {
       { title: "Become productive", userId: alice.id },
       { title: "Finish tasks daily", userId: alice.id },
     ],
+    skipDuplicates: true
   });
 
-  console.log(" Goals seeded");
+  console.log("✓ Goals seeded");
 
   // ==========================================
   // 6. BADGES
   // ==========================================
   await prisma.badge.createMany({
     data: [
-      { code: "ROOKIE", name: "Rookie", description: "Created your first task", icon: "⭐" },
-      { code: "STREAK_3", name: "3-Day Streak", description: "Completed tasks for 3 days" },
+      { code: "ROOKIE",           name: "Rookie",           description: "Created your first task", icon: "⭐" },
+      { code: "STREAK_3",         name: "3-Day Streak",     description: "Completed tasks for 3 days" },
+
+      { code: 'HABIT_STARTER',    name: 'Habit Starter',    description: 'Created your first habit.',      icon: '🌱' },
+      { code: 'HABIT_ACTIVE_3',   name: 'Habit Builder',    description: 'Maintain 3 active habits.',      icon: '🧱' },
+      { code: 'HABIT_STREAK_3',   name: 'Habit Streaker',   description: 'Logged a habit 3 days in a row.', icon: '🔥' }
     ],
+    skipDuplicates: true 
   });
 
   const rookieBadge = await prisma.badge.findFirst({ where: { code: "ROOKIE" } });
 
   await prisma.userBadge.create({
     data: { userId: alice.id, badgeId: rookieBadge.id },
-  });
+  }).catch(() => {}); 
 
-  console.log("Badges seeded");
+  console.log("✓ Badges seeded");
 
   // ==========================================
   // 7. CALENDAR TASKS
@@ -124,11 +135,50 @@ async function main() {
       content: "Finish UI for Dashboard",
       userId: alice.id,
     },
+  }).catch(() => {});
+
+  console.log("✓ Calendar tasks seeded");
+  console.log("🎉 Seed completed!");
+
+    // ==========================================
+  // 8. HABITS + HABIT LOGS (demo data)
+  // ==========================================
+  const makeUtcDate = (offsetDays) => {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() - offsetDays);
+    return d;
+  };
+
+  let demoHabit = await prisma.habit.findFirst({
+    where: { userId: alice.id, title: "Drink water" },
   });
 
-  console.log("Calendar tasks seeded");
+  if (!demoHabit) {
+    demoHabit = await prisma.habit.create({
+      data: {
+        userId: alice.id,
+        title: "Drink water",
+        description: "Drink 8 cups of water daily",
+        color: "#0d6efd",
+        targetPerWeek: 5,
+      },
+    });
+  }
 
-  console.log("Seed completed!");
+  await prisma.habitLog.createMany({
+    data: [
+      { habitId: demoHabit.id, date: makeUtcDate(0), completed: true },
+      { habitId: demoHabit.id, date: makeUtcDate(1), completed: true },
+      { habitId: demoHabit.id, date: makeUtcDate(2), completed: true },
+      { habitId: demoHabit.id, date: makeUtcDate(4), completed: true },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log("✓ Habits & habit logs seeded");
+  console.log("🎉 Seed completed!");
+
 }
 
 main()

@@ -345,7 +345,6 @@ function showTaskTable(tasks, categoryName, categoryColor) {
   document.getElementById("selected-category-title").innerText =
     `Tasks in ${categoryName}`;
 
-    // 🌟 START: DYNAMIC COLOR LOGIC 🌟
  const taskSection = document.getElementById("category-tasks-section");
  const hexColor = categoryColor || '#198754'; // Fallback color
  
@@ -357,10 +356,9 @@ function showTaskTable(tasks, categoryName, categoryColor) {
  if (rgb) {
  taskSection.style.setProperty('--category-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
  }
- // 🌟 END: DYNAMIC COLOR LOGIC 🌟
+
 const tbody = document.getElementById("tasks-table-body"); 
  
- // You should also clear it before adding new content (missing from your current version)
  if (tbody) {
      tbody.innerHTML = "";
  }

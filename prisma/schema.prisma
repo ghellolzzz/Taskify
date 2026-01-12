@@ -23,7 +23,8 @@ model User {
   streakCount Int          @default(0)
   lastActive  DateTime?
   theme       String?      
-  accentColor String?      
+  accentColor String? 
+       
 
   // Relations
   tasks       Task[]
@@ -36,6 +37,7 @@ model User {
   habits      Habit[]
   feedback    Feedback[]
    teams       TeamMember[] 
+  assignedTasks Task[]     @relation("TaskAssignee")
 
   @@map("users")
 }
@@ -93,21 +95,25 @@ model Task {
   id          Int          @id @default(autoincrement())
   title       String
   description String?
-  status      String        @default("Pending")
-  priority    String        @default("Medium")
+  status      String       @default("Pending")
+  priority    String       @default("Medium")
   dueDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   completedAt DateTime?
+
   
-
-  userId      Int
+  userId      Int          
   categoryId  Int?
-    teamId      Int?         
+  teamId      Int?         
+  assigneeId  Int?         
 
-  user        User          @relation(fields: [userId], references: [id])
-  category    Category?     @relation(fields: [categoryId], references: [id])
- team        Team?         @relation(fields: [teamId], references: [id]) 
+  // --- RELATIONS ---
+  user        User         @relation(fields: [userId], references: [id])
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  
+  team        Team?        @relation(fields: [teamId], references: [id])
+  assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
 
   comments    Comment[]
   reminders   Reminder[]

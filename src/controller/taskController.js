@@ -3,23 +3,28 @@ const { EMPTY_RESULT_ERROR } = require('../errors');
 
 
 //user creating a task
-module.exports.create = function(req,res){
-    const userId=res.locals.userId
-    const taskData={
-        title:req.body.title,
-        description:req.body.description || null,
-        priority:req.body.priority || "Medium",
-        status:"Pending",
-        dueDate:req.body.dueDate ? new Date(req.body.dueDate):null,
-        userId:userId,
-        categoryId:req.body.categoryId||null
+// user creating a task
+module.exports.create = function(req, res) {
+    const userId = res.locals.userId; 
 
-    }
+    const taskData = {
+        title: req.body.title,
+        description: req.body.description || null,
+        priority: req.body.priority || "Medium",
+        status: "Pending",
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+        userId: userId, 
+        categoryId: req.body.categoryId || null,
+        teamId: req.body.teamId ? parseInt(req.body.teamId) : null,
+        assigneeId: req.body.assigneeId ? parseInt(req.body.assigneeId) : userId
+        
+        
+    };
+
     return taskModel.createTask(taskData)
-    .then(task=>res.json({task}))
-    .catch(err=>res.status(500).json({error:err.messaage}))
-}
-
+        .then(task => res.status(201).json({ task })) 
+        .catch(err => res.status(500).json({ error: err.message }));
+};
 //retrieving user tasks
 module.exports.retrieveAll=function(req,res){
     const userId= res.locals.userId

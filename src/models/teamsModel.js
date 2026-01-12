@@ -82,27 +82,16 @@ module.exports.getUserTeams = function(userId){
 }
 
 //getting the team details
-module.exports.getTeamDetails=function(teamId,userId){
-    
-    //check if the member is part of the team
+module.exports.getTeamDetails = function(teamId, userId) {
     return prisma.teamMember.findUnique({
-        where:{
-            userId_teamId:{
-                userId:userId,
-                teamId:teamId
-            }
-        }
+        where: { userId_teamId: { userId, teamId } }
     })
-    .then(membership=>{
-        if(!membership){
-            throw new Error("Access denied: You are not a member of this team")
-        }
+    .then(membership => {
+        if (!membership) throw new Error("Access denied: You are not a member of this team");
 
         return prisma.team.findUnique({
-            where:{
-                id:teamId
-            },
-             include: {
+            where: { id: teamId },
+            include: {
                 members: {
                     include: {
                         user: { select: { id: true, name: true, email: true, avatarUrl: true } }
@@ -110,17 +99,31 @@ module.exports.getTeamDetails=function(teamId,userId){
                 },
                 tasks: {
                     include: {
-                        user: { select: { name: true } }
+                        user: { select: { name: true } },      
+                        assignee: { select: { name: true } }   
                     },
                     orderBy: { createdAt: 'desc' }
                 }
             }
-        })
+        });
     })
-    .then(team=>{
-        if(!team){
-            throw new EMPTY_RESULT_ERROR("Team not found")
-        }
+    .then(team => {
+        if (!team) throw new EMPTY_RESULT_ERROR("Team not found");
         return team;
+    });
+};
+//getting team statistics
+module.exports.getTeamStats = function(teamId) {
+    return prisma.task.groupBy({
+        by: ['status'],             
+        where: { teamId: parseInt(teamId) },
+        _count: { _all: true }      
     })
-}
+    .then(stats => {
+       //formatting the statistics
+        const formatted = { Pending: 0, "In Progress": 0, Completed: 0 };
+        stats.forEach(s => formatted[s.status] = s._count._all);
+        return formatted;
+    });
+};
+

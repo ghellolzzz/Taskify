@@ -7,6 +7,7 @@ router.post("/", verifyToken, teamController.create)
 router.get("/", verifyToken, teamController.getMyTeams)
 router.get("/:teamId", verifyToken, teamController.getTeamDetails)
 router.post("/:teamId/members", verifyToken, teamController.addMember)
+router.get("/:teamId/stats", verifyToken, teamController.getTeamStats)
 
 
 module.exports=router

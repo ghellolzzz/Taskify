@@ -60,3 +60,12 @@ module.exports.getTeamDetails=function(req,res){
         })
 
 }
+
+//getting team statistics
+module.exports.getTeamStats = function(req, res) {
+    const teamId = req.params.teamId;
+
+    return teamModel.getTeamStats(teamId)
+        .then(stats => res.json(stats))
+        .catch(err => res.status(500).json({ error: err.message }));
+};

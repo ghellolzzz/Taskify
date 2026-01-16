@@ -37,7 +37,7 @@ model User {
   habits      Habit[]
   feedback    Feedback[]
    teams       TeamMember[] 
-  assignedTasks Task[]     @relation("TaskAssignee")
+  assignedTasks Task[] @relation("TaskAssignees")
 
   @@map("users")
 }
@@ -106,14 +106,14 @@ model Task {
   userId      Int          
   categoryId  Int?
   teamId      Int?         
-  assigneeId  Int?         
+         
 
   // --- RELATIONS ---
   user        User         @relation(fields: [userId], references: [id])
   category    Category?    @relation(fields: [categoryId], references: [id])
   
-  team        Team?        @relation(fields: [teamId], references: [id])
-  assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  team        Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+ assignees   User[]        @relation("TaskAssignees")
 
   comments    Comment[]
   reminders   Reminder[]
@@ -276,7 +276,9 @@ model TeamMember {
   userId    Int
   teamId    Int
   role      String   @default("MEMBER") // 'OWNER' or 'MEMBER'
+  status    String   @default("PENDING")
   joinedAt  DateTime @default(now())
+
 
   user      User     @relation(fields: [userId], references: [id])
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)

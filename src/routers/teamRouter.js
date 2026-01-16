@@ -8,6 +8,12 @@ router.get("/", verifyToken, teamController.getMyTeams)
 router.get("/:teamId", verifyToken, teamController.getTeamDetails)
 router.post("/:teamId/members", verifyToken, teamController.addMember)
 router.get("/:teamId/stats", verifyToken, teamController.getTeamStats)
+router.get("/invites/pending", verifyToken, teamController.getPendingInvites);
+router.put("/invites/:teamId/respond", verifyToken, teamController.respondToInvite)
+router.delete("/:teamId", verifyToken, teamController.deleteTeam);
+router.put("/:teamId", verifyToken, teamController.updateTeam);
+router.delete("/:teamId/members/:userId", verifyToken, teamController.removeMember);
+router.delete("/:teamId/leave", verifyToken, teamController.leaveTeam);
 
 
 module.exports=router

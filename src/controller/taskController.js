@@ -67,7 +67,8 @@ module.exports.update = function(req, res) {
         priority: req.body.priority,
         dueDate: req.body.dueDate ? new Date(req.body.dueDate) : undefined,
         status: req.body.status,
-        completedAt: req.body.completedAt
+        completedAt: req.body.completedAt,
+        categoryId: req.body.categoryId ?? null
     };
 
     

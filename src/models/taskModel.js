@@ -21,7 +21,7 @@ module.exports.retrieveAll = function (userId) {
         },
         include: {
             comments: { include: { user: true } },
-            
+            category: true,  
             assignees: { select: { id: true, name: true } } 
         },
         orderBy: { dueDate: 'asc' }

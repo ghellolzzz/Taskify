@@ -17,6 +17,7 @@ async function main() {
       { name: "Alice",  email: "alice@example.com",   password: hashedPassword },
       { name: "Bob",    email: "bob@example.com",     password: hashedPassword },
       { name: "Charlie",email: "charlie@example.com", password: hashedPassword },
+       { name: "E2E Test User", email: "MGF_21@ICLOUD.COM", password: hashedPassword }
     ],
     skipDuplicates: true
   });

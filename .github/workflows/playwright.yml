@@ -65,6 +65,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
         run: |
+        
+         lsof -ti:3000 | xargs kill -9 || true
           node ./src/server.js &
           npx wait-on http://localhost:3000 --timeout 60000
       

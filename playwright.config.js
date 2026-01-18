@@ -73,10 +73,13 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
  webServer: {
-  command: 'node ./src/server.js',
+   command: 'node ./src/server.js',
   url: 'http://localhost:3000',
-  timeout: 60000,
-  reuseExistingServer: true, // avoids conflicts if server is already running
+  timeout: 120000, // 2 minutes
+  reuseExistingServer: true,
+  env: {
+    DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/testdb',
+  },
 }
 });
 

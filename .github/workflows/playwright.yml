@@ -60,6 +60,14 @@ jobs:
       #installing playwright test 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for Postgres..."
+          for i in {1..20}; do
+          pg_isready -h localhost -U postgres && break
+          sleep 3
+          done  
       
      
       

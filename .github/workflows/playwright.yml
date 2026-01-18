@@ -60,15 +60,8 @@ jobs:
       #installing playwright test 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-      #starts the application server in the bg
-      - name: Start Application Server
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
-        run: |
-        
-         lsof -ti:3000 | xargs kill -9 || true
-          node ./src/server.js &
-          npx wait-on http://localhost:3000 --timeout 60000
+      
+     
       
       # runs all Playwright E2E tests
       - name: Run Playwright E2E tests

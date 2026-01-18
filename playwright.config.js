@@ -72,10 +72,11 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: {
+    command: 'npm start', 
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI, // false in CI (forces Playwright to start it), true locally
+    timeout: 120 * 1000, // Increase timeout if your server is slow to start
+  },
 });
 

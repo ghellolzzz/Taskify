@@ -10,7 +10,6 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    
 
     services:
       postgres:
@@ -28,51 +27,57 @@ jobs:
           --health-retries=5
 
     steps:
-      # pulls the latest code
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      # installing the node version
+
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      
-      # install project dependencies from package.json
+
       - name: Install dependencies
         run: npm ci
-      
-      # generates the Prisma client based on the schema
+
       - name: Generate Prisma Client
         run: npx prisma generate
-      
-      # runs all database migrations to the temp database
+
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for Postgres..."
+          for i in {1..30}; do
+            pg_isready -h localhost -U postgres && break
+            echo "Postgres not ready yet, sleeping..."
+            sleep 3
+          done
+          echo "Postgres should be ready now."
+
       - name: Run Prisma migrations (test DB)
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
         run: npx prisma migrate deploy
-      
-      # seeds the database with test data 
+
       - name: Seed test database
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
         run: npx prisma db seed
-      #installing playwright test 
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-      #starts the application server in the bg
+
       - name: Start Application Server
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
         run: |
+          # Kill anything running on port 3000
+          lsof -ti:3000 | xargs kill -9 || true
+          # Start server in background
           node ./src/server.js &
-          npx wait-on http://localhost:3000 --timeout 60000
-      
-      # runs all Playwright E2E tests
+          # Wait until server is ready
+          npx wait-on http://localhost:3000 --timeout 120000
+
       - name: Run Playwright E2E tests
-        run: npm test
-      
-      # uploads the test report for review
+        run: npx playwright test
+
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

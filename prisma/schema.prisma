@@ -23,7 +23,8 @@ model User {
   streakCount Int          @default(0)
   lastActive  DateTime?
   theme       String?      
-  accentColor String?      
+  accentColor String? 
+       
 
   // Relations
   tasks       Task[]
@@ -35,6 +36,8 @@ model User {
   reminders   Reminder[]
   habits      Habit[]
   feedback    Feedback[]
+   teams       TeamMember[] 
+  assignedTasks Task[] @relation("TaskAssignees")
 
   @@map("users")
 }
@@ -92,18 +95,26 @@ model Task {
   id          Int          @id @default(autoincrement())
   title       String
   description String?
-  status      String        @default("Pending")
-  priority    String        @default("Medium")
+  status      String       @default("Pending")
+  priority    String       @default("Medium")
   dueDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   completedAt DateTime?
 
-  userId      Int
+  
+  userId      Int          
   categoryId  Int?
+  teamId      Int?         
+         
 
-  user        User          @relation(fields: [userId], references: [id])
-  category    Category?     @relation(fields: [categoryId], references: [id])
+  // --- RELATIONS ---
+  user        User         @relation(fields: [userId], references: [id])
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  
+  team        Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+ assignees   User[]        @relation("TaskAssignees")
+
   comments    Comment[]
   reminders   Reminder[]
 
@@ -239,5 +250,40 @@ model Feedback {
   user        User?    @relation(fields: [userId], references: [id])
 
   @@map("feedback")
+}
+
+//////////////////////////////////////////////////////
+// TEAM TABLE 
+//////////////////////////////////////////////////////
+model Team {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  members     TeamMember[]
+  tasks       Task[]       
+
+  @@map("teams")
+}
+
+//////////////////////////////////////////////////////
+// TEAM_MEMBER TABLE 
+//////////////////////////////////////////////////////
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  teamId    Int
+  role      String   @default("MEMBER") // 'OWNER' or 'MEMBER'
+  status    String   @default("PENDING")
+  joinedAt  DateTime @default(now())
+
+
+  user      User     @relation(fields: [userId], references: [id])
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId]) // User can't join the same team twice
+  @@map("team_members")
 }
 

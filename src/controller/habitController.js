@@ -55,6 +55,20 @@ module.exports.archive = function (req, res, next) {
 };
 
 /**
+ * DELETE /api/habits/:habitId/hard
+ * Permanently delete a habit + its logs, then return updated board
+ */
+module.exports.hardDelete = function (req, res, next) {
+  const userId = res.locals.userId;
+  const { habitId } = req.params;
+
+  habitModel.deleteHabit(userId, habitId)
+    .then(() => habitModel.getHabitsBoard(userId))
+    .then((board) => res.json(board))
+    .catch(next);
+};
+
+/**
  * POST /api/habits/:habitId/toggle
  * Toggle one day's check-in, then return updated board
  */

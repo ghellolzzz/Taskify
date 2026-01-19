@@ -29,6 +29,8 @@ function getMonday(d) {
 /**
  * Build the "Habits Board" for the current user
  */
+// src/models/Habit.model.js
+
 async function getHabitsBoard(userId) {
   const numericId = Number(userId);
 
@@ -39,9 +41,13 @@ async function getHabitsBoard(userId) {
   const weekStart = getMonday(todayStart);
   const weekEnd = addDays(weekStart, 7); // exclusive
 
-  const [habits, logs] = await Promise.all([
+  const [activeHabits, archivedHabits, logs] = await Promise.all([
     prisma.habit.findMany({
       where: { userId: numericId, isArchived: false },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.habit.findMany({
+      where: { userId: numericId, isArchived: true },
       orderBy: { createdAt: 'asc' },
     }),
     prisma.habitLog.findMany({
@@ -73,16 +79,18 @@ async function getHabitsBoard(userId) {
 
   const todayKey = todayStart.toISOString().slice(0, 10);
 
-  const totalHabits = habits.length;
+  const activeHabitsCount = activeHabits.length;
+  const totalHabitsCount = activeHabitsCount + archivedHabits.length;
+
   let todayCompleted = 0;
-  const todayTotal = totalHabits;
+  const todayTotal = activeHabitsCount;
 
   let totalCompletedChecksThisWeek = 0;
-  const totalPossibleChecksThisWeek = totalHabits * 7;
+  const totalPossibleChecksThisWeek = activeHabitsCount * 7;
 
   let longestStreakHabit = null;
 
-  const habitDtos = habits.map((h) => {
+  const habitDtos = activeHabits.map((h) => {
     // Compute streak: walk backwards from today until a missing day
     let streak = 0;
     for (let i = 0; ; i++) {
@@ -140,8 +148,9 @@ async function getHabitsBoard(userId) {
       : 0;
 
   const summary = {
-    totalHabits,
-    activeHabits: totalHabits,
+    totalHabits: totalHabitsCount,
+    activeHabits: activeHabitsCount,
+    archivedCount: archivedHabits.length,
     todayCompleted,
     todayTotal,
     avgWeeklyCompletion,
@@ -154,6 +163,14 @@ async function getHabitsBoard(userId) {
       days: weekDays,
     },
     habits: habitDtos,
+    archivedHabits: archivedHabits.map((h) => ({
+      id: h.id,
+      title: h.title,
+      color: h.color,
+      targetPerWeek: h.targetPerWeek,
+      // when isArchived flips to true, updatedAt will change
+      archivedAt: h.updatedAt || h.createdAt,
+    })),
     summary,
   };
 }
@@ -253,9 +270,31 @@ async function updateHabitMeta(userId, habitId, data) {
   });
 }
 
+/** Permanently delete a habit (and cascade its logs) */
+async function deleteHabit(userId, habitId) {
+  const numericUserId = Number(userId);
+  const numericHabitId = Number(habitId);
+
+  const existing = await prisma.habit.findFirst({
+    where: { id: numericHabitId, userId: numericUserId },
+  });
+
+  if (!existing) {
+    const err = new Error('Habit not found');
+    err.status = 404;
+    throw err;
+  }
+
+  // HabitLog has onDelete: Cascade in schema, so logs are removed automatically
+  await prisma.habit.delete({
+    where: { id: numericHabitId },
+  });
+}
+
 module.exports = {
   getHabitsBoard,
   createHabit,
   toggleHabitCheck,
   updateHabitMeta,
+  deleteHabit,
 };

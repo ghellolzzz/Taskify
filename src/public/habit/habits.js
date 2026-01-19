@@ -8,6 +8,11 @@ function authHeaders(extra = {}) {
   };
 }
 
+let currentBoard = null;
+let pendingDeleteHabit = null; // { id, title, rowEl }
+let editingHabitId = null;
+
+
 document.addEventListener('DOMContentLoaded', () => {
   // Handle logout like other pages
   const logoutBtn = document.querySelector('.sidebar-footer a');
@@ -25,18 +30,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setupColourSwatches();
+  setupHabitCreateButton();
   setupHabitForm();
+  setupDeleteModal();
   loadHabitsBoard();
 });
-
-let currentBoard = null;
 
 function loadHabitsBoard() {
   fetch('/api/habits', {
     headers: authHeaders(),
   })
-    .then((res) => res.json())
+    .then((res) => {
+      if (res.status === 401) {
+        console.warn('Not authenticated. Redirecting to login.');
+        // If you use a different login path, change this:
+        window.location.href = '../login.html';
+        return null;
+      }
+
+      if (!res.ok) {
+        throw new Error('Failed to load habits board. HTTP ' + res.status);
+      }
+
+      return res.json();
+    })
     .then((board) => {
+      if (!board) return; // already handled (e.g. redirected)
       currentBoard = board;
       renderHabitsBoard(board);
     })
@@ -45,21 +64,27 @@ function loadHabitsBoard() {
     });
 }
 
-function renderHabitsBoard(board) {
-  const { week, habits, summary } = board;
 
-  // Week header labels
+function renderHabitsBoard(board) {
+  if (!board || !board.week || !Array.isArray(board.week.days)) {
+    console.error('Unexpected response for habits board:', board);
+    return;
+  }
+
+  const { week, habits, summary, archivedHabits = [] } = board;
+
+  // Week header labels (second header row)
   const headerRow = document.getElementById('habitsWeekHeaderRow');
   headerRow.innerHTML = '';
 
-  // ⬇⬇ ADD THESE TWO SPACER CELLS ⬇⬇
+  // spacer cells for Habit + Target columns
   const spacerHabit = document.createElement('th');
   const spacerTarget = document.createElement('th');
   spacerTarget.classList.add('text-center');
   headerRow.appendChild(spacerHabit);
   headerRow.appendChild(spacerTarget);
-  // ⬆⬆ NOW THE DAYS LINE UP UNDER THE "Week" COLUMNS ⬆⬆
 
+  // day headers under "Week"
   week.days.forEach((day) => {
     const d = new Date(day.date);
     const th = document.createElement('th');
@@ -72,6 +97,7 @@ function renderHabitsBoard(board) {
     headerRow.appendChild(th);
   });
 
+  // "Actions" header (first row) has no sub-header, so no extra <th> here
 
   // Habits count badge
   const badge = document.getElementById('habitsCountBadge');
@@ -87,7 +113,7 @@ function renderHabitsBoard(board) {
   if (habits.length === 0) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td colspan="9" class="text-center text-muted small py-4">
+      <td colspan="10" class="text-center text-muted small py-4">
         No habits yet. Click <strong>New habit</strong> to create your first one.
       </td>
     `;
@@ -102,8 +128,8 @@ function renderHabitsBoard(board) {
         : 'Flexible';
 
       let daysHtml = '';
-      week.days.forEach((day, idx) => {
-        const entry = habit.week.find(w => w.date === day.date);
+      week.days.forEach((day) => {
+        const entry = habit.week.find((w) => w.date === day.date);
         const isDone = entry?.completed;
         const extraClasses = [
           'habit-dot',
@@ -137,6 +163,50 @@ function renderHabitsBoard(board) {
           <span class="badge bg-light text-dark small">${targetLabel}</span>
         </td>
         ${daysHtml}
+                <td class="text-end">
+          <div class="dropdown habit-actions-dropdown">
+            <button
+              class="btn btn-sm btn-light habit-actions-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <button
+                  class="dropdown-item habit-edit-btn"
+                  type="button"
+                  data-habit-id="${habit.id}"
+                >
+                  <i class="bi bi-pencil-square me-2"></i> Edit habit
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <button
+                  class="dropdown-item habit-archive-btn"
+                  type="button"
+                  data-habit-id="${habit.id}"
+                >
+                  <i class="bi bi-archive me-2"></i> Archive habit
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <button
+                  class="dropdown-item text-danger habit-delete-btn"
+                  type="button"
+                  data-habit-id="${habit.id}"
+                  data-habit-title="${habit.title.replace(/"/g, '&quot;')}"
+                >
+                  <i class="bi bi-trash3 me-2"></i> Delete permanently
+                </button>
+              </li>
+            </ul>
+          </div>
+        </td>
       `;
 
       tbody.appendChild(tr);
@@ -151,6 +221,38 @@ function renderHabitsBoard(board) {
       toggleHabitDay(habitId, date);
     });
   });
+
+    // Archive buttons
+  tbody.querySelectorAll('.habit-archive-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.dataset.habitId;
+      const rowEl = btn.closest('tr');
+      archiveHabit(habitId, rowEl);
+    });
+  });
+
+  // Delete buttons
+  tbody.querySelectorAll('.habit-delete-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.dataset.habitId;
+      const title = btn.dataset.habitTitle || 'this habit';
+      const rowEl = btn.closest('tr');
+      openHabitDeleteModal(habitId, title, rowEl);
+    });
+  });
+
+  // Edit buttons
+  tbody.querySelectorAll('.habit-edit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.dataset.habitId;
+      const habit = findHabitById(habitId);
+      if (habit) {
+        openHabitEditModal(habit);
+      }
+    });
+  });
+
+  renderArchivedHabits(archivedHabits);
 
   // Week range label
   const weekRangeLabel = document.getElementById('weekRangeLabel');
@@ -171,6 +273,165 @@ function renderHabitsBoard(board) {
   updateSidebarStats(summary);
 }
 
+function findHabitById(habitId) {
+  if (!currentBoard || !Array.isArray(currentBoard.habits)) return null;
+  const idNum = Number(habitId);
+  return currentBoard.habits.find((h) => h.id === idNum) || null;
+}
+
+function openHabitEditModal(habit) {
+  setHabitModalMode('edit', habit);
+  resetHabitFormFields(habit);
+
+  const modalEl = document.getElementById('habitModal');
+  if (!modalEl) return;
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
+}
+
+function setHabitModalMode(mode, habit) {
+  const titleEl = document.getElementById('habitModalTitle');
+  const submitBtn = document.getElementById('habitModalSubmitBtn');
+  const idInput = document.getElementById('habitId');
+
+  if (mode === 'edit' && habit) {
+    editingHabitId = habit.id;
+    if (idInput) idInput.value = habit.id;
+    if (titleEl) titleEl.textContent = 'Edit habit';
+    if (submitBtn) submitBtn.textContent = 'Save changes';
+  } else {
+    editingHabitId = null;
+    if (idInput) idInput.value = '';
+    if (titleEl) titleEl.textContent = 'New habit';
+    if (submitBtn) submitBtn.textContent = 'Create habit';
+  }
+}
+
+function resetHabitFormFields(habit) {
+  const titleInput = document.getElementById('habitTitle');
+  const targetInput = document.getElementById('habitTargetPerWeek');
+  const colorInput = document.getElementById('habitColor');
+  const swatches = document.querySelectorAll('.habit-color-swatch');
+
+  if (habit) {
+    if (titleInput) titleInput.value = habit.title || '';
+    if (targetInput) {
+      targetInput.value =
+        habit.targetPerWeek !== null && habit.targetPerWeek !== undefined
+          ? String(habit.targetPerWeek)
+          : '';
+    }
+    if (colorInput) colorInput.value = habit.color || '#198754';
+
+    swatches.forEach((sw) => {
+      sw.classList.toggle('active', sw.dataset.color === colorInput.value);
+    });
+  } else {
+    if (titleInput) titleInput.value = '';
+    if (targetInput) targetInput.value = '';
+    if (colorInput) colorInput.value = '#198754';
+
+    swatches.forEach((sw, idx) => {
+      sw.classList.toggle('active', idx === 0);
+    });
+  }
+}
+
+
+function renderArchivedHabits(archivedHabits) {
+  const listEl = document.getElementById('archivedHabitsList');
+  const countBadge = document.getElementById('archivedCountBadge');
+  const card = document.getElementById('archivedHabitsCard');
+
+  if (!listEl || !countBadge || !card) return;
+
+  const count = archivedHabits.length;
+  countBadge.textContent = count === 1 ? '1 habit' : `${count} habits`;
+
+  listEl.innerHTML = '';
+
+  if (count === 0) {
+    card.classList.add('archived-empty-state');
+    listEl.innerHTML = `
+      <div class="archived-habits-empty">
+        You haven't archived any habits yet.
+      </div>
+    `;
+    return;
+  }
+
+  card.classList.remove('archived-empty-state');
+
+  archivedHabits.forEach((habit) => {
+    const color = habit.color || 'var(--accent-color)';
+    const container = document.createElement('div');
+    container.className = 'archived-habit-item';
+    container.dataset.habitId = habit.id;
+
+    let metaText = '';
+    if (habit.archivedAt) {
+      const d = new Date(habit.archivedAt);
+      metaText = `Archived on ${d.toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+      })}`;
+    }
+
+    container.innerHTML = `
+      <div class="d-flex align-items-center gap-2 flex-grow-1">
+        <span class="habit-color-dot" style="background:${color};"></span>
+        <div class="flex-grow-1">
+          <div class="archived-habit-name text-truncate">${habit.title}</div>
+          ${
+            metaText
+              ? `<div class="archived-habit-meta">${metaText}</div>`
+              : ''
+          }
+        </div>
+      </div>
+      <div class="btn-group btn-group-sm archived-actions" role="group">
+        <button
+          type="button"
+          class="btn btn-outline-success archived-unarchive-btn"
+          data-habit-id="${habit.id}"
+          data-habit-title="${habit.title.replace(/"/g, '&quot;')}"
+        >
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-danger archived-delete-btn"
+          data-habit-id="${habit.id}"
+          data-habit-title="${habit.title.replace(/"/g, '&quot;')}"
+        >
+          <i class="bi bi-trash3"></i>
+        </button>
+      </div>
+    `;
+
+    listEl.appendChild(container);
+  });
+
+  // Wire up archive list buttons
+  listEl.querySelectorAll('.archived-unarchive-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.dataset.habitId;
+      const rowEl = btn.closest('.archived-habit-item');
+      unarchiveHabit(habitId, rowEl);
+    });
+  });
+
+  listEl.querySelectorAll('.archived-delete-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.dataset.habitId;
+      const title = btn.dataset.habitTitle || 'this habit';
+      const rowEl = btn.closest('.archived-habit-item');
+      openHabitDeleteModal(habitId, title, rowEl);
+    });
+  });
+}
+
+
 function toggleHabitDay(habitId, date) {
   fetch(`/api/habits/${habitId}/toggle`, {
     method: 'POST',
@@ -186,6 +447,75 @@ function toggleHabitDay(habitId, date) {
       console.error('Failed to toggle habit day:', err);
     });
 }
+
+function archiveHabit(habitId, rowEl) {
+  if (rowEl) {
+    rowEl.classList.add('habit-row-removing');
+  }
+
+  fetch(`/api/habits/${habitId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  })
+    .then((res) => {
+      if (res.status === 401) {
+        console.warn('Not authenticated. Redirecting to login.');
+        window.location.href = '../login.html';
+        return null;
+      }
+
+      if (!res.ok) {
+        throw new Error('Failed to archive habit. HTTP ' + res.status);
+      }
+
+      return res.json();
+    })
+    .then((board) => {
+      if (!board) return;
+      currentBoard = board;
+      renderHabitsBoard(board);
+    })
+    .catch((err) => {
+      console.error('Failed to archive habit:', err);
+      if (rowEl) rowEl.classList.remove('habit-row-removing');
+    });
+}
+
+
+function unarchiveHabit(habitId, itemEl) {
+  if (itemEl) {
+    itemEl.classList.add('habit-row-removing');
+  }
+
+  fetch(`/api/habits/${habitId}`, {
+    method: 'PATCH',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ isArchived: false }),
+  })
+    .then((res) => {
+      if (res.status === 401) {
+        console.warn('Not authenticated. Redirecting to login.');
+        window.location.href = '../login.html';
+        return null;
+      }
+
+      if (!res.ok) {
+        throw new Error('Failed to unarchive habit. HTTP ' + res.status);
+      }
+
+      return res.json();
+    })
+    .then((board) => {
+      if (!board) return;
+      currentBoard = board;
+      renderHabitsBoard(board);
+    })
+    .catch((err) => {
+      console.error('Failed to unarchive habit:', err);
+      if (itemEl) itemEl.classList.remove('habit-row-removing');
+    });
+}
+
 
 function updateSidebarStats(summary) {
   const todayLabel = document.getElementById('todayLabel');
@@ -259,6 +589,18 @@ function setupColourSwatches() {
   });
 }
 
+function setupHabitCreateButton() {
+  const btn = document.getElementById('habitNewBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    // Reset modal to "create" mode
+    setHabitModalMode('create');
+    resetHabitFormFields(null);
+  });
+}
+
+
 function setupHabitForm() {
   const form = document.getElementById('habitForm');
   if (!form) return;
@@ -281,33 +623,101 @@ function setupHabitForm() {
       return;
     }
 
-    fetch('/api/habits', {
-      method: 'POST',
+    const isEdit = !!editingHabitId;
+    const url = isEdit ? `/api/habits/${editingHabitId}` : '/api/habits';
+    const method = isEdit ? 'PATCH' : 'POST';
+
+    fetch(url, {
+      method,
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          console.warn('Not authenticated. Redirecting to login.');
+          window.location.href = '../login.html';
+          return null;
+        }
+
+        if (!res.ok) {
+          throw new Error(
+            (isEdit ? 'Failed to update habit. HTTP ' : 'Failed to create habit. HTTP ') +
+              res.status
+          );
+        }
+
+        return res.json();
+      })
       .then((board) => {
+        if (!board) return;
+
         currentBoard = board;
         renderHabitsBoard(board);
 
-        // Reset form
+        // Reset form back into "create" mode for next time
         form.reset();
-        if (colorInput) colorInput.value = '#198754';
-        document
-          .querySelectorAll('.habit-color-swatch')
-          .forEach((s) => s.classList.remove('active'));
-        const firstSwatch = document.querySelector('.habit-color-swatch');
-        if (firstSwatch) firstSwatch.classList.add('active');
+        setHabitModalMode('create');
+        resetHabitFormFields(null);
 
         // Close modal
         const modalEl = document.getElementById('habitModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
-        modal.hide();
+        if (modal) modal.hide();
       })
       .catch((err) => {
-        console.error('Failed to create habit:', err);
-        alert('Failed to create habit. Please try again.');
+        console.error(isEdit ? 'Failed to update habit:' : 'Failed to create habit:', err);
+        alert(isEdit ? 'Failed to update habit. Please try again.' : 'Failed to create habit. Please try again.');
       });
   });
+}
+
+
+// --- Delete habit modal wiring ---
+
+function setupDeleteModal() {
+  const confirmBtn = document.getElementById('habitDeleteConfirmBtn');
+  if (!confirmBtn) return;
+
+  confirmBtn.addEventListener('click', () => {
+    if (!pendingDeleteHabit) return;
+
+    const { id, rowEl } = pendingDeleteHabit;
+    const modalEl = document.getElementById('habitDeleteModal');
+    const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+
+    if (rowEl) {
+      rowEl.classList.add('habit-row-removing');
+    }
+
+    fetch(`/api/habits/${id}/hard`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    })
+      .then((res) => res.json())
+      .then((board) => {
+        pendingDeleteHabit = null;
+        if (modal) modal.hide();
+        currentBoard = board;
+        renderHabitsBoard(board);
+      })
+      .catch((err) => {
+        console.error('Failed to delete habit:', err);
+        if (rowEl) rowEl.classList.remove('habit-row-removing');
+      });
+  });
+}
+
+function openHabitDeleteModal(habitId, title, rowEl) {
+  pendingDeleteHabit = { id: habitId, title, rowEl };
+
+  const msgEl = document.getElementById('habitDeleteMessage');
+  if (msgEl) {
+    msgEl.textContent = `Delete "${title}"?`;
+  }
+
+  const modalEl = document.getElementById('habitDeleteModal');
+  if (!modalEl) return;
+
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
 }

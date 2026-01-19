@@ -1,6 +1,4 @@
-// --- UTILITY FUNCTIONS (Copied from existing project structure) ---
-
-// auth headers (assuming you might protect the feedback route later)
+// auth headers
 function getAuthHeaders(contentType = "application/json") {
  const token = localStorage.getItem("token");
  return {
@@ -9,7 +7,7 @@ function getAuthHeaders(contentType = "application/json") {
 };
 }
 
-// get logged in user id (Required to fix the ReferenceError)
+// get logged in user id 
 function getLoggedInUserId() {
  const userIdElement = document.getElementById("logged-in-user-id");
  // Assuming 'logged-in-user-id' is a hidden input element holding the user ID
@@ -31,7 +29,7 @@ document.querySelector('.sidebar-footer a')?.addEventListener("click", (e) => {
     window.location.href = '../login.html';
 });
 
-// --- CORE FUNCTIONALITY ---
+// main functionality
 
 function submitFeedback(event) {
     event.preventDefault();
@@ -44,7 +42,7 @@ function submitFeedback(event) {
     const data = {
         type: form.type.value,
         description: form.description.value,
-        userId: getLoggedInUserId() // Include this line if you track user IDs and uncomment the function above
+        userId: getLoggedInUserId()
     };
 
     // Disable button and clear previous message
@@ -52,12 +50,11 @@ function submitFeedback(event) {
     submitBtn.textContent = 'Submitting...';
     feedbackMessage.style.display = 'none';
 
-    // 💡 FIX: Define headers in a variable explicitly before the fetch call
     const headers = getAuthHeaders();
 
     fetch('/api/feedback', {
         method: 'POST',
-        headers: headers, // Use the pre-defined headers variable
+        headers: headers,
         body: JSON.stringify(data)
     })
     .then(res => {
@@ -70,7 +67,7 @@ function submitFeedback(event) {
         return res.json();
     })
     .then(data => {
-        feedbackMessage.textContent = '✅ Thank you for your feedback! It has been successfully submitted.';
+        feedbackMessage.textContent = 'Thank you for your feedback! It has been successfully submitted.';
         feedbackMessage.className = 'alert alert-success';
         feedbackMessage.style.display = 'block';
         form.reset(); // Clear the form on success
@@ -78,7 +75,7 @@ function submitFeedback(event) {
     .catch(error => {
         console.error('Submission Error:', error);
         // Display the specific error message 
-        feedbackMessage.textContent = '❌ Error submitting feedback: ' + (error.message || 'Please check the console.');
+        feedbackMessage.textContent = 'Error submitting feedback: ' + (error.message || 'Please check the console.');
         feedbackMessage.className = 'alert alert-danger';
         feedbackMessage.style.display = 'block';
     })

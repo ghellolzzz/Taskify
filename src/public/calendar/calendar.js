@@ -616,7 +616,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-
     // Add button to show priority suggestions
     function addSuggestionsButton() {
         const existingBtn = document.getElementById('show-suggestions-btn');
@@ -633,7 +632,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const calendarHeader = document.querySelector('.calendar-header');
         calendarHeader.appendChild(btn);
     }
-
 
     // Logout functionality
     document.querySelector('.sidebar-footer a')?.addEventListener('click', (e) => {

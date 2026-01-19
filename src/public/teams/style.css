@@ -1,0 +1,152 @@
+/* =========================================
+   NOTION-STYLE CARD DESIGN
+   ========================================= */
+
+
+.team-task-card {
+    background: #ffffff;
+    border: 1px solid #e9ecef; 
+    border-radius: 8px;       
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+
+.team-task-card:hover {
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    border-color: #dee2e6;
+}
+
+
+.team-task-card.task-completed {
+    opacity: 0.6;
+    background-color: #f8f9fa;
+}
+
+
+.task-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #212529;
+    letter-spacing: -0.3px;
+    margin-top: 4px;
+}
+
+
+.notion-tag {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tag-gray   { background: #e9ecef; color: #495057; }
+.tag-red    { background: #ffc9c9; color: #c92a2a; } 
+.tag-yellow { background: #ffec99; color: #e67700; } 
+.tag-blue   { background: #a5d8ff; color: #1864ab; } 
+.tag-green  { background: #b2f2bb; color: #2b8a3e; } 
+
+
+.status-select {
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+    appearance: none; 
+    text-align: center;
+}
+
+
+.status-pending     { background: #e9ecef; color: #495057; }
+.status-inprogress  { background: #e7f5ff; color: #1c7ed6; }
+.status-completed   { background: #ebfbee; color: #2f9e44; }
+
+.status-select:hover {
+    filter: brightness(0.95);
+}
+
+
+.card-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.team-task-card:hover .card-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    color: #868e96;
+    padding: 4px;
+    border-radius: 4px;
+}
+.action-btn:hover {
+    background-color: #f1f3f5;
+    color: #212529;
+}
+/* Comment Section */
+.comment-section {
+    background-color: #f8f9fa;
+    border-top: 1px solid #eee;
+}
+
+.comment-bubble {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    font-size: 0.9rem;
+}
+
+
+.form-select.text-bg-primary, 
+.form-select.text-bg-success, 
+.form-select.text-bg-secondary {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+
+.form-select:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+
+.ms-n2 {
+    margin-left: -8px !important;
+}
+
+
+.rounded-circle:hover {
+    transform: translateY(-2px);
+    z-index: 20 !important; 
+    transition: transform 0.2s;
+}
+
+
+.border-high { border-left: 5px solid #ffc9c9 !important; } 
+.border-medium { border-left: 5px solid #ffec99 !important; } 
+.border-low { border-left: 5px solid #a5d8ff !important; }
+
+
+#completed-team-task-container {
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+  max-height: 2000px; 
+  opacity: 1;
+}
+
+#completed-team-task-container.collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}

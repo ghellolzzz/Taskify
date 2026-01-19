@@ -451,12 +451,14 @@ body {
 
 .empty-suggestions i {
     margin-bottom: 20px;
+    color: white;
     opacity: 0.8;
 }
 
 .empty-suggestions p {
     line-height: 1.6;
     max-width: 400px;
+    color: white;
 }
 
 .suggestion-item {

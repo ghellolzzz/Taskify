@@ -16,4 +16,7 @@ router.put("/:id", categoriesController.updateCategory);
 // Delete category
 router.delete("/:id", categoriesController.deleteCategory);
 
+// get tasks by category
+router.get("/:id/tasks", categoriesController.getTasksByCategory);
+
 module.exports = router;

@@ -21,6 +21,21 @@ document.getElementById("show-add-goal-form").addEventListener("click", () => {
     document.getElementById("add-goal-card").classList.toggle("d-none")
 })
 
+// Logout functionality
+document.querySelector('.sidebar-footer a')?.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('accountNo');
+    localStorage.removeItem('role');
+    localStorage.removeItem('memberId');
+
+    window.location.href = '../login.html';
+});
+
+
 
 function loadGoals() {
 

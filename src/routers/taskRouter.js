@@ -3,16 +3,15 @@ const router= express.Router();
 
 const taskController= require("../controller/taskController")
 const { verifyToken } = require("../middleware/jwtMiddleware");
-router.use(verifyToken)
 
-router.post('/', taskController.create);
-router.get('/', taskController.retrieveAll);
+router.post('/', verifyToken, taskController.create);
+router.get('/', verifyToken, taskController.retrieveAll);
 
-router.get('/filter', taskController.filter);  
+router.get('/filter', verifyToken, taskController.filter);  
 
-router.get('/:id', taskController.retrieveById);
-router.put('/:id', taskController.update);
-router.delete('/:id', taskController.delete);
+router.get('/:id', verifyToken, taskController.retrieveById);
+router.put('/:id', verifyToken, taskController.update);
+router.delete('/:id', verifyToken, taskController.delete);
 
 
 module.exports=router

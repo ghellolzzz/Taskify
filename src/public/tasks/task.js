@@ -105,7 +105,21 @@ function createTaskCard(task) {
             color:white;
             display:inline-block;
         ">
+       ${
+        task.teamId
+            ? `<span class="badge bg-secondary">Team task</span>`
+            : `<span class="badge-category" style="
+        background:${task.category?.color || '#ccc'};
+        padding:4px 10px;
+        border-radius:12px;
+        font-size:12px;
+        color:white;
+        display:inline-block;
+      ">
         ${task.category?.name || "No category"}
+      </span>`
+        }
+
             </span>
     </div>
 
@@ -248,7 +262,8 @@ function openEditModal(taskId) {
 
             document.querySelector("#edit-task-id").value = taskId;
 
-            loadEditCategories(task.categoryId)
+            loadEditCategories(task.category?.id)
+
 
 
             const modal = new bootstrap.Modal(document.getElementById("editModal"));

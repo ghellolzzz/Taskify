@@ -1,5 +1,14 @@
 // /src/public/js/profile.js
 
+
+// Global state for activity tab filters
+const profileActivityState = {
+  full: null,          // { heatmap, recent }
+  currentFilter: 'all', // 'all' | 'tasks' | 'goals' | 'habits' | 'calendar' | 'reminders'
+  heatmapDays: 28       // 7 | 28 | 90 (default 28)
+
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   // Enable Bootstrap tooltips on badges once DOM is ready
   const tooltipTriggerList = [].slice.call(
@@ -17,18 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  Promise.all([
-  fetch(`/api/profile/${userId}/overview`, { headers: authHeaders() }).then((r) => r.json()),
-  fetch(`/api/profile/${userId}/badges`, { headers: authHeaders() }).then((r) => r.json()),
-  fetch(`/api/profile/${userId}/activity`, { headers: authHeaders() }).then((r) => r.json()),
-])
-
-    .then(([overview, badges, activity]) => {
+    Promise.all([
+    fetch(`/api/profile/${userId}/overview`, { headers: authHeaders() }).then((r) => r.json()),
+    fetch(`/api/profile/${userId}/badges`,   { headers: authHeaders() }).then((r) => r.json()),
+    fetch(`/api/profile/${userId}/activity`, { headers: authHeaders() }).then((r) => r.json()),
+    // NEW: load habits board to show snapshot in Profile
+    fetch('/api/habits',                     { headers: authHeaders() }).then((r) => r.json()),
+  ])
+    .then(([overview, badges, activity, habitsBoard]) => {
       setupProfileUI(overview);
       setupBadgesUI(badges);
       setupActivityUI(activity);
       setupThemeControls(overview.user);
       setupEditProfileModal(overview.user);
+
+      if (habitsBoard && habitsBoard.summary) {
+        setupHabitsSummaryUI(habitsBoard.summary);
+      }
     })
     .catch((err) => {
       console.error('Failed to load profile data:', err);
@@ -107,6 +121,43 @@ if (user.avatarUrl) {
   document.getElementById('tasksProgressBar').style.width =
     tasksPct + '%';
 
+        // --- Weekly Productivity card ---
+  const prod = stats.productivity || {};
+
+  const scoreEl      = document.getElementById('prodScoreValue');
+  const chipEl       = document.getElementById('prodScoreChip');
+  const labelEl      = document.getElementById('prodLabel');
+  const breakdownEl  = document.getElementById('prodBreakdown');
+
+  if (scoreEl && chipEl && labelEl && breakdownEl) {
+    const score      = prod.score ?? 0;
+    const completed  = prod.completedThisWeek ?? 0;
+    const overdue    = prod.overdueThisWeek ?? 0;
+    const level      = prod.level || 'neutral';
+    const labelText  = prod.label ||
+      'You are on track this week.';
+    const message    = prod.message ||
+      'Complete more tasks and keep overdue items low to boost your score.';
+
+    scoreEl.textContent = score;
+    labelEl.textContent = labelText;
+    breakdownEl.textContent =
+      `✅ ${completed} tasks completed · ⚠️ ${overdue} overdue`;
+
+    chipEl.classList.remove(
+      'prod-chip-good',
+      'prod-chip-ok',
+      'prod-chip-bad',
+      'prod-chip-neutral'
+    );
+
+    let chipClass = 'prod-chip-neutral';
+    if (level === 'good') chipClass = 'prod-chip-good';
+    else if (level === 'ok') chipClass = 'prod-chip-ok';
+    else if (level === 'bad') chipClass = 'prod-chip-bad';
+
+    chipEl.classList.add(chipClass);
+  }
 
   const categoriesContainer = document.querySelector(
     '#categoriesContainer'
@@ -157,6 +208,70 @@ if (user.avatarUrl) {
     ).textContent = `Active ${activeCount} of the last 7 days.`;
   }
 }
+
+/**
+ * Show habits info in the Profile → Overview "Habits snapshot" card.
+ * summary comes from Habit.model getHabitsBoard(userId).summary
+ */
+function setupHabitsSummaryUI(summary) {
+  const summaryLineEl = document.getElementById('habitsSummaryLine');
+  const todayBarEl    = document.getElementById('habitsTodayProgressBar');
+  const weeklyMsgEl   = document.getElementById('habitsWeeklyMessage');
+  const streakEl      = document.getElementById('habitsStreakHighlight');
+
+  if (!summaryLineEl || !todayBarEl || !weeklyMsgEl || !streakEl) return;
+
+  const totalHabits    = summary.totalHabits    ?? 0;
+  const activeHabits   = summary.activeHabits   ?? 0;
+  const archivedCount  = summary.archivedCount  ?? 0;
+  const todayTotal     = summary.todayTotal     ?? 0;
+  const todayCompleted = summary.todayCompleted ?? 0;
+  const weeklyPct      = summary.avgWeeklyCompletion ?? 0;
+  const longest        = summary.longestStreakHabit || null;
+
+  // No active habits yet
+  if (totalHabits === 0 || activeHabits === 0) {
+    summaryLineEl.textContent =
+      'No active habits yet. Create your first one in the Habits Lab.';
+    todayBarEl.style.width = '0%';
+    weeklyMsgEl.textContent = '';
+    streakEl.textContent = 'Your first habit streak is waiting 🔥';
+    return;
+  }
+
+  // Today % bar
+  const todayPct =
+    todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
+
+  summaryLineEl.textContent =
+    `${todayCompleted} of ${todayTotal} habits completed today · ` +
+    `${activeHabits} active, ${archivedCount} archived`;
+
+  todayBarEl.style.width = `${todayPct}%`;
+
+  // Weekly consistency message
+  if (weeklyPct === 0) {
+    weeklyMsgEl.textContent =
+      'Your week is still blank — tiny actions will fill it up.';
+  } else if (weeklyPct < 60) {
+    weeklyMsgEl.textContent =
+      `Weekly consistency: ${weeklyPct}% – you’re building momentum.`;
+  } else {
+    weeklyMsgEl.textContent =
+      `Weekly consistency: ${weeklyPct}% – great discipline this week 🔥`;
+  }
+
+  // Longest habit streak
+  if (longest && longest.streak > 0) {
+    const daysLabel = longest.streak === 1 ? 'day' : 'days';
+    streakEl.innerHTML =
+      `Best streak: <strong>${longest.title}</strong> – ${longest.streak} ${daysLabel}.`;
+  } else {
+    streakEl.textContent =
+      'No habit streaks yet — your first one is waiting 🔥';
+  }
+}
+
 
 /**
  * Populate badges tab.
@@ -234,47 +349,180 @@ function setupBadgesUI(badges) {
 }
 
 /**
- * Populate activity tab.
+ * Populate activity tab (heatmap + recent activity with filters).
  * activity = { heatmap: [], recent: [] }
  */
 function setupActivityUI(activity) {
-  const { heatmap, recent } = activity;
+  // Store full activity data in global state
+  profileActivityState.full = activity;
+  profileActivityState.currentFilter = 'all';
+  profileActivityState.heatmapDays = 28; // default visible range
+
+  // Setup controls
+  setupActivityFilters();
+  setupActivityRangeControls();
+
+  // Initial render
+  renderActivityHeatmap();
+  renderRecentActivityList();
+}
+
+
+/**
+ * Render the 28-day heatmap.
+ */
+function renderActivityHeatmap() {
+  const state = profileActivityState;
+  const allDays = state.full?.heatmap || [];
+  const days = state.heatmapDays || 28;
 
   const heatmapContainer = document.getElementById('activityHeatmap');
-  if (heatmapContainer) {
-    heatmapContainer.innerHTML = '';
-    heatmap.forEach((day) => {
-      const cell = document.createElement('div');
-      cell.classList.add('heat-cell');
-      if (day.level && day.level > 0) {
-        cell.classList.add(`level-${day.level}`);
-      }
-      heatmapContainer.appendChild(cell);
+  if (!heatmapContainer) return;
+
+  // Take the LAST N days from the full 90-day array
+  const subset = allDays.slice(-days);
+
+  heatmapContainer.innerHTML = '';
+  subset.forEach((day) => {
+    const cell = document.createElement('div');
+    cell.classList.add('heat-cell');
+    if (day.level && day.level > 0) {
+      cell.classList.add(`level-${day.level}`);
+    }
+    heatmapContainer.appendChild(cell);
+  });
+}
+
+/**
+ * Attach click handlers to filter chips.
+ * data-filter values: all | tasks | goals | habits | calendar
+ */
+function setupActivityFilters() {
+  const filtersContainer = document.getElementById('activityFilters');
+  if (!filtersContainer) return;
+
+  const buttons = filtersContainer.querySelectorAll('button[data-filter]');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter || 'all';
+      profileActivityState.currentFilter = filter;
+
+      // Toggle .active class
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Re-render list
+      renderRecentActivityList();
     });
-  }
+  });
+}
+
+/**
+ * Attach click handlers to range buttons (7d / 28d / 90d).
+ */
+function setupActivityRangeControls() {
+  const rangeContainer = document.getElementById('activityRange');
+  const labelEl = document.getElementById('activityRangeLabel');
+  if (!rangeContainer) return;
+
+  const buttons = rangeContainer.querySelectorAll('button[data-range]');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = parseInt(btn.dataset.range, 10) || 28;
+      profileActivityState.heatmapDays = value;
+
+      // Toggle active state on buttons
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Update helper text
+      if (labelEl) {
+        labelEl.textContent =
+          `Showing last ${value} days. Darker squares mean more tasks completed that day.`;
+      }
+
+      // Re-render the heatmap using the new range
+      renderActivityHeatmap();
+    });
+  });
+}
+
+
+/**
+ * Render the recent activity list based on the current filter.
+ */
+function renderRecentActivityList() {
+  const state = profileActivityState;
+  if (!state.full) return;
 
   const recentList = document.getElementById('recentActivityList');
-  if (recentList) {
-    recentList.innerHTML = '';
-    recent.forEach((event) => {
-      const li = document.createElement('li');
-      li.classList.add('list-group-item');
+  if (!recentList) return;
 
-      let emoji = '📌';
-      if (event.type === 'TASK_COMPLETED') emoji = '✅';
-      else if (event.type === 'TASK_CREATED') emoji = '📝';
-      else if (event.type === 'GOAL_COMPLETED') emoji = '🎯';
-      else if (event.type === 'CALENDAR_NOTE') emoji = '📅';
+  const { recent } = state.full;
+  const filter = state.currentFilter || 'all';
 
-      const when = new Date(event.createdAt).toLocaleString();
-      li.innerHTML = `
-        ${emoji} ${event.label}
-        <span class="text-muted">· ${when}</span>
-      `;
-      recentList.appendChild(li);
+  // Filter mapping:
+  // - tasks    → TASK_COMPLETED, TASK_CREATED
+  // - goals    → GOAL_COMPLETED
+  // - habits   → HABIT_LOGGED
+  // - calendar → CALENDAR_NOTE
+  let filtered = recent;
+
+    if (filter !== 'all') {
+    filtered = recent.filter((event) => {
+      switch (filter) {
+        case 'tasks':
+          return (
+            event.type === 'TASK_COMPLETED' ||
+            event.type === 'TASK_CREATED'
+          );
+        case 'goals':
+          return event.type === 'GOAL_COMPLETED';
+        case 'habits':
+          return event.type === 'HABIT_LOGGED';
+        case 'calendar':
+          return event.type === 'CALENDAR_NOTE';
+        case 'reminders':
+          return event.type === 'REMINDER';
+        default:
+          return true;
+      }
     });
   }
+
+
+  // Rebuild list
+  recentList.innerHTML = '';
+  filtered.forEach((event) => {
+    const li = document.createElement('li');
+    li.classList.add('list-group-item');
+
+    let emoji = '📌';
+    if (event.type === 'TASK_COMPLETED') emoji = '✅';
+    else if (event.type === 'TASK_CREATED') emoji = '📝';
+    else if (event.type === 'GOAL_COMPLETED') emoji = '🎯';
+    else if (event.type === 'CALENDAR_NOTE') emoji = '📅';
+    else if (event.type === 'HABIT_LOGGED') emoji = '🔁';
+    else if (event.type === 'REMINDER') emoji = '⏰';
+
+    const when = new Date(event.createdAt).toLocaleString();
+    li.innerHTML = `
+      ${emoji} ${event.label}
+      <span class="text-muted">· ${when}</span>
+    `;
+    recentList.appendChild(li);
+  });
+
+  // Empty-state UX (optional)
+  if (filtered.length === 0) {
+    const li = document.createElement('li');
+    li.classList.add('list-group-item', 'text-muted');
+    li.textContent = 'No activity for this filter yet.';
+    recentList.appendChild(li);
+  }
 }
+
 
 /**
  * Setup theme & accent controls that persist via PUT /api/profile/:userId

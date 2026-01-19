@@ -53,16 +53,20 @@ body.profile-theme-light {
 /* ---------- Sidebar ---------- */
 
 .sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 230px;
-  height: 100vh;
-  background: #ffffff;
-  border-right: 1px solid #e6e6e6;
-  padding: 20px 16px;
-  z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+    background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
+    padding: 20px 16px;
+
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; 
 }
+
 
 .sidebar .brand {
   font-size: 1.4rem;
@@ -95,10 +99,8 @@ body.profile-theme-light {
 }
 
 .sidebar-footer {
-  position: absolute;
-  bottom: 20px;
-  left: 16px;
-  right: 16px;
+    margin-top: auto;   /* push footer to bottom naturally */
+    padding-top: 20px;
 }
 
 /* ---------- Footer ---------- */
@@ -440,4 +442,147 @@ body.profile-theme-dark .avatar-dropzone.dragover {
 }
 body.profile-theme-dark .avatar-dropzone-text {
   color: #94a3b8;
+}
+
+/* Productivity chip styles */
+.prod-chip-neutral {
+  background: #e9ecef;
+  color: #6c757d;
+}
+
+.prod-chip-good {
+  background: rgba(25, 135, 84, 0.12);
+  color: #198754;
+}
+
+.prod-chip-ok {
+  background: rgba(255, 193, 7, 0.14);
+  color: #f59e0b;
+}
+
+.prod-chip-bad {
+  background: rgba(220, 53, 69, 0.14);
+  color: #dc3545;
+}
+
+/* Optional for dark theme tweaks */
+body.profile-theme-dark .prod-chip-neutral {
+  background: #1f2937;
+  color: #cbd5e1;
+}
+
+/* -----------------------------------------
+   Accent-aware Bootstrap overrides
+   ----------------------------------------- */
+
+/* Solid success buttons use accent */
+.btn-success,
+.btn-success:focus,
+.btn-success:active {
+  background-color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+}
+
+/* Outline success buttons (e.g. filter chips, Edit profile) */
+.btn-outline-success {
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  background-color: transparent;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success.active,
+.btn-outline-success:active,
+.show > .btn-outline-success.dropdown-toggle {
+  background-color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+  color: #ffffff !important;
+}
+
+/* Text-success (e.g. "Open Habits Lab →") follows accent */
+.text-success,
+a.text-success {
+  color: var(--accent-color) !important;
+}
+
+/* In dark mode, keep outline buttons transparent until hover/active */
+body.profile-theme-dark .btn-outline-success {
+  background-color: transparent;
+}
+
+/* -----------------------------------------
+   Dark mode list groups inside profile cards
+   (Recent activity list)
+   ----------------------------------------- */
+
+body.profile-theme-dark .profile-card .list-group,
+body.profile-theme-dark .profile-card .list-group-item {
+  background-color: #111827;
+  border-color: #1f2937;
+  color: #e2e8f0;
+}
+
+/* -----------------------------------------
+   Edit Profile modal – dark theme
+   ----------------------------------------- */
+
+body.profile-theme-dark .modal-content {
+  background: rgba(15, 23, 42, 0.96);       /* deep navy glass */
+  border-radius: 18px;
+  border: 1px solid #1f2937;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  color: #e5e7eb;
+}
+
+body.profile-theme-dark .modal-header,
+body.profile-theme-dark .modal-footer {
+  background: transparent;
+  border-color: #1f2937;
+}
+
+body.profile-theme-dark .modal-title {
+  color: #e5e7eb;
+}
+
+/* Close (X) button visible on dark bg */
+body.profile-theme-dark .btn-close {
+  filter: invert(1) grayscale(100%);
+  opacity: 0.75;
+}
+body.profile-theme-dark .btn-close:hover {
+  opacity: 1;
+}
+
+/* Form fields inside the modal */
+body.profile-theme-dark .modal-content .form-label {
+  color: #e5e7eb;
+}
+
+body.profile-theme-dark .modal-content .form-control,
+body.profile-theme-dark .modal-content .form-select,
+body.profile-theme-dark .modal-content textarea {
+  background-color: #020617;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+body.profile-theme-dark .modal-content .form-control::placeholder,
+body.profile-theme-dark .modal-content textarea::placeholder {
+  color: #6b7280;
+}
+
+body.profile-theme-dark .modal-content .form-control:focus,
+body.profile-theme-dark .modal-content .form-select:focus,
+body.profile-theme-dark .modal-content textarea:focus {
+  background-color: #020617;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--accent-color) 35%, transparent);
+  color: #e5e7eb;
+}
+
+/* Keep avatar dropzone nicely blended in dark mode (you already have some of this) */
+body.profile-theme-dark .modal-content .avatar-dropzone {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: color-mix(in srgb, var(--accent-color) 40%, #475569);
 }

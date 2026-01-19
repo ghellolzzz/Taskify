@@ -61,10 +61,18 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
         run: npx prisma db seed
 
+      - name: Create .env.test for CI (use local Postgres)
+        run: |
+          cat > .env.test <<'EOF'
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/testdb
+          PORT=3001
+          JWT_SECRET_KEY=test-secret
+          JWT_EXPIRES_IN=24h
+          JWT_ALGORITHM=HS256
+          EOF
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-
-   
 
       - name: Run Playwright E2E tests
         run: npm test

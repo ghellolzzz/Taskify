@@ -65,7 +65,10 @@ module.exports = defineConfig({
   url: 'http://127.0.0.1:3001',
   reuseExistingServer: !process.env.CI,
   timeout: 180 * 1000,
+  stdout: 'pipe',
+  stderr: 'pipe',
 },
+
 
   globalSetup: require.resolve('./playwright-global-setup'),
 });

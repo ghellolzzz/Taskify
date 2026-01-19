@@ -33,7 +33,6 @@
     "test": "dotenv -e .env.test -- playwright test --config=configs/playwright.config.js",
     "lint": "eslint -c configs/eslint.config.mjs src/**/*.js",
     "test-trace": "npm test -- --reporter=html --trace on",
-    "start:test": "dotenv -e .env.test -- node ./src/server.js",
-    "test": "dotenv -e .env.test -- playwright test --config=configs/playwright.config.js"
+    "start:test": "dotenv -e .env.test -- node ./src/server.js"
   }
 }

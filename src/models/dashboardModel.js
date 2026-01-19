@@ -24,8 +24,30 @@ module.exports.getTasksDueToday = function (userId) {
     }
   });
 };
+// GET today reminder
+module.exports.getTodayList = function (userId, start, end) {
+  return prisma.reminder.findMany({
+    where: {
+      userId,
+      remindAt: { gte: start, lt: end }
+    },
+    orderBy: { remindAt: "asc" }
+  });
+};
+// GET upcoming reminder
+module.exports.getUpcoming = function (userId, todayEnd) {
+  const upcomingEnd = new Date(todayEnd);
+  upcomingEnd.setDate(upcomingEnd.getDate() + 3); // next 3 days
 
-
+  return prisma.reminder.findMany({
+    where: {
+      userId,
+      remindAt: { gte: todayEnd, lt: upcomingEnd },
+      isDone: false
+    },
+    orderBy: { remindAt: "asc" }
+  });
+};
 module.exports.getDashboardStats = async function (userId) {
   // Run all count queries in parallel
   const [total, completed, pending, inProgress] = await Promise.all([

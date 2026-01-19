@@ -5,17 +5,17 @@ test.describe('Team Collaboration UI (E2E)', () => {
 
     // Login via UI before every test
     test.beforeEach(async ({ page }) => {
-        await page.goto('http://localhost:3000/login.html');
+        await page.goto('http://localhost:3001/login.html');
         await page.fill('#email', 'MGF_21@ICLOUD.COM'); 
         await page.fill('#password', 'password123');
         await page.click('button[type="submit"]');
-        await page.waitForURL('http://localhost:3000/dashboard/dashboard.html');
+        await page.waitForURL('http://localhost:3001/dashboard/dashboard.html');
     });
 
     test('should create a team, enter workspace, and create a task', async ({ page }) => {
         
         //navigating to the team hub
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
         
         //checks if the header is visible
@@ -37,7 +37,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
 
         //enters the team workspace
         await page.click(`.team-card h5:has-text("${teamName}")`);
-        await page.waitForURL('http://localhost:3000/teams/team-view.html?id=*');
+        await page.waitForURL('http://localhost:3001/teams/team-view.html?id=*');
         
         await page.waitForLoadState('networkidle');
         
@@ -71,7 +71,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
     });
 
     test('should allow updating task status', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
         
        
@@ -114,7 +114,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
   
 
     test('should edit a team successfully', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
 
         //creating the team first again
@@ -147,7 +147,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
     });
 
     test('should edit a task successfully', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
 
        
@@ -184,7 +184,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
     });
 
     test('should delete a task successfully', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
 
        
@@ -218,7 +218,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
     });
 
     test('should add and display comments on a task', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
 
        
@@ -257,7 +257,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
     });
 
     test('should display team statistics correctly', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
 
       
@@ -293,7 +293,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
     });
 
     test('should show appropriate buttons based on user role (owner vs member)', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
 
         // Create a team (user becomes owner)
@@ -316,7 +316,7 @@ test.describe('Team Collaboration UI (E2E)', () => {
     });
 
     test('should expand task detail modal with full information', async ({ page }) => {
-        await page.goto('http://localhost:3000/teams/teams.html');
+        await page.goto('http://localhost:3001/teams/teams.html');
         await page.waitForLoadState('networkidle');
 
        

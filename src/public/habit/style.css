@@ -1,0 +1,273 @@
+/* src/public/habit/style.css */
+
+/* Page layout tweaks */
+.habits-page {
+  max-width: 1200px;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+/* Reuse profile-card for base look; habits-card is just a semantic helper */
+.habits-card {
+  border-radius: 18px;
+  border: none;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+.habits-card .card-body {
+  padding: 1.25rem 1.5rem;
+}
+
+/* Table */
+.habits-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.habits-table th,
+.habits-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.habits-table thead tr:nth-child(1) th {
+  border-bottom: none;
+}
+
+.habits-table thead tr:nth-child(2) th {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.is-today-header {
+  color: var(--accent-color);
+}
+
+/* Hover + removal animation for rows */
+.habits-table tbody tr {
+  transition:
+    background-color 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.habits-table tbody tr:hover {
+  background-color: rgba(25, 135, 84, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.habits-table tbody tr.habit-row-removing {
+  opacity: 0;
+  transform: translateX(-6px);
+  box-shadow: none;
+}
+
+/* Habit row visuals */
+.habit-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+}
+
+.habit-title {
+  font-size: 0.95rem;
+}
+
+/* Check-in buttons */
+.habit-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid #dee2e6;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
+.habit-dot:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.habit-dot.is-complete {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.2);
+}
+
+.habit-dot.is-today {
+  box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.35);
+}
+
+/* Colour swatches in modal */
+.habit-color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid #dee2e6;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.habit-color-swatch.active {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.3);
+}
+
+/* Actions dropdown */
+.habit-actions-dropdown .habit-actions-toggle {
+  border-radius: 999px;
+  border: none;
+  background-color: #f8fafc;
+  padding: 4px 8px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 0.12s ease,
+    box-shadow 0.12s ease,
+    transform 0.1s ease;
+}
+
+.habit-actions-dropdown .habit-actions-toggle i {
+  font-size: 1rem;
+}
+
+.habit-actions-dropdown .habit-actions-toggle:hover {
+  background-color: #e2e8f0;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+.habit-actions-dropdown .dropdown-menu {
+  border-radius: 12px;
+  padding: 0.25rem 0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  border: none;
+}
+
+.habit-actions-dropdown .dropdown-item {
+  font-size: 0.9rem;
+  padding: 0.45rem 1.1rem;
+}
+
+.habit-actions-dropdown .dropdown-item i {
+  font-size: 0.95rem;
+}
+
+/* Dark mode tweaks */
+body.profile-theme-dark .habits-table thead tr:nth-child(2) th {
+  color: #94a3b8;
+}
+
+body.profile-theme-dark .habit-dot {
+  border-color: #1f2937;
+  background-color: #020617;
+}
+
+body.profile-theme-dark .habit-dot:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+body.profile-theme-dark .habit-dot.is-complete {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 70%, transparent);
+}
+
+body.profile-theme-dark .habit-color-swatch {
+  border-color: #1f2937;
+}
+
+body.profile-theme-dark .habit-actions-dropdown .habit-actions-toggle {
+  background-color: #020617;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+body.profile-theme-dark .habit-actions-dropdown .habit-actions-toggle:hover {
+  background-color: #111827;
+}
+
+body.profile-theme-dark .habit-actions-dropdown .dropdown-menu {
+  background-color: #020617;
+  border-color: #1f2937;
+}
+
+/* Archived habits sidecard */
+.archived-habits-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.archived-habits-empty {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.archived-habit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  background: #f8fafc;
+  margin-bottom: 0.35rem;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.1s ease,
+    opacity 0.18s ease;
+}
+
+.archived-habit-item:hover {
+  background: rgba(25, 135, 84, 0.06);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+.archived-habit-name {
+  font-size: 0.9rem;
+}
+
+.archived-habit-meta {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+/* Make archive card look a bit lighter when empty */
+.archived-empty-state .card-body {
+  opacity: 0.9;
+}
+
+/* Dark mode tweaks for archive section */
+body.profile-theme-dark .archived-habit-item {
+  background: #020617;
+}
+
+body.profile-theme-dark .archived-habit-item:hover {
+  background: #0b1120;
+}
+
+body.profile-theme-dark .archived-habits-empty {
+  color: #64748b;
+}

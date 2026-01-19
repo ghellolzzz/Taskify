@@ -1,3 +1,4 @@
+/* ===== SIDEBAR ===== */
 body {
     display: flex;
     flex-direction: column;
@@ -15,10 +16,11 @@ body {
     left:0;
     width:230px;
     height:100vh;
-    background: linear-gradient(#e9f5ee, #ffffff);
+   background: linear-gradient(#e9f5ee, #ffffff);
     border-right: 1px solid #e0e6ed;
     padding: 20px;
 }
+
 
 .sidebar .brand{
     font-size:1.4rem;
@@ -64,16 +66,68 @@ body {
 
 
 /* ===== MAIN DASHBOARD AREA ===== */
-.dashboard {
+body {
+    background: #F6FFF9; /* soft mint white */
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
+}
+
+.dashboard-wrapper {
+    /* font-family: Arial, sans-serif; */
+    display: grid;
+    grid-template-columns: 1fr 300px; 
+    gap: 25px;
+    margin-left: 250px; /* keep your original dashboard left margin */
+    padding: 30px;
+}
+/* .dashboard {
     margin-left: 250px;
     padding: 30px;
     font-family: Arial, sans-serif;
+} */
+ .dashboard-left {
+    width: 100%;
+}
+.dashboard-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
+.right-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid
+}
 .greeting-container {
     margin-bottom: 25px;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #E5E7EB;
+}
+.hero-btn {
+    display: inline-block;   /* important for <a> */
+    text-decoration: none;   /* remove underline */
+    background: white;
+    color: #1F3A5F;
+    font-weight: 600;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    background: #e8eef6;
+    margin-top: 10px;
 }
 
+.hero-btn:hover {
+    background: #c7dffe;
+}
 .greeting {
     font-size: 2.2rem;
     font-weight: 600;
@@ -93,6 +147,12 @@ body {
     color: #555;
 }
 
+.task-today {
+    margin-top: 30px;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: #2c2c2c;
+}
 
 /* ===== STATS CARDS ===== */
 .stats-container {
@@ -102,12 +162,31 @@ body {
     margin-bottom: 30px;
 }
 
-.stat-card {
-    background: #f5fff7; /* pastel green tint */
+.stat-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-icon {
+    font-size: 48px;
+    color: #cbd5e1; /* soft gray-blue */
+    opacity: 0.9;
+}
+/* .stat-card {
+    background: #f5fff7; 
     padding: 20px;
     border-radius: 12px;
     border: 1px solid #d8f3dd;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
+} */
+ .stat-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #E5E7EB;
     transition: 0.2s ease;
 }
 
@@ -128,36 +207,228 @@ body {
     border-left: 5px solid #ffca28;
 }
 
-.stat-card.inprogress {
+.stat-card.inProgress {
     border-left: 5px solid #a1a1a1;
 }
 
-.stat-card h3 {
+/* .stat-card h3 {
     margin: 0;
     font-size: 1.1rem;
     color: #444;
+} */
+
+.stat-card h3 {
+    font-size: 1rem;
+    color: #64748B; /* Slate-500 */
+    font-weight: 600;
 }
 
-.stat-card .number {
+/* .stat-card .number {
     font-size: 2rem;
     font-weight: bold;
     margin-top: 10px;
     color: #198754;
-}
+} */
 
-/* ===== CHART PLACEHOLDER ===== */
-.chart-placeholder {
-    background: #eefaf1;
-    border: 2px dashed #bfe8c9;
-    padding: 40px;
-    border-radius: 12px;
-    text-align: center;
-    color: #198754;
-    font-size: 1.2rem;
-}
 
-.chart-placeholder i {
+.stat-card .number {
+    color: #1E293B; /* Slate-800 */
     font-size: 2rem;
+    font-weight: 700;
+}
+
+/* ===== CHART  ===== */
+.charts-row {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.chart-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+}
+
+.chart-card h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1E293B;
+    margin-bottom: 15px;
+}
+.chart-card canvas {
+    max-height: 350px !important;
+}
+.charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-top: 20px;
+}
+/* ===== CHART-LEGEND  ===== */
+.task-legend {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.task-legend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "Inter", sans-serif;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-bottom: 5px;
+}
+
+.legend-percent {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1E293B;
+}
+
+.legend-label {
+    font-size: 13px;
+    color: #6B7280;
+}
+
+/* ===== RIGHT SIDE BAR ===== */
+
+/* ===== CALENDAR ===== */
+.ios-calendar-widget {
+    /* width: 310px;*/
+    height: 130px; 
+    background: white;
+    border-radius: 22px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+    padding-top: 15px;
+}
+
+.ios-cal-dayname {
+    font-size: 20px;
+    font-weight: 700;
+    color: #d32f2f; /* iOS red */
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.ios-cal-daynumber {
+    font-size: 55px;
+    font-weight: 700;
+    color: #1E1E1E;
+    line-height: 1;
+}
+
+/* ===== REMINDER ===== */
+.dashboard-card {
+  padding: 1rem;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  font-weight: 600;
+  margin-bottom: 6px;
+  margin-top: 6px;
+}
+
+.reminder-card {
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.reminder-card strong {
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.reminder-card .reminder-time {
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+/* STATUS COLORS */
+.reminder-done {
+  background: #e6f7e9;
+  border-left: 4px solid #3bb162;
+}
+
+.reminder-upcoming {
+  background: #FFF9DB;
+  border-left: 4px solid #F2C94C;
+}
+
+.reminder-overdue {
+  background: #ffe7e7;
+  border-left: 4px solid #d9534f;
+}
+/* ===== TIMER ===== */
+
+
+.pomodoro-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #dbdbdb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pomodoro-display {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #346f54;
+    margin: 15px 0;
+}
+
+.pomodoro-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pomodoro-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.pomodoro-btn.start {
+    background: #198754;
+    color: white;
+}
+
+.pomodoro-btn.pause {
+    background: #fbbf24;
+    color: white;
+}
+
+.pomodoro-btn.reset {
+    background: #ef4444;
+    color: white;
+}
+
+.pomodoro-status {
+    margin-top: 10px;
+    color: #64748B;
+    font-size: 1rem;
 }
 
 /* ===== FOOTER ===== */

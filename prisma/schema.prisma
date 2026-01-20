@@ -103,25 +103,10 @@ model Task {
   updatedAt   DateTime  @updatedAt
   completedAt DateTime?
 
-  userId     Int
-  categoryId Int?
-
-  user      User       @relation(fields: [userId], references: [id])
-  category  Category?  @relation(fields: [categoryId], references: [id])
-  comments  Comment[]
-  reminders Reminder[]
-  status      String       @default("Pending")
-  priority    String       @default("Medium")
-  dueDate     DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  completedAt DateTime?
-
-  
   userId      Int          
   categoryId  Int?
-  teamId      Int?         
-         
+  teamId      Int? 
+
 
   // --- RELATIONS ---
   user        User         @relation(fields: [userId], references: [id])

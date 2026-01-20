@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Focus Mode</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+
+    <div class="focus-wrapper">
+        <div class="brand">
+            <i class="bi bi-list-task"></i>
+            <span>Taskify</span>
+        </div>
+        
+        <div id="menu-view">
+            <h1>Choose Your Focus Fuel</h1>
+            <p>The drink is your timer. Finish the task before the cup is empty.</p>
+
+            <div class="drink-options">
+                <div class="drink-card" onclick="focusApp.startSession('coffee', 5)">
+                    <div class="icon">☕</div>
+                    <h3>Espresso</h3>
+                    <p>5 Mins</p>
+                </div>
+
+                <div class="drink-card featured" onclick="focusApp.startSession('matcha', 30)">
+                    <div class="icon">🍵</div>
+                    <h3>Matcha Latte</h3>
+                    <p>30 Mins</p>
+                    <span class="badge">Recommended</span>
+                </div>
+
+                <div class="drink-card" onclick="focusApp.startSession('water', 60)">
+                    <div class="icon">💧</div>
+                    <h3>Ice Water</h3>
+                    <p>1 Hour</p>
+                </div>
+            </div>
+
+            <div class="exit-container">
+                <a href="../dashboard/dashboard.html" class="btn-home">Turn Off Focus Mode</a>
+            </div>
+
+        </div>
+
+        <div id="focus-view" class="hidden">
+            
+            <div class="cup-container">
+                <div class="cup-body">
+                    <div id="liquid" class="liquid-matcha"></div>
+                </div>
+                <div class="cup-handle"></div>
+            </div>
+
+            <h2 id="timer-display"></h2>
+            <p id="focus-status">Stay focused...</p>
+            
+            <button onclick="focusApp.giveUp()" class="btn-giveup">Give Up (Spill Drink)</button>
+        </div>
+
+    </div>
+
+    <script src="focus.js"></script>
+</body>
+</html>

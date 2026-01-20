@@ -10,15 +10,25 @@ body {
 }
 
 /* Sidebar */
-.sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    width:230px;
-    height:100vh;
-   background: linear-gradient(#e9f5ee, #ffffff);
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+
+    background: linear-gradient(#e9f5ee, #ffffff);
     border-right: 1px solid #e0e6ed;
+
     padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+}
+.sidebar .nav {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
 
@@ -54,7 +64,8 @@ body {
 /* Sidebar footer */
 .sidebar-footer {
     margin-top: auto;
-    padding-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e6ed;
 }
 
 .sidebar-footer a {
@@ -251,7 +262,43 @@ body {
     border: 1px solid #E5E7EB;
     box-shadow: 0 4px 14px rgba(0,0,0,0.05);
 }
+/* ------------------------------------------------------ */
+/* Create a container for the title and the filter */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
 
+.chart-card h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1E293B;
+    margin-bottom: 0; /* Remove bottom margin since header handles spacing */
+}
+
+/* Style the dropdown menu */
+#daysFilter {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-family: "Inter", sans-serif;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background-color: #F9FAFB;
+    color: #4B5563;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#daysFilter:hover {
+    border-color: #D1D5DB;
+    background-color: #ffffff;
+}
+
+
+/* ------------------------------------------------------ */
 .chart-card h4 {
     font-size: 1.2rem;
     font-weight: 600;
@@ -429,7 +476,55 @@ body {
     margin-top: 10px;
     color: #64748B;
     font-size: 1rem;
+} 
+
+/* new */
+/* Mode Toggle Styling */
+.mode-toggle {
+    display: flex;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 15px;
 }
+
+.mode-toggle button {
+    flex: 1;
+    border: none;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.mode-toggle button.active {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    color: #346f54;
+}
+
+/* Make inputs look like the original display */
+.pomodoro-display input {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #346f54;
+    border: none;
+    width: 70px;
+    text-align: center;
+    background: transparent;
+    font-family: inherit;
+}
+
+/* Hide arrows on number inputs */
+.pomodoro-display input::-webkit-inner-spin-button,
+.pomodoro-display input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 
 /* ===== FOOTER ===== */
 .footer {

@@ -48,8 +48,72 @@ module.exports.getUpcoming = function (userId, todayEnd) {
     orderBy: { remindAt: "asc" }
   });
 };
+
+  // --------------------------------------
+  // OLD
+  // --------------------------------------
+// module.exports.getDashboardStats = async function (userId) {
+//   // Run all count queries in parallel
+//   const [total, completed, pending, inProgress] = await Promise.all([
+//     prisma.task.count({ where: { userId } }),
+//     prisma.task.count({ where: { userId, status: "Completed" } }),
+//     prisma.task.count({ where: { userId, status: "Pending" } }),
+//     prisma.task.count({ where: { userId, status: "In Progress" } }),
+//   ]);
+
+//   // --------------------------------------
+//   // Productivity Trend (last 7 days)
+//   // --------------------------------------
+//   const today = new Date();
+//   today.setHours(0,0,0,0);
+
+//   const startDate = new Date(today);
+//   startDate.setDate(today.getDate() - 6);
+
+//   let days = [];
+//   let values = [];
+
+//   for (let i = 0; i < 7; i++) {
+//     let dayStart = new Date(startDate);
+//     dayStart.setDate(startDate.getDate() + i);
+//     dayStart.setHours(0,0,0,0);
+
+//     let dayEnd = new Date(dayStart);
+//     dayEnd.setDate(dayStart.getDate() + 1);
+
+//     const count = await prisma.task.count({
+//       where: {
+//         userId,
+//         status: "Completed",
+//         completedAt: {
+//           gte: dayStart,
+//           lt: dayEnd
+//         }
+//       }
+//     });
+
+//     days.push(dayStart.toLocaleDateString('en-US', { weekday: 'short' }));
+//     values.push(count);
+//   }
+
+//   return {
+//     total,
+//     completed,
+//     pending,
+//     inProgress,
+//     productivity: {
+//       days,
+//       values
+//     }
+//   };
+// };
+
+  // --------------------------------------
+  // Productivity Trend (NEW)
+  // --------------------------------------
+
 module.exports.getDashboardStats = async function (userId) {
-  // Run all count queries in parallel
+  // 1. Lifetime stats (These never change when filtering)
   const [total, completed, pending, inProgress] = await Promise.all([
     prisma.task.count({ where: { userId } }),
     prisma.task.count({ where: { userId, status: "Completed" } }),
@@ -57,23 +121,20 @@ module.exports.getDashboardStats = async function (userId) {
     prisma.task.count({ where: { userId, status: "In Progress" } }),
   ]);
 
-  // --------------------------------------
-  // Productivity Trend (last 7 days)
-  // --------------------------------------
+  // 2. Fetch 30 days of trend data
+  const range = 30; 
   const today = new Date();
   today.setHours(0,0,0,0);
-
   const startDate = new Date(today);
-  startDate.setDate(today.getDate() - 6);
+  startDate.setDate(today.getDate() - (range - 1));
 
   let days = [];
   let values = [];
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < range; i++) {
     let dayStart = new Date(startDate);
     dayStart.setDate(startDate.getDate() + i);
     dayStart.setHours(0,0,0,0);
-
     let dayEnd = new Date(dayStart);
     dayEnd.setDate(dayStart.getDate() + 1);
 
@@ -81,25 +142,14 @@ module.exports.getDashboardStats = async function (userId) {
       where: {
         userId,
         status: "Completed",
-        completedAt: {
-          gte: dayStart,
-          lt: dayEnd
-        }
+        completedAt: { gte: dayStart, lt: dayEnd }
       }
     });
 
-    days.push(dayStart.toLocaleDateString('en-US', { weekday: 'short' }));
+    // Use a date format like "Jan 19"
+    days.push(dayStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     values.push(count);
   }
 
-  return {
-    total,
-    completed,
-    pending,
-    inProgress,
-    productivity: {
-      days,
-      values
-    }
-  };
+  return { total, completed, pending, inProgress, productivity: { days, values } };
 };

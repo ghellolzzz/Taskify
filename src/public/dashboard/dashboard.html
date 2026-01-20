@@ -12,6 +12,7 @@
 </head>
 
 <body>
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="brand">
@@ -25,6 +26,7 @@
             <li><a href="../categories/categories.html"><i class="bi bi-tags"></i> Task Categories</a></li>
             <li><a href="../reminder/reminder.html"><i class="bi bi-bell"></i> Reminder</a></li>
             <li><a href="../goal/goal.html"><i class="bi bi-bullseye"></i> Goals</a></li>
+            <li><a href="../teams/teams.html"><i class="bi bi-people-fill"></i> Teams</a></li>
             <li><a href="../habit/habits.html"><i class="bi bi-repeat"></i> Habits</a></li>
             <li><a href ="../calendar/calendar.html"><i class="bi bi-calendar-event"></i>Calender</a></li>
             <li><a href="../profile/profile.html"><i class="bi bi-person-circle"></i> Profile</a></li>
@@ -105,8 +107,20 @@
             </div>
 
             <!-- Productivity Trend Chart -->
-            <div class="chart-card">
+            <!-- <div class="chart-card">
                 <h4>Productivity Trend (Last 7 Days)</h4>
+                <canvas id="productivityChart"></canvas>
+            </div> -->
+            <!-- Productivity Trend Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4 id="chartTitle">Productivity Trend (Last 7 Days)</h4>
+                    <select id="daysFilter" onchange="applyProductivityFilter(this.value)">
+                        <option value="7">Last 7 Days</option>
+                        <option value="14">Last 14 Days</option>
+                        <option value="30">Last 30 Days</option>
+                    </select>
+                </div>
                 <canvas id="productivityChart"></canvas>
             </div>
         </div>
@@ -138,10 +152,32 @@
         </div>
     </a>
 
-        <div class="pomodoro-card">
+    <!-- <div class="pomodoro-card">
+        <h4>Pomodoro Timer</h4>
+
+        <div id="pomodoro-display" class="pomodoro-display">25:00</div>
+
+        <div class="pomodoro-controls">
+            <button id="pomodoro-start" class="pomodoro-btn start">Start</button>
+            button id="pomodoro-pause" class="pomodoro-btn pause">Pause</button>
+            <button id="pomodoro-reset" class="pomodoro-btn reset">Reset</button>
+        </div>
+
+        <p id="pomodoro-status" class="pomodoro-status">Focus Session</p>
+    </div> -->
+
+    <div class="pomodoro-card">
+    <div class="mode-toggle">
+        <button id="mode-focus" class="active">Focus</button>
+        <button id="mode-break">Break</button>
+    </div>
+
     <h4>Pomodoro Timer</h4>
 
-    <div id="pomodoro-display" class="pomodoro-display">25:00</div>
+    <div class="pomodoro-display">
+        <input type="number" id="input-min" value="25" min="0" max="99">:
+        <input type="number" id="input-sec" value="00" min="0" max="59">
+    </div>
 
     <div class="pomodoro-controls">
         <button id="pomodoro-start" class="pomodoro-btn start">Start</button>
@@ -150,7 +186,7 @@
     </div>
 
     <p id="pomodoro-status" class="pomodoro-status">Focus Session</p>
-    </div>
+</div>
 
     </aside>
 

@@ -97,30 +97,24 @@ function createTaskCard(task) {
             <span class="badge-status">${task.status}</span>
         </div>
         <div class="mt-1">
-            <span class="badge-category" style="
-             background:${task.category?.color || '#ccc'};
+         ${
+    task.teamId
+      ? `<span class="badge bg-secondary">Team task</span>`
+      : `<span 
+          class="badge-category" 
+          style="
+            background:${task.category?.color || '#ccc'};
             padding:4px 10px;
             border-radius:12px;
             font-size:12px;
             color:white;
             display:inline-block;
-        ">
-       ${
-        task.teamId
-            ? `<span class="badge bg-secondary">Team task</span>`
-            : `<span class="badge-category" style="
-        background:${task.category?.color || '#ccc'};
-        padding:4px 10px;
-        border-radius:12px;
-        font-size:12px;
-        color:white;
-        display:inline-block;
-      ">
-        ${task.category?.name || "No category"}
-      </span>`
-        }
+          ">
+          ${task.category?.name || "No category"}
+        </span>`
+  }
 
-            </span>
+           
     </div>
 
         <p class="text-muted mt-2">${task.description || "*No description*"}</p>
@@ -275,6 +269,8 @@ function openEditModal(taskId) {
 // saving changes when the user completes the task
 document.querySelector("#edit-task-form").addEventListener("submit", function (e) {
     e.preventDefault();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+    modal.hide();
 
     const taskId = document.querySelector("#edit-task-id").value;
 

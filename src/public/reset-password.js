@@ -14,7 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (errorMessage) {
       errorMessage.textContent = 'Invalid or missing reset token. Please request a new password reset link.';
       errorMessage.classList.add('show');
-      errorMessage.style.display = 'block'; // Ensure it's visible
+      // Force visibility with inline styles
+      errorMessage.style.display = 'block';
+      errorMessage.style.visibility = 'visible';
+      errorMessage.style.opacity = '1';
     }
     if (resetPasswordForm) {
       resetPasswordForm.style.display = 'none';
@@ -50,7 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (errorMessage) {
       errorMessage.textContent = error.message || 'Invalid or expired reset token.';
       errorMessage.classList.add('show');
-      errorMessage.style.display = 'block'; // Ensure it's visible
+      // Force visibility with inline styles
+      errorMessage.style.display = 'block';
+      errorMessage.style.visibility = 'visible';
+      errorMessage.style.opacity = '1';
     }
     if (resetPasswordForm) {
       resetPasswordForm.style.display = 'none';
@@ -75,7 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (errorMessage) {
         errorMessage.textContent = 'Passwords do not match.';
         errorMessage.classList.add('show');
-        errorMessage.style.display = 'block'; // Ensure it's visible
+        // Force visibility with inline styles
+        errorMessage.style.display = 'block';
+        errorMessage.style.visibility = 'visible';
+        errorMessage.style.opacity = '1';
       }
       return;
     }
@@ -85,7 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (errorMessage) {
         errorMessage.textContent = 'Password must be at least 6 characters.';
         errorMessage.classList.add('show');
-        errorMessage.style.display = 'block'; // Ensure it's visible
+        // Force visibility with inline styles
+        errorMessage.style.display = 'block';
+        errorMessage.style.visibility = 'visible';
+        errorMessage.style.opacity = '1';
       }
       return;
     }
@@ -127,7 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (errorMessage) {
         errorMessage.textContent = error.message || 'An error occurred. Please try again.';
         errorMessage.classList.add('show');
-        errorMessage.style.display = 'block'; // Ensure it's visible
+        // Force visibility with inline styles
+        errorMessage.style.display = 'block';
+        errorMessage.style.visibility = 'visible';
+        errorMessage.style.opacity = '1';
       }
 
       // Re-enable submit button

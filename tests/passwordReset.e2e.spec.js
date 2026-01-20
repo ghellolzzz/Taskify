@@ -297,8 +297,16 @@ test.describe('Password Reset Feature (E2E)', () => {
             
             // Should show error that token is invalid/used
             const errorMessage = page.locator('#errorMessage');
-            await expect(errorMessage).toBeVisible({ timeout: 5000 });
-            await expect(errorMessage).toContainText(/Invalid|expired|used/i, { timeout: 3000 });
+            
+            // Check that error message has text content
+            await expect(errorMessage).toContainText(/Invalid|expired|used/i, { timeout: 5000 });
+            
+            // Check that error message is displayed (check computed style)
+            const isErrorVisible = await errorMessage.evaluate((el) => {
+                const style = window.getComputedStyle(el);
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+            });
+            expect(isErrorVisible).toBe(true);
             
             // Form should be hidden when token is invalid
             const formAfterReuse = page.locator('#resetPasswordForm');

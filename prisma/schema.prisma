@@ -37,9 +37,6 @@ model User {
   feedback      Feedback[]
   focusSettings UserFocusSetting[]
   focusSessions FocusSession[]
-  theme       String?      
-  accentColor String? 
-       
 
   // Relations
   tasks       Task[]

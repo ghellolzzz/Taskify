@@ -1,7 +1,34 @@
 const { test, expect } = require('@playwright/test');
 
+// Helper function to reset password back to original
+async function resetPasswordToOriginal(page) {
+    try {
+        // Request a new reset token
+        const resetResponse = await page.request.post('http://localhost:3001/api/password-reset/request', {
+            data: { email: 'MGF_21@ICLOUD.COM' }
+        });
+        
+        const resetData = await resetResponse.json();
+        if (resetData.token) {
+            // Reset password back to original 'password123'
+            await page.request.post('http://localhost:3001/api/password-reset/reset', {
+                data: { 
+                    token: resetData.token,
+                    newPassword: 'password123'
+                }
+            });
+        }
+    } catch (error) {
+        // Ignore errors in cleanup
+        console.log('Cleanup: Could not reset password (this is okay if test failed)');
+    }
+}
+
 // Group all password reset tests
+// Run these tests serially to avoid password conflicts with other tests
 test.describe('Password Reset Feature (E2E)', () => {
+    // Run tests in this describe block serially (one at a time)
+    test.describe.configure({ mode: 'serial' });
 
     test('should display forgot password page with form', async ({ page }) => {
         await page.goto('http://localhost:3001/forgot-password.html');
@@ -260,6 +287,9 @@ test.describe('Password Reset Feature (E2E)', () => {
             
             // Should successfully login
             await expect(page).toHaveURL(/dashboard/, { timeout: 5000 });
+            
+            // Reset password back to original for other tests
+            await resetPasswordToOriginal(page);
         }
     });
 
@@ -311,6 +341,9 @@ test.describe('Password Reset Feature (E2E)', () => {
             // Form should be hidden when token is invalid
             const formAfterReuse = page.locator('#resetPasswordForm');
             await expect(formAfterReuse).toHaveCSS('display', 'none');
+            
+            // Reset password back to original for other tests
+            await resetPasswordToOriginal(page);
         }
     });
 });

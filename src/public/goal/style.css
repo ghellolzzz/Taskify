@@ -23,9 +23,13 @@ body {
     left: 0;
     width: 230px;
     height: 100vh;
+
     background: linear-gradient(#e9f5ee, #ffffff);
     border-right: 1px solid #e0e6ed;
     padding: 20px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar .brand {
@@ -42,6 +46,13 @@ body {
     margin: 15px 0;
 }
 
+.sidebar .nav {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+
 .sidebar a {
     text-decoration: none;
     font-size: 1rem;
@@ -57,9 +68,16 @@ body {
     color: #198754;
 }
 
+/* Sidebar footer */
 .sidebar-footer {
     margin-top: auto;
     padding-top: 20px;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #e0e6ed;
 }
 
 .sidebar-footer a {

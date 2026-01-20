@@ -11,9 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // If no token, show error and redirect
   if (!token) {
-    errorMessage.textContent = 'Invalid or missing reset token. Please request a new password reset link.';
-    errorMessage.classList.add('show');
-    resetPasswordForm.style.display = 'none';
+    if (errorMessage) {
+      errorMessage.textContent = 'Invalid or missing reset token. Please request a new password reset link.';
+      errorMessage.classList.add('show');
+      errorMessage.style.display = 'block'; // Ensure it's visible
+    }
+    if (resetPasswordForm) {
+      resetPasswordForm.style.display = 'none';
+    }
     return;
   }
 
@@ -24,17 +29,32 @@ document.addEventListener('DOMContentLoaded', () => {
       'Content-Type': 'application/json',
     },
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(data => {
+        throw new Error(data.error || 'Invalid or expired reset token.');
+      });
+    }
+    return response.json();
+  })
   .then(data => {
-    if (data.error) {
-      errorMessage.textContent = data.error || 'Invalid or expired reset token.';
-      errorMessage.classList.add('show');
-      resetPasswordForm.style.display = 'none';
+    // Token is valid, form is already visible
+    if (data.message === 'Token is valid') {
+      // Form should remain visible
+      resetPasswordForm.style.display = 'block';
     }
   })
   .catch(error => {
     console.error('Error verifying token:', error);
-    // Continue anyway - let the reset attempt handle the error
+    // Show error message and hide form
+    if (errorMessage) {
+      errorMessage.textContent = error.message || 'Invalid or expired reset token.';
+      errorMessage.classList.add('show');
+      errorMessage.style.display = 'block'; // Ensure it's visible
+    }
+    if (resetPasswordForm) {
+      resetPasswordForm.style.display = 'none';
+    }
   });
 
   resetPasswordForm.addEventListener('submit', async (e) => {
@@ -52,15 +72,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Validate passwords match
     if (newPassword !== confirmPassword) {
-      errorMessage.textContent = 'Passwords do not match.';
-      errorMessage.classList.add('show');
+      if (errorMessage) {
+        errorMessage.textContent = 'Passwords do not match.';
+        errorMessage.classList.add('show');
+        errorMessage.style.display = 'block'; // Ensure it's visible
+      }
       return;
     }
 
     // Validate password length
     if (newPassword.length < 6) {
-      errorMessage.textContent = 'Password must be at least 6 characters.';
-      errorMessage.classList.add('show');
+      if (errorMessage) {
+        errorMessage.textContent = 'Password must be at least 6 characters.';
+        errorMessage.classList.add('show');
+        errorMessage.style.display = 'block'; // Ensure it's visible
+      }
       return;
     }
 
@@ -98,12 +124,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 2000);
     } catch (error) {
       // Show error message
-      errorMessage.textContent = error.message || 'An error occurred. Please try again.';
-      errorMessage.classList.add('show');
+      if (errorMessage) {
+        errorMessage.textContent = error.message || 'An error occurred. Please try again.';
+        errorMessage.classList.add('show');
+        errorMessage.style.display = 'block'; // Ensure it's visible
+      }
 
       // Re-enable submit button
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Reset Password';
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Reset Password';
+      }
     }
   });
 });

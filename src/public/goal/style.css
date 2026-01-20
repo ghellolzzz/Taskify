@@ -17,6 +17,7 @@ body {
 /* ======================================================
    SIDEBAR
 ====================================================== */
+/* Sidebar */
 .sidebar {
     position: fixed;
     top: 0;
@@ -32,13 +33,13 @@ body {
     overflow-x: hidden;
 }
 
-.sidebar .brand {
-    font-size: 1.4rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    color: #198754;
+.sidebar .brand{
+    font-size:1.4rem;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    color:#198754;
 }
 
 .sidebar ul li {

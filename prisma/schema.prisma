@@ -37,18 +37,7 @@ model User {
   feedback      Feedback[]
   focusSettings UserFocusSetting[]
   focusSessions FocusSession[]
-
-  // Relations
-  tasks       Task[]
-  categories  Category[]
-  comments    Comment[]
-  goals       Goal[]
-  calendar    CalendarTask[]
-  badges      UserBadge[]
-  reminders   Reminder[]
-  habits      Habit[]
-  feedback    Feedback[]
-   teams       TeamMember[] 
+  teams       TeamMember[] 
   assignedTasks Task[] @relation("TaskAssignees")
 
   @@map("users")

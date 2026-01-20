@@ -158,13 +158,28 @@ test.describe('Password Reset Feature (E2E)', () => {
                 await page.fill('input#newPassword', '12345'); // 5 characters, min is 6
                 await page.fill('input#confirmPassword', '12345');
                 
-                // Try to submit - should show error
-                await page.click('button[type="submit"]');
-                await page.waitForTimeout(500);
+                // Check HTML5 validation - the input should be invalid
+                const newPasswordInput = page.locator('input#newPassword');
+                const isValid = await newPasswordInput.evaluate((el) => {
+                    const input = el instanceof HTMLInputElement ? el : null;
+                    return input ? input.validity.valid : false;
+                });
+                expect(isValid).toBe(false);
                 
-                // Check for error message about password length
-                const errorMessage = page.locator('#errorMessage');
-                await expect(errorMessage).toContainText(/6|characters|length/i, { timeout: 3000 });
+                // Try to submit - HTML5 validation should prevent submission
+                // But we can also check if the form's checkValidity returns false
+                const formValid = await form.evaluate((el) => {
+                    const formEl = el instanceof HTMLFormElement ? el : null;
+                    return formEl ? formEl.checkValidity() : false;
+                });
+                expect(formValid).toBe(false);
+                
+                // Also check that the input has the validation message
+                const validationMessage = await newPasswordInput.evaluate((el) => {
+                    const input = el instanceof HTMLInputElement ? el : null;
+                    return input ? input.validationMessage : '';
+                });
+                expect(validationMessage).toContain('6');
             }
         }
     });
@@ -264,20 +279,30 @@ test.describe('Password Reset Feature (E2E)', () => {
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(1000);
             
+            // Check form is visible before proceeding
+            const form = page.locator('#resetPasswordForm');
+            await expect(form).toBeVisible({ timeout: 5000 });
+            
             const newPassword = `TestPassword${Date.now()}`;
             await page.fill('input#newPassword', newPassword);
             await page.fill('input#confirmPassword', newPassword);
             await page.click('button[type="submit"]');
             await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(2000); // Wait for redirect or success message
             
             // Try to use the same token again
             await page.goto(`http://localhost:3001/reset-password.html?token=${resetToken}`);
             await page.waitForLoadState('networkidle');
-            await page.waitForTimeout(1000); // Wait for token verification
+            await page.waitForTimeout(2000); // Wait longer for token verification to complete
             
             // Should show error that token is invalid/used
             const errorMessage = page.locator('#errorMessage');
-            await expect(errorMessage).toContainText(/Invalid|expired|used/i, { timeout: 5000 });
+            await expect(errorMessage).toBeVisible({ timeout: 5000 });
+            await expect(errorMessage).toContainText(/Invalid|expired|used/i, { timeout: 3000 });
+            
+            // Form should be hidden when token is invalid
+            const formAfterReuse = page.locator('#resetPasswordForm');
+            await expect(formAfterReuse).toHaveCSS('display', 'none');
         }
     });
 });

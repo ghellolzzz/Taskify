@@ -17,6 +17,7 @@ const goalRouter = require("./routers/goalRouter.js");
 const habitRouter = require('./routers/Habit.router.js');
 const feedbackRouter = require('./routers/feedbackRoutes.js');
 const focusRoutes = require('./routers/focusRouter.js');
+const teamRouter=require("./routers/teamRouter.js")
 
 const app = express();
 app.use(express.json());
@@ -39,6 +40,7 @@ app.use("/api/goals", goalRouter);
 app.use('/api/habits', habitRouter);
 app.use("/api/feedback", feedbackRouter);
 app.use('/api/focus', focusRoutes);
+app.use("/api/teams", teamRouter);
 
 app.get('/.well-known/appspecific/*', (req, res) => {
   res.status(204).end();

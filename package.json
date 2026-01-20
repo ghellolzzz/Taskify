@@ -19,7 +19,8 @@
     "@types/node": "^22.7.2",
     "eslint": "^9.11.1",
     "globals": "^15.9.0",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "wait-on": "^9.0.3"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -31,6 +32,7 @@
     "start": "dotenv -e .env.development -- node ./src/server.js",
     "test": "dotenv -e .env.test -- playwright test --config=configs/playwright.config.js",
     "lint": "eslint -c configs/eslint.config.mjs src/**/*.js",
-    "test-trace": "npm test -- --reporter=html --trace on"
+    "test-trace": "npm test -- --reporter=html --trace on",
+    "start:test": "dotenv -e .env.test -- node ./src/server.js"
   }
 }

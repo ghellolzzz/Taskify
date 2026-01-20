@@ -79,25 +79,3 @@ module.exports.addUser = (data, callback) => {
             callback(error, null);
         });
 };
-
-//////////////////////////////////////////////////////
-// UPDATE USER PASSWORD
-//////////////////////////////////////////////////////
-
-module.exports.updatePassword = (data, callback) => {
-    prisma.user.update({
-        where: { id: data.userId },
-        data: { password: data.password },
-        select: {
-            id: true,
-            email: true,
-            name: true
-        }
-    })
-    .then((user) => {
-        callback(null, [user]);
-    })
-    .catch((error) => {
-        callback(error, null);
-    });
-};

@@ -11,30 +11,32 @@ datasource db {
 // USER TABLE
 //////////////////////////////////////////////////////
 model User {
-  id          Int          @id @default(autoincrement())
-  name        String
-  email       String       @unique
-  password    String
-  createdAt   DateTime     @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
 
   // Profile
   avatarUrl   String?
   bio         String?
-  streakCount Int          @default(0)
+  streakCount Int       @default(0)
   lastActive  DateTime?
-  theme       String?      
-  accentColor String?      
+  theme       String?
+  accentColor String?
 
   // Relations
-  tasks       Task[]
-  categories  Category[]
-  comments    Comment[]
-  goals       Goal[]
-  calendar    CalendarTask[]
-  badges      UserBadge[]
-  reminders   Reminder[]
-  habits      Habit[]
-  feedback    Feedback[]
+  tasks         Task[]
+  categories    Category[]
+  comments      Comment[]
+  goals         Goal[]
+  calendar      CalendarTask[]
+  badges        UserBadge[]
+  reminders     Reminder[]
+  habits        Habit[]
+  feedback      Feedback[]
+  focusSettings UserFocusSetting[]
+  focusSessions FocusSession[]
 
   @@map("users")
 }
@@ -43,13 +45,13 @@ model User {
 // BADGE TABLE
 //////////////////////////////////////////////////////
 model Badge {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
   name        String
   description String
   icon        String?
 
-  users       UserBadge[]
+  users UserBadge[]
 
   @@map("badges")
 }
@@ -63,8 +65,8 @@ model UserBadge {
   badgeId   Int
   awardedAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
-  badge     Badge    @relation(fields: [badgeId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
 
   @@unique([userId, badgeId])
   @@map("user_badges")
@@ -74,13 +76,13 @@ model UserBadge {
 // CATEGORY TABLE
 //////////////////////////////////////////////////////
 model Category {
-  id       Int      @id @default(autoincrement())
-  name     String
-  color    String?
-  userId   Int
+  id     Int     @id @default(autoincrement())
+  name   String
+  color  String?
+  userId Int
 
-  user     User     @relation(fields: [userId], references: [id])
-  tasks    Task[]
+  user  User   @relation(fields: [userId], references: [id])
+  tasks Task[]
 
   @@map("categories")
 }
@@ -89,23 +91,23 @@ model Category {
 // TASK TABLE
 //////////////////////////////////////////////////////
 model Task {
-  id          Int          @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   description String?
-  status      String        @default("Pending")
-  priority    String        @default("Medium")
+  status      String    @default("Pending")
+  priority    String    @default("Medium")
   dueDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   completedAt DateTime?
 
-  userId      Int
-  categoryId  Int?
+  userId     Int
+  categoryId Int?
 
-  user        User          @relation(fields: [userId], references: [id])
-  category    Category?     @relation(fields: [categoryId], references: [id])
-  comments    Comment[]
-  reminders   Reminder[]
+  user      User       @relation(fields: [userId], references: [id])
+  category  Category?  @relation(fields: [categoryId], references: [id])
+  comments  Comment[]
+  reminders Reminder[]
 
   @@map("tasks")
 }
@@ -120,8 +122,8 @@ model Comment {
   taskId    Int
   userId    Int
 
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id])
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 
   @@map("comments")
 }
@@ -130,15 +132,15 @@ model Comment {
 // GOAL TABLE
 //////////////////////////////////////////////////////
 model Goal {
-  id          Int      @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   title       String
   description String?
-  completed   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  completed   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
   category    GoalCategory?
   userId      Int
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("goals")
 }
@@ -156,12 +158,12 @@ enum GoalCategory {
 // CALENDAR TASK TABLE
 //////////////////////////////////////////////////////
 model CalendarTask {
-  id        Int      @id @default(autoincrement())
-  date      DateTime
-  content   String
-  userId    Int
+  id      Int      @id @default(autoincrement())
+  date    DateTime
+  content String
+  userId  Int
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("calendar_tasks")
 }
@@ -170,26 +172,26 @@ model CalendarTask {
 // QUOTES TABLE
 //////////////////////////////////////////////////////
 model Quote {
-  id        Int      @id @default(autoincrement())
-  text      String
-  author    String?
+  id     Int     @id @default(autoincrement())
+  text   String
+  author String?
 }
 
 //////////////////////////////////////////////////////
 // HABITS TABLE
 //////////////////////////////////////////////////////
 model Habit {
-  id            Int        @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   userId        Int
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title         String
   description   String?
   color         String?
   targetPerWeek Int?
-  isArchived    Boolean    @default(false)
-  createdAt     DateTime   @default(now())
+  isArchived    Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
-  logs          HabitLog[]
+  logs HabitLog[]
 }
 
 model HabitLog {
@@ -207,21 +209,21 @@ model HabitLog {
 // REMINDER TABLE 
 //////////////////////////////////////////////////////
 model Reminder {
-  id         Int       @id @default(autoincrement())
-  userId     Int
-  taskId     Int?
+  id     Int  @id @default(autoincrement())
+  userId Int
+  taskId Int?
 
-  title      String
-  notes      String?
+  title String
+  notes String?
 
   remindAt   DateTime
-  isDone     Boolean   @default(false)
+  isDone     Boolean  @default(false)
   repeatType String?
 
-  createdAt  DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id])
-  task    Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id])
+  task Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("reminders")
 }
@@ -236,8 +238,30 @@ model Feedback {
   createdAt   DateTime @default(now())
   userId      Int?
 
-  user        User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@map("feedback")
 }
 
+//////////////////////////////////////////////////////
+// FOCUS-MODE TABLE
+//////////////////////////////////////////////////////
+model UserFocusSetting {
+  id              Int    @id @default(autoincrement())
+  userId          Int    @unique
+  preferredTheme  String @default("drink")
+  preferredDrink  String @default("coffee")
+  backgroundColor String @default("#fdf6e3")
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model FocusSession {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  durationMinutes Int
+  status          String // 'COMPLETED' or 'ABANDONED'
+  completedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

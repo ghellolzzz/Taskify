@@ -1,7 +1,6 @@
 
-// tests/habits.e2e.spec.js
-// Abinesh – E2E tests for Habits Lab + Profile integration
 
+const { test, expect } = require('@playwright/test');
 
 test.describe('Habits & Profile (E2E – Abinesh)', () => {
   // Re-use the same seeded user as the team tests

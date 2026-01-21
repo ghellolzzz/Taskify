@@ -165,7 +165,9 @@ body {
 
 .error-message.show,
 .success-message.show {
-    display: block;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .error-message {

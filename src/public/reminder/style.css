@@ -1,37 +1,47 @@
 /* ===== SIDEBAR ===== */
-.sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    width:230px;
-    height:100vh;
-   background: linear-gradient(#e9f5ee, #ffffff);
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+    background: linear-gradient(#e9f5ee, #ffffff);
     border-right: 1px solid #e0e6ed;
     padding: 20px;
+    display: flex; /* Added to help footer positioning */
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
 }
 
+.sidebar .brand {
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #198754;
+    margin-bottom: 20px;
+}
 
-.sidebar .brand{
-    font-size:1.4rem;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-weight:600;
-    color:#198754;
+.sidebar ul {
+    padding-left: 0;
 }
 
 .sidebar ul li {
     list-style: none;
-    margin: 15px 0;
+    margin: 8px 0;
 }
 
 .sidebar a {
     text-decoration: none;
     font-size: 1rem;
-    padding: 10px 5px;
+    padding: 10px 12px;
     color: #535353;
     display: block;
     border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
 .sidebar a.active,
@@ -40,66 +50,78 @@
     color: #198754;
 }
 
-/* Sidebar footer */
 .sidebar-footer {
     margin-top: auto;
-    padding-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e6ed;
 }
 
-.sidebar-footer a {
-    color: #535353;
-    text-decoration: none;
-    font-size: 1rem;
-}
-
-/* ===== MAIN DISLAY AREA ===== */
+/* ===== MAIN DISPLAY AREA ===== */
 body {
-    display: flex;
-    flex-direction: column;
-    background: #F6FFF9; /* soft mint white */
+    background: #F6FFF9;
     font-family: 'Inter', 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
     color: #2E2E2E;
+    overflow-x: hidden; 
+    min-height: 100vh;
 }
 
+.container {
+    margin-left: 230px !important; /* Pushes content past the fixed sidebar */
+    max-width: calc(100% - 230px) !important; /* Ensures it fills only the remaining space */
+    padding: 30px;
+    width: auto;
+}
+
+/* NEW: This handles the side-by-side layout */
+.content-layout {
+    display: flex;
+    flex-wrap: wrap; /* Allows stacking on small mobile screens if necessary */
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.table-section {
+    flex: 1; /* Table takes as much room as possible */
+    min-width: 500px; /* Prevents table from becoming too narrow */
+}
+
+.form-section {
+    flex: 0 0 380px; /* Form stays exactly 380px wide */
+}
+
+/* Summary Box Styling */
 .summary-box {
-  background: #f8fff8;
+    background: white;
+    border: 1px solid #e0e6ed;
 }
 
 .mini-card {
-  background: white;
-  padding: 10px 15px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    font-weight: 500;
 }
 
 .mini-card i {
-  margin-right: 7px;
-  color: #198754;
+    margin-right: 7px;
+    color: #198754;
 }
 
+/* Status Badges */
 .status-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
 }
 
-.status-upcoming {
-  background: #fff7cc;
-  color: #b88c00;
-}
-
-.status-overdue {
-  background: #ffe5e5;
-  color: #d32f2f;
-}
-
-.status-done {
-  background: #d4f8da;
-  color: #2e7d32;
-}
+.status-upcoming { background: #fff7cc; color: #b88c00; }
+.status-overdue { background: #ffe5e5; color: #d32f2f; }
+.status-done { background: #d4f8da; color: #2e7d32; }
 
 /* ===== MODAL ===== */
 .modal {
@@ -108,95 +130,23 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    display:none;              /* center children */
-    align-items: center;           /* vertical center */
-    justify-content: center;       /* horizontal center */
-
-    background: rgba(0, 0, 0, 0.4); /* dim background */
-
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
     z-index: 9999;
 }
-/* --- Modal Box --- */
+
 .modal-content {
     background: white;
     padding: 30px;
     width: 450px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    animation: popup 0.3s ease-out;
 }
 
-/* Popup animation */
 @keyframes popup {
-    from {
-        transform: scale(0.95);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* --- Title --- */
-.modal-content h4 {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 18px;
-    color: #1e293b;
-}
-
-/* --- Labels --- */
-.modal-content label {
-    font-size: 14px;
-    font-weight: 600;
-    margin-top: 12px;
-    margin-bottom: 4px;
-    display: block;
-    color: #475569;
-}
-
-/* --- Inputs and Selects --- */
-.modal-content .form-control {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #d1d5db;
-    background: #f8fafc;
-    transition: 0.2s;
-    font-size: 14px;
-}
-
-/* Focus effect */
-.modal-content .form-control:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-    background: white;
-}
-
-/* Textarea adjustments */
-.modal-content textarea {
-    min-height: 80px;
-}
-
-/* Save button */
-.modal-content .btn-success {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-.modal-content .btn-success:hover {
-    background: #15803d !important;
-}
-
-/* Optional close button (top-right X) */
-.modal-close {
-    position: absolute;
-    right: 20px;
-    top: 18px;
-    font-size: 22px;
-    cursor: pointer;
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }

@@ -1,0 +1,349 @@
+const { test, expect } = require('@playwright/test');
+
+// Helper function to reset password back to original
+async function resetPasswordToOriginal(page) {
+    try {
+        // Request a new reset token
+        const resetResponse = await page.request.post('http://localhost:3001/api/password-reset/request', {
+            data: { email: 'MGF_21@ICLOUD.COM' }
+        });
+        
+        const resetData = await resetResponse.json();
+        if (resetData.token) {
+            // Reset password back to original 'password123'
+            await page.request.post('http://localhost:3001/api/password-reset/reset', {
+                data: { 
+                    token: resetData.token,
+                    newPassword: 'password123'
+                }
+            });
+        }
+    } catch (error) {
+        // Ignore errors in cleanup
+        console.log('Cleanup: Could not reset password (this is okay if test failed)');
+    }
+}
+
+// Group all password reset tests
+// Run these tests serially to avoid password conflicts with other tests
+test.describe('Password Reset Feature (E2E)', () => {
+    // Run tests in this describe block serially (one at a time)
+    test.describe.configure({ mode: 'serial' });
+
+    test('should display forgot password page with form', async ({ page }) => {
+        await page.goto('http://localhost:3001/forgot-password.html');
+        
+        // Check page title
+        await expect(page).toHaveTitle(/Forgot Password/);
+        
+        // Check form elements are visible
+        await expect(page.locator('input[type="email"]')).toBeVisible();
+        await expect(page.locator('button[type="submit"]')).toBeVisible();
+        await expect(page.locator('button:has-text("Send Reset Link")')).toBeVisible();
+        
+        // Check navigation links
+        await expect(page.locator('a:has-text("Login here")')).toBeVisible();
+        await expect(page.locator('a:has-text("Register here")')).toBeVisible();
+    });
+
+    test('should request password reset with valid email', async ({ page }) => {
+        await page.goto('http://localhost:3001/forgot-password.html');
+        
+        // Fill in email
+        await page.fill('input[type="email"]', 'MGF_21@ICLOUD.COM');
+        
+        // Submit form
+        await page.click('button[type="submit"]');
+        
+        // Wait for response
+        await page.waitForLoadState('networkidle');
+        
+        // Check for success message (in development, it shows the reset URL)
+        const successMessage = page.locator('#successMessage');
+        await expect(successMessage).toBeVisible({ timeout: 5000 });
+        
+        // In development mode, check if reset URL is shown
+        const messageText = await successMessage.textContent();
+        expect(messageText).toContain('reset');
+    });
+
+    test('should show error for invalid email format', async ({ page }) => {
+        await page.goto('http://localhost:3001/forgot-password.html');
+        
+        // Try to submit with invalid email
+        await page.fill('input[type="email"]', 'invalid-email');
+        await page.click('button[type="submit"]');
+        
+        // HTML5 validation should prevent submission
+        // Check if email input has validation error
+        const emailInput = page.locator('input[type="email"]');
+        const isValid = await emailInput.evaluate((el) => {
+            const input = el instanceof HTMLInputElement ? el : null;
+            return input ? input.validity.valid : false;
+        });
+        expect(isValid).toBe(false);
+    });
+
+    test('should display reset password page with valid token', async ({ page }) => {
+        // First, get a valid reset token by requesting password reset
+        const response = await page.request.post('http://localhost:3001/api/password-reset/request', {
+            data: { email: 'MGF_21@ICLOUD.COM' }
+        });
+        
+        const responseData = await response.json();
+        
+        // Only proceed if we got a token
+        if (responseData.token) {
+            const resetToken = responseData.token;
+            await page.goto(`http://localhost:3001/reset-password.html?token=${resetToken}`);
+            await page.waitForLoadState('networkidle');
+            
+            // Wait for token verification to complete
+            await page.waitForTimeout(1000);
+            
+            // Check page loads
+            await expect(page).toHaveTitle(/Reset Password/);
+            
+            // Check form elements are visible (form should be visible with valid token)
+            await expect(page.locator('input#newPassword')).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('input#confirmPassword')).toBeVisible();
+            await expect(page.locator('button:has-text("Reset Password")')).toBeVisible();
+        }
+    });
+
+    test('should show error for invalid or missing token', async ({ page }) => {
+        await page.goto('http://localhost:3001/reset-password.html?token=invalid-token-123');
+        
+        // Wait for page to load and token verification to complete
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000);
+        
+        // The page should show an error message for invalid token
+        const errorMessage = page.locator('#errorMessage');
+        // Check if error message has text content
+        await expect(errorMessage).toContainText(/Invalid|expired|token/i, { timeout: 5000 });
+        
+        // Form should be hidden
+        const form = page.locator('#resetPasswordForm');
+        await expect(form).toHaveCSS('display', 'none');
+    });
+
+    test('should validate password confirmation match', async ({ page }) => {
+        // Get a valid token first
+        const response = await page.request.post('http://localhost:3001/api/password-reset/request', {
+            data: { email: 'MGF_21@ICLOUD.COM' }
+        });
+        
+        const responseData = await response.json();
+        
+        if (responseData.token) {
+            await page.goto(`http://localhost:3001/reset-password.html?token=${responseData.token}`);
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(1000); // Wait for token verification
+            
+            // Check form is visible before proceeding
+            const form = page.locator('#resetPasswordForm');
+            const isFormVisible = await form.evaluate(el => window.getComputedStyle(el).display !== 'none');
+            
+            if (isFormVisible) {
+                // Fill in passwords that don't match
+                await page.fill('input#newPassword', 'newpassword123');
+                await page.fill('input#confirmPassword', 'differentpassword');
+                
+                // Try to submit
+                await page.click('button[type="submit"]');
+                
+                // Wait for validation error
+                await page.waitForTimeout(500);
+                
+                // Check if error message appears
+                const errorMessage = page.locator('#errorMessage');
+                await expect(errorMessage).toContainText(/match/i, { timeout: 3000 });
+            }
+        }
+    });
+
+    test('should validate minimum password length', async ({ page }) => {
+        // Get a valid token first
+        const response = await page.request.post('http://localhost:3001/api/password-reset/request', {
+            data: { email: 'MGF_21@ICLOUD.COM' }
+        });
+        
+        const responseData = await response.json();
+        
+        if (responseData.token) {
+            await page.goto(`http://localhost:3001/reset-password.html?token=${responseData.token}`);
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(1000); // Wait for token verification
+            
+            // Check form is visible
+            const form = page.locator('#resetPasswordForm');
+            const isFormVisible = await form.evaluate(el => window.getComputedStyle(el).display !== 'none');
+            
+            if (isFormVisible) {
+                // Fill in password that's too short
+                await page.fill('input#newPassword', '12345'); // 5 characters, min is 6
+                await page.fill('input#confirmPassword', '12345');
+                
+                // Check HTML5 validation - the input should be invalid
+                const newPasswordInput = page.locator('input#newPassword');
+                const isValid = await newPasswordInput.evaluate((el) => {
+                    const input = el instanceof HTMLInputElement ? el : null;
+                    return input ? input.validity.valid : false;
+                });
+                expect(isValid).toBe(false);
+                
+                // Try to submit - HTML5 validation should prevent submission
+                // But we can also check if the form's checkValidity returns false
+                const formValid = await form.evaluate((el) => {
+                    const formEl = el instanceof HTMLFormElement ? el : null;
+                    return formEl ? formEl.checkValidity() : false;
+                });
+                expect(formValid).toBe(false);
+                
+                // Also check that the input has the validation message
+                const validationMessage = await newPasswordInput.evaluate((el) => {
+                    const input = el instanceof HTMLInputElement ? el : null;
+                    return input ? input.validationMessage : '';
+                });
+                expect(validationMessage).toContain('6');
+            }
+        }
+    });
+
+    test('should navigate to login from forgot password page', async ({ page }) => {
+        await page.goto('http://localhost:3001/forgot-password.html');
+        
+        // Click login link
+        await page.click('a:has-text("Login here")');
+        
+        // Should navigate to login page
+        await expect(page).toHaveURL(/login\.html/);
+    });
+
+    test('should navigate to forgot password from login page', async ({ page }) => {
+        await page.goto('http://localhost:3001/login.html');
+        
+        // Click forgot password link
+        await page.click('a:has-text("Forgot Password?")');
+        
+        // Should navigate to forgot password page
+        await expect(page).toHaveURL(/forgot-password\.html/);
+    });
+
+    test('should navigate to forgot password from register page', async ({ page }) => {
+        await page.goto('http://localhost:3001/register.html');
+        
+        // Click forgot password link in footer
+        await page.click('a:has-text("Forgot Password?")');
+        
+        // Should navigate to forgot password page
+        await expect(page).toHaveURL(/forgot-password\.html/);
+    });
+
+    test('should complete full password reset flow', async ({ page }) => {
+        // Step 1: Request password reset
+        await page.goto('http://localhost:3001/forgot-password.html');
+        await page.fill('input[type="email"]', 'MGF_21@ICLOUD.COM');
+        await page.click('button[type="submit"]');
+        await page.waitForLoadState('networkidle');
+        
+        // Step 2: Get reset token from API response (in development mode)
+        const response = await page.request.post('http://localhost:3001/api/password-reset/request', {
+            data: { email: 'MGF_21@ICLOUD.COM' }
+        });
+        
+        const responseData = await response.json();
+        expect(response.status()).toBe(200);
+        
+        // If token is returned (development mode), use it
+        if (responseData.token) {
+            const resetToken = responseData.token;
+            
+            // Step 3: Navigate to reset password page with token
+            await page.goto(`http://localhost:3001/reset-password.html?token=${resetToken}`);
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(1000); // Wait for token verification
+            
+            // Step 4: Fill in new password (check form is visible first)
+            const form = page.locator('#resetPasswordForm');
+            await expect(form).toBeVisible({ timeout: 5000 });
+            
+            const newPassword = `TestPassword${Date.now()}`;
+            await page.fill('input#newPassword', newPassword);
+            await page.fill('input#confirmPassword', newPassword);
+            
+            // Step 5: Submit reset
+            await page.click('button[type="submit"]');
+            await page.waitForLoadState('networkidle');
+            
+            // Step 6: Should redirect to login page
+            await expect(page).toHaveURL(/login\.html/, { timeout: 5000 });
+            
+            // Step 7: Verify login works with new password
+            await page.fill('input[type="email"]', 'MGF_21@ICLOUD.COM');
+            await page.fill('input[type="password"]', newPassword);
+            await page.click('button[type="submit"]');
+            
+            // Should successfully login
+            await expect(page).toHaveURL(/dashboard/, { timeout: 5000 });
+            
+            // Reset password back to original for other tests
+            await resetPasswordToOriginal(page);
+        }
+    });
+
+    test('should prevent reusing the same reset token', async ({ page }) => {
+        // Request password reset
+        const response = await page.request.post('http://localhost:3001/api/password-reset/request', {
+            data: { email: 'MGF_21@ICLOUD.COM' }
+        });
+        
+        const responseData = await response.json();
+        
+        if (responseData.token) {
+            const resetToken = responseData.token;
+            
+            // Use token first time
+            await page.goto(`http://localhost:3001/reset-password.html?token=${resetToken}`);
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(1000);
+            
+            // Check form is visible before proceeding
+            const form = page.locator('#resetPasswordForm');
+            await expect(form).toBeVisible({ timeout: 5000 });
+            
+            const newPassword = `TestPassword${Date.now()}`;
+            await page.fill('input#newPassword', newPassword);
+            await page.fill('input#confirmPassword', newPassword);
+            await page.click('button[type="submit"]');
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(2000); // Wait for redirect or success message
+            
+            // Try to use the same token again
+            await page.goto(`http://localhost:3001/reset-password.html?token=${resetToken}`);
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(2000); // Wait longer for token verification to complete
+            
+            // Should show error that token is invalid/used
+            const errorMessage = page.locator('#errorMessage');
+            
+            // Check that error message has text content
+            await expect(errorMessage).toContainText(/Invalid|expired|used/i, { timeout: 5000 });
+            
+            // Check that error message is displayed (check computed style)
+            const isErrorVisible = await errorMessage.evaluate((el) => {
+                const style = window.getComputedStyle(el);
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+            });
+            expect(isErrorVisible).toBe(true);
+            
+            // Form should be hidden when token is invalid
+            const formAfterReuse = page.locator('#resetPasswordForm');
+            await expect(formAfterReuse).toHaveCSS('display', 'none');
+            
+            // Reset password back to original for other tests
+            await resetPasswordToOriginal(page);
+        }
+    });
+});

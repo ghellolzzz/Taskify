@@ -40,7 +40,25 @@ model User {
   teams       TeamMember[] 
   assignedTasks Task[] @relation("TaskAssignees")
 
+  passwordResets PasswordReset[]
+
   @@map("users")
+}
+
+//////////////////////////////////////////////////////
+// PASSWORD RESET TABLE
+//////////////////////////////////////////////////////
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
 }
 
 //////////////////////////////////////////////////////

@@ -5,6 +5,15 @@ const focusApp = {
     totalSeconds: 0,
     elapsedSeconds: 0,
     
+   renderTimer: function(remaining) {
+        const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+        const s = (remaining % 60).toString().padStart(2, '0');
+        document.getElementById('timer-display').innerText = `${m}:${s}`;
+
+        const percentage = (remaining / this.totalSeconds) * 100;
+        document.getElementById('liquid').style.height = `${percentage}%`;
+    }, 
+    
     // 1.Start Focus Session
     startSession: function(drinkType, minutes) {
         // Setup Variables
@@ -24,30 +33,25 @@ const focusApp = {
         // Save Preference
         this.saveSettings(drinkType);
 
+        this.renderTimer(this.totalSeconds); // "30:00"
+
         // Start the Loop
         this.startTimer();
     },
 
     // 2.Timer
-    startTimer: function() {
-        this.timerInterval = setInterval(() => {
-            this.elapsedSeconds++;
-            const remaining = this.totalSeconds - this.elapsedSeconds;
+startTimer: function() {
+    this.timerInterval = setInterval(() => {
+        this.elapsedSeconds++;
+        const remaining = this.totalSeconds - this.elapsedSeconds;
 
-            // Update Text
-            const m = Math.floor(remaining / 60).toString().padStart(2,'0');
-            const s = (remaining % 60).toString().padStart(2,'0');
-            document.getElementById('timer-display').innerText = `${m}:${s}`;
+        this.renderTimer(remaining);
 
-            // Calculate remaining time
-            const percentage = (remaining / this.totalSeconds) * 100;
-            document.getElementById('liquid').style.height = `${percentage}%`;
-
-            if (remaining <= 0) {
-                this.completeSession();
-            }
-        }, 1000);
-    },
+        if (remaining <= 0) {
+            this.completeSession();
+        }
+    }, 1000);
+},
 
 // 3.Save User Preference
     saveSettings: function(drink) {
@@ -57,7 +61,6 @@ const focusApp = {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                // ADD THIS LINE: Send the "ID Card"
                 'Authorization': `Bearer ${token}` 
             },
             body: JSON.stringify({
@@ -94,14 +97,24 @@ const focusApp = {
     // 5.Giving Up
     giveUp: function() {
         if(confirm("Are you sure? You'll spill the drink!")) {
-            // 1. Stop the timer logic
+        // 1. Stop the timer logic
             clearInterval(this.timerInterval);
             
-            // 2. Visual: Empty the cup (CSS transition takes 1 second)
-            document.getElementById('liquid').style.height = '0%'; 
-            
-            // 3. Log Failure to Backend
-            const token = localStorage.getItem('token');
+    const liquid = document.getElementById('liquid');
+
+        // 2. Snap height to 0 immediately (disable transition)
+        const prevTransition = liquid.style.transition;
+        liquid.style.transition = 'none';
+        liquid.style.height = '0px';
+
+        // Force reflow to apply height immediately
+        liquid.offsetHeight;
+
+        // Restore transition for future sessions
+        liquid.style.transition = prevTransition || '';
+
+        // 3. Log failure to backend
+        const token = localStorage.getItem('token');
             
             fetch('/api/focus/log', {
                 method: 'POST',

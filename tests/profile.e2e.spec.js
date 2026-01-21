@@ -1,23 +1,4 @@
-// @ts-check
-import { test, expect } from '@playwright/test';
-
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
-});
-
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
-
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
-});
-
+const { test, expect } = require('@playwright/test');
 
 test.describe('Profile (E2E)', () => {
   test.beforeEach(async ({ page }) => {
@@ -29,7 +10,7 @@ test.describe('Profile (E2E)', () => {
   });
 
   test('activity shows habits after logging + heatmap range switches', async ({ page }) => {
-    // 1) Create + log a habit first (so Profile has activity)
+
     await page.goto('http://localhost:3001/habit/habits.html');
     await page.waitForLoadState('networkidle');
 
@@ -48,36 +29,29 @@ test.describe('Profile (E2E)', () => {
     await habitRow.locator('.habit-dot.is-today').click();
     await page.waitForLoadState('networkidle');
 
-    // 2) Go to Profile
     await page.goto('http://localhost:3001/profile/profile.html');
     await page.waitForLoadState('networkidle');
 
-    // Ensure Activity tab / section is visible
     await page.click('#tab-activity, button:has-text("Activity")');
     await expect(page.locator('#activityRange')).toBeVisible({ timeout: 10000 });
 
-    // Heatmap default = 28 days
     const heatCells = page.locator('#activityHeatmap .heat-cell');
     await expect(heatCells).toHaveCount(28, { timeout: 10000 });
 
-    // Switch to 7 days (sometimes inside a collapsible => scroll + force helps)
     const btn7 = page.locator('#activityRange button[data-range="7"]');
     await btn7.scrollIntoViewIfNeeded();
     await btn7.click({ force: true });
     await expect(heatCells).toHaveCount(7);
 
-    // Switch to 90 days
     const btn90 = page.locator('#activityRange button[data-range="90"]');
     await btn90.scrollIntoViewIfNeeded();
     await btn90.click({ force: true });
     await expect(heatCells).toHaveCount(90);
 
-    // Filter: habits
     const habitsFilterBtn = page.locator('#activityFilters button[data-filter="habits"]');
     await habitsFilterBtn.scrollIntoViewIfNeeded();
     await habitsFilterBtn.click({ force: true });
 
-    // ✅ FIX for strict mode: assert "at least 1 match" instead of toBeVisible on multi locator
     const habitItems = page.locator('#recentActivityList li', { hasText: habitName });
     await expect(habitItems).toHaveCount(1, { timeout: 10000 });
   });

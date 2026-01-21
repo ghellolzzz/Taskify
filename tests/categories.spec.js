@@ -1,5 +1,4 @@
 const { test, expect } = require('@playwright/test');
-
 test.describe('Task Categories Feature', () => {
 
   // Create a User & Login
@@ -114,9 +113,10 @@ await expect(page.locator('#category-preview')).toBeHidden();
 
     // 2. Click the Title (H4) inside that SPECIFIC card
     await page.locator('.category-card')
-              .filter({ hasText: drillDownName }) // Matches ONLY the new card
-              .locator('h4')
-              .click();
+    .filter({ hasText: 'DrillDown View' })
+    .first().locator('h4')
+    .click();
+    
     // 3. Verify Grid is hidden & Tasks are visible
     await expect(page.locator('.categories-grid')).toBeHidden();
     await expect(page.locator('#category-tasks-section')).toBeVisible();

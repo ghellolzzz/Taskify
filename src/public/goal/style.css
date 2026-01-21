@@ -81,6 +81,10 @@ body {
     border-top: 1px solid #e0e6ed;
 }
 
+.sidebar-footer a {
+    color: #535353;
+}
+
 .main-content {
     margin-left: 260px;
     padding: 30px;

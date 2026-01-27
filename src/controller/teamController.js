@@ -129,7 +129,7 @@ module.exports.removeMember = function(req, res) {
     const userId=req.params.userId;
     const teamId=req.params.teamId
     const removerId = res.locals.userId;
-     const removedUserName = req.headers['x-removed-user-name'] || `user ID ${userIdToRemove}`;
+     const removedUserName = req.headers['x-removed-user-name'];
 
     return teamModel.removeMember(teamId, userId, removerId)
         .then(() => {

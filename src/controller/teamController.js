@@ -143,14 +143,14 @@ module.exports.removeMember = function(req, res) {
 module.exports.leaveTeam = function(req, res) {
 
     const teamId= req.params.teamId;
-   
+   const userName=res.locals.name;
     const userId = res.locals.userId;
 
    
     return teamModel.leaveTeam(teamId, userId)
         .then(() => {
-            const userName = res.locals.name; 
-            
+           
+            activityLog.createLog(teamId, userId, 'LEAVE_TEAM', userName); 
             res.json({ message: "You have successfully left the team" });
         })
         .catch(err => {
@@ -161,8 +161,8 @@ module.exports.leaveTeam = function(req, res) {
 
 //get activity
 module.exports.getActivity = function(req, res) {
-    const { teamId } = req.params;
-    return act.getByTeam(teamId)
+    const teamId=req.params.teamId
+    return activityLog.getByTeam(teamId)
         .then(logs => res.json(logs))
         .catch(err => res.status(500).json({ error: err.message }));
 };

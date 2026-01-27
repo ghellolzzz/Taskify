@@ -87,10 +87,14 @@ module.exports.update = function(req, res) {
    
     return taskModel.updateTask(taskId, updateData)
        .then(()=>{
-        if(req.body.status&&req.body.teamId){
-            const details=`status of task to ${req.body.status}`
-            activityLog.createLog(req.body.teamId, res.locals.userId, 'UPDATE_STATUS', details)
+            return taskModel.retrieveById(taskId,res.locals.userId)
+       })
+       .then(task=>{
+        if(task.teamId && req.body.status){
+             const details = `status of "${task.title}" to ${req.body.status}`;
+               activityLog.createLog(task.teamId, res.locals.userId, 'UPDATE_STATUS', details);
         }
+        res.json({message:"Task Updated"})
        })
         .catch(err => res.status(500).json({ error: err.message }))
 };

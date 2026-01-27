@@ -1,4 +1,5 @@
 const taskModel = require("../models/taskModel");
+const activityLog=require("../models/activityLogModel")
 const { EMPTY_RESULT_ERROR } = require('../errors');
 
 
@@ -28,9 +29,14 @@ module.exports.create = function(req, res) {
         }
     };
 
-    return taskModel.createTask(taskData)
-        .then(task => res.status(201).json({ task }))
-        .catch(err => res.status(500).json({ error: err.message }))
+     return taskModel.createTask(taskData)
+        .then(task => {
+            if (task.teamId) {
+                activityLog.createLog(task.teamId, userId, 'CREATE_TASK', task.title);
+            }
+            res.status(201).json({ task });
+        })
+        .catch(err => res.status(500).json({ error: err.message }));
 };
 //retrieving user tasks
 module.exports.retrieveAll=function(req,res){
@@ -80,7 +86,12 @@ module.exports.update = function(req, res) {
 
    
     return taskModel.updateTask(taskId, updateData)
-        .then(() => res.json({ message: "Task Updated" }))
+       .then(()=>{
+        if(req.body.status&&req.body.teamId){
+            const details=`status of task to ${req.body.status}`
+            activityLog.createLog(req.body.teamId, res.locals.userId, 'UPDATE_STATUS', details)
+        }
+       })
         .catch(err => res.status(500).json({ error: err.message }))
 };
 //deleting a task

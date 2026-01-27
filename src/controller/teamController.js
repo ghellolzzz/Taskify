@@ -1,6 +1,7 @@
 const teamModel = require("../models/teamsModel");
 const { EMPTY_RESULT_ERROR } = require("../errors");
 const { team } = require("../models/prismaClient");
+const activityLog=require("../models/activityLogModel")
 
 //create a team
 module.exports.create=function(req,res){
@@ -21,7 +22,10 @@ module.exports.addMember=function(req,res){
     const inviterId = res.locals.userId;
 
     return teamModel.addMembersByEmail(teamId,email,inviterId)
-        .then(newMember=>res.json(newMember))        
+         .then(newMember => {
+            activityLog.createLog(teamId, inviterId, 'ADD_MEMBER', newMember.user.name)
+            res.json(newMember)
+        })
         .catch(err=>{
               if (err instanceof EMPTY_RESULT_ERROR) {
                 return res.status(404).json({ error: err.message });
@@ -127,7 +131,10 @@ module.exports.removeMember = function(req, res) {
     const removerId = res.locals.userId;
 
     return teamModel.removeMember(teamId, userId, removerId)
-        .then(() => res.json({ message: "Member removed successfully" }))
+        .then(() => {
+            activityLog.createLog(teamId, removerId, 'REMOVE_MEMBER', `user ID ${userId}`);
+            res.json({ message: "Member removed successfully" });
+        })
         .catch(err => res.status(403).json({ error: err.message }));
 };
 
@@ -142,11 +149,20 @@ module.exports.leaveTeam = function(req, res) {
    
     return teamModel.leaveTeam(teamId, userId)
         .then(() => {
-           
+            const userName = res.locals.name; 
+            
             res.json({ message: "You have successfully left the team" });
         })
         .catch(err => {
            
             res.status(403).json({ error: err.message });
         });
+};
+
+//get activity
+module.exports.getActivity = function(req, res) {
+    const { teamId } = req.params;
+    return act.getByTeam(teamId)
+        .then(logs => res.json(logs))
+        .catch(err => res.status(500).json({ error: err.message }));
 };

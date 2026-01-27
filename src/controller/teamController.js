@@ -23,7 +23,7 @@ module.exports.addMember=function(req,res){
 
     return teamModel.addMembersByEmail(teamId,email,inviterId)
          .then(newMember => {
-            activityLog.createLog(teamId, inviterId, 'ADD_MEMBER', newMember.user.name)
+            activityLog.createLog(teamId, inviterId, 'ADD_MEMBER', ` invited ${newMember.user.name}`)
             res.json(newMember)
         })
         .catch(err=>{
@@ -129,10 +129,11 @@ module.exports.removeMember = function(req, res) {
     const userId=req.params.userId;
     const teamId=req.params.teamId
     const removerId = res.locals.userId;
+     const removedUserName = req.headers['x-removed-user-name'] || `user ID ${userIdToRemove}`;
 
     return teamModel.removeMember(teamId, userId, removerId)
         .then(() => {
-            activityLog.createLog(teamId, removerId, 'REMOVE_MEMBER', `user ID ${userId}`);
+            activityLog.createLog(teamId, removerId, 'REMOVE_MEMBER', removedUserName);
             res.json({ message: "Member removed successfully" });
         })
         .catch(err => res.status(403).json({ error: err.message }));

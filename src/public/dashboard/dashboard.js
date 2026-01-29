@@ -40,6 +40,17 @@ function loadUser() {
     .catch(err => console.error("Error loading user:", err));
 }
 
+function isDarkTheme() {
+  return document.body.classList.contains("profile-theme-dark");
+}
+
+function getAccent() {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue("--accent-color")
+    .trim() || "#198754";
+}
+
+
 document.addEventListener("DOMContentLoaded", loadUser);
 
 /* ===== QUOTES LIST ===== */
@@ -114,12 +125,12 @@ function loadBreakdownChart(completed, inProgress, pending) {
   const percentInProgress = ((inProgress / total) * 100).toFixed(0);
   const percentPending = ((pending / total) * 100).toFixed(0);
 
-  // Colors that match your green theme
-  const colors = {
-    completed: "#4CAF50",
-    inProgress: "#81C784",
-    pending: "#FFEB99"
-  };
+  const accent = getAccent();
+const colors = {
+  completed: accent,
+  inProgress: "rgba(148, 163, 184, 0.9)",
+  pending: "#FFCA28"
+};
 
   new Chart(ctx, {
     type: "doughnut",
@@ -247,27 +258,43 @@ function renderProductivityLineChart(labels, values) {
         productivityChartInstance.destroy();
     }
 
-    productivityChartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: "Tasks Completed",
-                data: values,
-                borderColor: "#4CAF50",
-                backgroundColor: "rgba(76, 175, 80, 0.1)",
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } }
-            }
-        }
-    });
+    const dark = isDarkTheme();
+const accent = getAccent();
+
+productivityChartInstance = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels,
+    datasets: [{
+      label: "Tasks Completed",
+      data: values,
+      borderColor: accent,
+      backgroundColor: dark ? "rgba(25, 135, 84, 0.15)" : "rgba(76, 175, 80, 0.1)",
+      fill: true,
+      tension: 0.3
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: dark ? "#e2e8f0" : "#1E293B" }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: dark ? "#94a3b8" : "#4B5563" },
+        grid: { color: dark ? "rgba(148,163,184,0.12)" : "rgba(0,0,0,0.06)" }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 1, color: dark ? "#94a3b8" : "#4B5563" },
+        grid: { color: dark ? "rgba(148,163,184,0.12)" : "rgba(0,0,0,0.06)" }
+      }
+    }
+  }
+});
 }
 // Run on page load
 document.addEventListener("DOMContentLoaded", loadDashboardStats);

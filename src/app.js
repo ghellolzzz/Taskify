@@ -19,6 +19,7 @@ const feedbackRouter = require('./routers/feedbackRoutes.js');
 const focusRoutes = require('./routers/focusRouter.js');
 const teamRouter=require("./routers/teamRouter.js")
 const passwordResetRouter = require('./routers/passwordResetRouter');
+const communityRouter = require('./routers/communityRouter.js')
 
 const app = express();
 app.use(express.json());
@@ -43,6 +44,7 @@ app.use("/api/feedback", feedbackRouter);
 app.use('/api/focus', focusRoutes);
 app.use("/api/teams", teamRouter);
 app.use('/api/password-reset', passwordResetRouter);
+app.use("/api/community", communityRouter);
 
 app.get('/.well-known/appspecific/*', (req, res) => {
   res.status(204).end();

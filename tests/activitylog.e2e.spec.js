@@ -7,7 +7,7 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
 
     test.beforeEach(async ({ page }) => {
        
-        await page.goto('http://localhost:3000/login.html');
+        await page.goto('http://localhost:3001/login.html');
         await page.fill('#email', ownerUser.email);
         await page.fill('#password', ownerUser.password);
         await page.click('button[type="submit"]');
@@ -39,14 +39,14 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
         await page.waitForLoadState('networkidle');
         
         
-        await expect(activityContainer).toContainText(`Mee Ghel created task: "${taskTitle}"`);
+        await expect(activityContainer).toContainText(`E2E Test User created task: "${taskTitle}"`);
         
        //updating the status
         await page.locator('.status-select').first().selectOption('In Progress');
         await page.waitForLoadState('networkidle');
 
       
-        await expect(activityContainer).toContainText('Mee Ghel updated status of "Core Log Test Task" to In Progress');
+        await expect(activityContainer).toContainText('E2E Test User updated status of "Core Log Test Task" to In Progress');
 
         //posting a commment
         const commentText = 'Test log comment';
@@ -56,7 +56,7 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
         await page.waitForTimeout(1000); 
 
        
-        await expect(activityContainer).toContainText(`Mee Ghel commented on task "${taskTitle}"`);
+        await expect(activityContainer).toContainText(`E2E Test User commented on task "${taskTitle}"`);
 
        
         const logEntries = activityContainer.locator('.d-flex.mb-3');

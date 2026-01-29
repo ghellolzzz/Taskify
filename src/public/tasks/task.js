@@ -492,3 +492,50 @@ function toggleCompleted() {
         arrow.classList.replace("bi-chevron-down", "bi-chevron-up")
     }
 }
+
+
+
+//add category form in the category drop down list
+document.addEventListener("DOMContentLoaded", setupAddCategoryForm);
+
+function setupAddCategoryForm() {
+    const form = document.getElementById('add-category-form');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const categoryName = document.getElementById('new-category-name').value;
+        const categoryColor = document.getElementById('new-category-color').value;
+        const modalEl = document.getElementById('newCategoryModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+
+        const body = {
+            name: categoryName,
+            color: categoryColor 
+        };
+
+        fetch('/api/categories', { 
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            body: JSON.stringify(body)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to create category");
+            return res.json();
+        })
+        .then(() => {
+            //refreshing all the categories in the drop down
+            loadCategories(); 
+            loadEditCategories();
+
+          
+            form.reset();
+            if (modal) modal.hide();
+        })
+        .catch(err => console.error("Category Creation Error:", err.message));
+    });
+}

@@ -264,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     prevBtn.addEventListener('click', () => {
         if (currentView === 'month') {
+            currentDate.setDate(1);
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderMonthView();
         } else {
@@ -274,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nextBtn.addEventListener('click', () => {
         if (currentView === 'month') {
+            currentDate.setDate(1);
             currentDate.setMonth(currentDate.getMonth() + 1);
             renderMonthView();
         } else {

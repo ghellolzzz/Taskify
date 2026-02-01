@@ -39,6 +39,7 @@ model User {
   focusSessions FocusSession[]
   teams       TeamMember[] 
   assignedTasks Task[] @relation("TaskAssignees")
+  timeEntries TimeEntry[]
 
   passwordResets PasswordReset[]
 
@@ -135,8 +136,27 @@ model Task {
 
   comments    Comment[]
   reminders   Reminder[]
+  timeEntries TimeEntry[]
 
   @@map("tasks")
+}
+
+//////////////////////////////////////////////////////
+// TIME ENTRY TABLE (time tracking)
+//////////////////////////////////////////////////////
+model TimeEntry {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  taskId    Int
+  minutes   Int
+  date      DateTime @db.Date
+  note      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("time_entries")
 }
 
 //////////////////////////////////////////////////////

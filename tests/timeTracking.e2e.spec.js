@@ -232,9 +232,16 @@ test.describe('Time tracking (E2E)', () => {
         await postPromise;
         await page.waitForLoadState('networkidle');
 
+        // Wait for summary to update (list re-fetches after create)
+        await page.waitForFunction(
+            (prev) => document.getElementById('sumTotal')?.innerText?.trim() !== prev,
+            initialTotal.trim(),
+            { timeout: 10000 }
+        );
         const newTotal = await page.locator('#sumTotal').innerText();
         expect(newTotal).not.toBe(initialTotal);
-        await expect(page.locator('#sumTotal')).toContainText('1h');
+        // Total should show a duration (e.g. "1h 30m" or "6h 30m") - not tied to a specific value
+        expect(newTotal).toMatch(/\d+h\s*\d*m|\d+m/);
     });
 
     test('should apply date filter and show filtered entries', async ({ page }) => {

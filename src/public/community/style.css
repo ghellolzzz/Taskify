@@ -1,0 +1,222 @@
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+
+    background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
+    padding: 20px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar .brand{
+    font-size:1.4rem;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    color:#198754;
+}
+
+.sidebar ul li {
+    list-style: none;
+    margin: 15px 0;
+}
+
+.sidebar .nav {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+
+.sidebar a {
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 10px 5px;
+    color: #535353;
+    display: block;
+    border-radius: 8px;
+}
+
+.sidebar a.active,
+.sidebar a:hover {
+    background: #e9f7ef;
+    color: #198754;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #e0e6ed;
+}
+
+/* Sidebar Layout Fix */
+/* Update Body for Mint Background */
+body { 
+    display: flex; 
+    min-height: 100vh; 
+    background-color: #F6FFF9; /* Soft Mint */
+    margin: 0;
+}
+
+/* Ensure Main Content pushes footer down */
+.main-content { 
+    flex-grow: 1; 
+    margin-left: 230px; 
+    padding: 2rem;
+    display: flex;
+    flex-direction: column; /* This allows the footer to stay at bottom */
+    min-height: 100vh;
+}
+
+.community-board {
+    background-color: #fffef0; 
+    border: 2px solid #e0ede4; 
+    border-radius: 20px;
+    
+    /* ADD THESE TWO LINES */
+    min-height: 500px; 
+    flex-grow: 1; 
+    
+    padding: 40px;
+    margin-bottom: 2rem;
+    background-image: radial-gradient(#dccdb4 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Ensure these color variations are in your style.css */
+.note-yellow { background-color: #fff9c4 !important; border-bottom: 2px solid #fbc02d; }
+.note-pink   { background-color: #fce4ec !important; border-bottom: 2px solid #f06292; }
+.note-blue   { background-color: #e3f2fd !important; border-bottom: 2px solid #64b5f6; }
+.note-green  { background-color: #e8f5e9 !important; border-bottom: 2px solid #81c784; }
+/* The base class needs a default size and z-index to show up clearly */
+/* Container for the Masonry Effect */
+#notesContainer {
+    display: block; /* Required for column-count */
+    column-count: 3; /* 3 columns on desktop */
+    column-gap: 20px;
+    width: 100%;
+}
+
+/* Updated Sticky Note for Masonry */
+.sticky-note {
+    display: inline-block; /* Essential for masonry */
+    /* Limit the width so they stay squarish */
+    width: 280px; 
+    /* min-height ensures they don't look like thin strips if text is short */
+    min-height: 250px; 
+    margin-bottom: 20px;
+    padding: 25px;
+    word-wrap: break-word; /* Prevents long words from breaking the square */
+    margin-bottom: 20px;
+    position: relative;
+    background-color: #fff9c4; 
+    padding: 25px;
+    box-shadow: 2px 10px 15px rgba(0,0,0,0.08);
+    border-radius: 2px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Prevent notes from splitting across columns */
+    break-inside: avoid;
+}
+
+.sticky-note p {
+    font-family: 'Gochi Hand';
+    font-size: 1.3rem;
+    line-height: 1.4;
+    color: #333;
+}
+/* Responsive Columns */
+@media (max-width: 1200px) { #notesContainer { column-count: 2; } }
+@media (max-width: 768px) { #notesContainer { column-count: 1; } }
+
+
+/* Add a "Tape" effect at the top */
+.sticky-note::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 25px;
+    background: rgba(212, 212, 212, 0.4);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.sticky-note:hover {
+    transform: scale(1.05) translateY(-5px) rotate(0deg) !important;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+    z-index: 100;
+}
+/* Micro-animation for the heart icon */
+.hover-bounce:hover {
+    display: inline-block;
+    animation: bounce 0.4s infinite alternate;
+}
+
+@keyframes heartBurst {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5) rotate(-15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* This class will be added/removed by JavaScript */
+.animate-pop {
+  animation: heartBurst 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: inline-block;
+}
+/* Custom Color Picker for the Modal */
+.color-radio {
+    position: relative;
+    cursor: pointer;
+}
+
+.color-radio input {
+    position: absolute;
+    opacity: 0; /* Hide actual radio */
+}
+
+.color-radio .dot {
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    transition: transform 0.2s;
+}
+
+.color-radio input:checked + .dot {
+    transform: scale(1.2);
+    border-color: #333; /* Dark ring when selected */
+}
+
+/* Match Button to Sidebar Brand Color */
+.btn-primary {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.btn-primary:hover {
+    background-color: #146c43 !important;
+}
+
+/* Sticky Footer */
+.footer {
+    margin-top: auto; 
+    text-align: center;
+    padding: 20px 0;
+    width: 100%;
+    color: #6c757d;
+}

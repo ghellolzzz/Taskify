@@ -14,6 +14,7 @@ router.delete("/:teamId", verifyToken, teamController.deleteTeam);
 router.put("/:teamId", verifyToken, teamController.updateTeam);
 router.delete("/:teamId/members/:userId", verifyToken, teamController.removeMember);
 router.delete("/:teamId/leave", verifyToken, teamController.leaveTeam);
+router.get("/:teamId/activity", verifyToken, teamController.getActivity);
 
 
 module.exports=router

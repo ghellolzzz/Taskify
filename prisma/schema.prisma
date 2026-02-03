@@ -39,6 +39,7 @@ model User {
   focusSessions FocusSession[]
   teams       TeamMember[] 
   assignedTasks Task[] @relation("TaskAssignees")
+  activityLogs  ActivityLog[]
 
   passwordResets PasswordReset[]
   communityNotes CommunityNote[]
@@ -304,7 +305,8 @@ model Team {
   updatedAt   DateTime     @updatedAt
 
   members     TeamMember[]
-  tasks       Task[]       
+  tasks       Task[]
+  activityLogs ActivityLog[]  
 
   @@map("teams")
 }
@@ -328,6 +330,29 @@ model TeamMember {
   @@map("team_members")
 }
 
+model ActivityLog {
+  id          Int        @id @default(autoincrement())
+  teamId      Int
+  userId      Int        
+  actionType  ActionType 
+  details     String?    
+  createdAt   DateTime   @default(now())
+
+  team        Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id])
+  
+  // Add a relation back to Team
+  @@map("activity_logs")
+}
+
+enum ActionType {
+  CREATE_TASK
+  UPDATE_STATUS
+  ADD_MEMBER
+  REMOVE_MEMBER
+  LEAVE_TEAM
+  POST_COMMENT
+}
 
 //////////////////////////////////////////////////////
 //// CommunityNote TABLE 

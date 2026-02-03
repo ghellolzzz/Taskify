@@ -43,6 +43,8 @@ model User {
   activityLogs ActivityLog[]
 
   passwordResets PasswordReset[]
+  communityNotes CommunityNote[]
+  noteReactions  NoteReaction[]
 
   @@map("users")
 }
@@ -323,13 +325,14 @@ model Team {
   updatedAt   DateTime     @updatedAt
 
   members     TeamMember[]
-  tasks       Task[]       
+  tasks       Task[]
+  activityLogs ActivityLog[]  
 
   @@map("teams")
 }
 
 //////////////////////////////////////////////////////
-// TEAM_MEMBER TABLE 
+/// TEAM_MEMBER TABLE 
 //////////////////////////////////////////////////////
 model TeamMember {
   id        Int      @id @default(autoincrement())
@@ -347,3 +350,56 @@ model TeamMember {
   @@map("team_members")
 }
 
+model ActivityLog {
+  id          Int        @id @default(autoincrement())
+  teamId      Int
+  userId      Int        
+  actionType  ActionType 
+  details     String?    
+  createdAt   DateTime   @default(now())
+
+  team        Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id])
+  
+  // Add a relation back to Team
+  @@map("activity_logs")
+}
+
+enum ActionType {
+  CREATE_TASK
+  UPDATE_STATUS
+  ADD_MEMBER
+  REMOVE_MEMBER
+  LEAVE_TEAM
+  POST_COMMENT
+}
+
+//////////////////////////////////////////////////////
+//// CommunityNote TABLE 
+//////////////////////////////////////////////////////
+model CommunityNote {
+  id        Int            @id @default(autoincrement())
+  content   String         @db.VarChar(280)
+  color     String         @default("yellow")
+  createdAt DateTime       @default(now())
+  userId    Int
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions NoteReaction[]
+
+  @@map("community_notes")
+}
+
+//////////////////////////////////////////////////////
+/// NoteReaction TABLE 
+//////////////////////////////////////////////////////
+model NoteReaction {
+  id     Int           @id @default(autoincrement())
+  type   String        // e.g., "HEART", "THUMBS_UP", "SMILE"
+  noteId Int
+  userId Int
+  note   CommunityNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, noteId, type])
+  @@map("note_reactions")
+}

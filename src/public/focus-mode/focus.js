@@ -75,10 +75,11 @@ startTimer: function() {
 // 4. Log Success
     completeSession: function() {
         clearInterval(this.timerInterval);
-        alert("Delicious! Focus session complete.");
+        
+        // Alert the reward
+        alert("Delicious! Focus session complete.\n\n💰 You earned 50 Beans!");
 
         const token = localStorage.getItem('token');
-
         const minutes = this.totalSeconds / 60;
         fetch('/api/focus/log', {
             method: 'POST',
@@ -91,30 +92,24 @@ startTimer: function() {
                 minutes: minutes,
                 status: 'COMPLETED'
             })
-        }).then(() => location.reload()); 
+        }).then(() => {
+            location.reload(); 
+        }); 
     },
 
-    // 5.Giving Up
+// 5. Giving Up
     giveUp: function() {
         if(confirm("Are you sure? You'll spill the drink!")) {
-        // 1. Stop the timer logic
+            // Stop the timer logic
             clearInterval(this.timerInterval);
             
-    const liquid = document.getElementById('liquid');
+            const liquid = document.getElementById('liquid');
 
-        // 2. Snap height to 0 immediately (disable transition)
-        const prevTransition = liquid.style.transition;
-        liquid.style.transition = 'none';
-        liquid.style.height = '0px';
+            // Give up drink animation
+            liquid.style.height = '0%'; 
 
-        // Force reflow to apply height immediately
-        liquid.offsetHeight;
-
-        // Restore transition for future sessions
-        liquid.style.transition = prevTransition || '';
-
-        // 3. Log failure to backend
-        const token = localStorage.getItem('token');
+            // Log failure to backend
+            const token = localStorage.getItem('token');
             
             fetch('/api/focus/log', {
                 method: 'POST',
@@ -128,9 +123,10 @@ startTimer: function() {
                     status: 'ABANDONED'
                 })
             }).then(() => {
+                // 4. Wait for the 1-second animation to finish before reloading
                 setTimeout(() => {
                     location.reload(); 
-                }, 1000); // 1s delay
+                }, 1000); 
             });
         }
     }

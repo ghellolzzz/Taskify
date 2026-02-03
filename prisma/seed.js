@@ -178,6 +178,43 @@ async function main() {
   });
 
   console.log("✓ Habits & habit logs seeded");
+
+  // ==========================================
+  // 8. SHOP THEMES
+  // ==========================================
+  console.log("... adding Shop Themes");
+  await prisma.theme.deleteMany({});
+  await prisma.theme.createMany({
+      data: [
+          { 
+              name: "Classic Coffee", 
+              cost: 0, 
+              cssClass: "theme-coffee", 
+              description: "The original reliable choice." 
+          },
+          { 
+              name: "Matcha", 
+              cost: 100, 
+              cssClass: "theme-matcha", 
+              description: "Green, calm, and focused." 
+          },
+          { 
+              name: "Cyberpunk City", 
+              cost: 500, 
+              cssClass: "theme-cyberpunk", 
+              description: "Neon lights and deep focus." 
+          },
+          { 
+              name: "Midnight Blue", 
+              cost: 300, 
+              cssClass: "theme-midnight", 
+              description: "Deep colors for late night grinders." 
+          }
+      ],
+      skipDuplicates: true, 
+  });
+  console.log("Shop Themes added");
+  
   console.log("🎉 Seed completed!");
 
 }

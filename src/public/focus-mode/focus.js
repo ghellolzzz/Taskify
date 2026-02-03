@@ -122,8 +122,18 @@ startTimer: function() {
             }).then(() => {
                 // 2. Wait for animation
                 setTimeout(() => {
-                    document.getElementById('focus-status').innerText = "Session Abandoned";
+                    document.getElementById('focus-status').innerText = "Don't Give Up!! Lets Try Again :D";
                     document.getElementById('timer-display').innerText = "00:00";
+
+                    // 3. Change "Give Up" button to "Try Again"
+                    const btn = document.querySelector('.btn-giveup');
+                    btn.innerText = "Try Again";
+                    
+                    // reload the page
+                    btn.onclick = function() {
+                        location.reload();
+                    };
+                    
                 }, 1000); 
             });
         }

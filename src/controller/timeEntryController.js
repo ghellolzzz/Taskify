@@ -24,6 +24,7 @@ module.exports.createTimeEntry = function (req, res) {
     .then((entry) => res.status(201).json({ timeEntry: entry }))
     .catch((err) => {
       if (err.message === 'Task not found or access denied') return res.status(404).json({ error: err.message });
+      console.error('[time-entry create]', err);
       res.status(500).json({ error: err.message });
     });
 };
@@ -39,7 +40,10 @@ module.exports.getTimeEntries = function (req, res) {
 
   timeEntryModel.getAll(userId, options)
     .then((entries) => res.json({ timeEntries: entries }))
-    .catch((err) => res.status(500).json({ error: err.message }));
+    .catch((err) => {
+      console.error('[time-entry getAll]', err);
+      res.status(500).json({ error: err.message });
+    });
 };
 
 // GET time entry by id

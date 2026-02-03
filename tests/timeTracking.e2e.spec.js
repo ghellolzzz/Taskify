@@ -54,8 +54,19 @@ test.describe('Time tracking (E2E)', () => {
         await page.fill('#timeMinutes', '45');
         await page.fill('#timeNote', 'E2E test note');
 
+        // Ensure the form state is visible to the page script (avoids race where createTimeEntry() reads empty values)
+        await page.waitForFunction(
+            ({ taskId, minutes }) => {
+                const sel = document.getElementById('timeTask');
+                const min = document.getElementById('timeMinutes');
+                return sel && String(sel.value) === String(taskId) && min && min.value === minutes;
+            },
+            { taskId, minutes: '45' },
+            { timeout: 5000 }
+        );
+
         const postPromise = page.waitForResponse(resp => resp.url().includes('/api/time-entries') && resp.request().method() === 'POST' && resp.ok);
-        await page.evaluate(() => createTimeEntry());
+        await page.evaluate(() => document.querySelector('.form-section button.btn-success')?.click());
         await postPromise;
         await page.waitForLoadState('networkidle');
 
@@ -90,8 +101,19 @@ test.describe('Time tracking (E2E)', () => {
         await page.waitForSelector(`#timeTask option[value="${taskId}"]`, { state: 'attached', timeout: 15000 });
         await page.selectOption('#timeTask', taskId);
         await page.fill('#timeMinutes', '30');
+
+        await page.waitForFunction(
+            ({ taskId, minutes }) => {
+                const sel = document.getElementById('timeTask');
+                const min = document.getElementById('timeMinutes');
+                return sel && String(sel.value) === String(taskId) && min && min.value === minutes;
+            },
+            { taskId, minutes: '30' },
+            { timeout: 5000 }
+        );
+
         const postPromise = page.waitForResponse(resp => resp.url().includes('/api/time-entries') && resp.request().method() === 'POST' && resp.ok);
-        await page.evaluate(() => createTimeEntry());
+        await page.evaluate(() => document.querySelector('.form-section button.btn-success')?.click());
         await postPromise;
         await page.waitForLoadState('networkidle');
 
@@ -137,8 +159,19 @@ test.describe('Time tracking (E2E)', () => {
         await page.waitForSelector(`#timeTask option[value="${taskId}"]`, { state: 'attached', timeout: 15000 });
         await page.selectOption('#timeTask', taskId);
         await page.fill('#timeMinutes', '15');
+
+        await page.waitForFunction(
+            ({ taskId, minutes }) => {
+                const sel = document.getElementById('timeTask');
+                const min = document.getElementById('timeMinutes');
+                return sel && String(sel.value) === String(taskId) && min && min.value === minutes;
+            },
+            { taskId, minutes: '15' },
+            { timeout: 5000 }
+        );
+
         const postPromise = page.waitForResponse(resp => resp.url().includes('/api/time-entries') && resp.request().method() === 'POST' && resp.ok);
-        await page.evaluate(() => createTimeEntry());
+        await page.evaluate(() => document.querySelector('.form-section button.btn-success')?.click());
         await postPromise;
         await page.waitForLoadState('networkidle');
 
@@ -183,8 +216,19 @@ test.describe('Time tracking (E2E)', () => {
         await page.waitForSelector(`#timeTask option[value="${taskId}"]`, { state: 'attached', timeout: 15000 });
         await page.selectOption('#timeTask', taskId);
         await page.fill('#timeMinutes', '90');
+
+        await page.waitForFunction(
+            ({ taskId, minutes }) => {
+                const sel = document.getElementById('timeTask');
+                const min = document.getElementById('timeMinutes');
+                return sel && String(sel.value) === String(taskId) && min && min.value === minutes;
+            },
+            { taskId, minutes: '90' },
+            { timeout: 5000 }
+        );
+
         const postPromise = page.waitForResponse(resp => resp.url().includes('/api/time-entries') && resp.request().method() === 'POST' && resp.ok);
-        await page.evaluate(() => createTimeEntry());
+        await page.evaluate(() => document.querySelector('.form-section button.btn-success')?.click());
         await postPromise;
         await page.waitForLoadState('networkidle');
 

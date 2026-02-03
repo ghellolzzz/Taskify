@@ -117,6 +117,12 @@ function applyFilter() {
 
 // CREATE time entry
 function createTimeEntry() {
+  const authToken = localStorage.getItem("token");
+  if (!authToken) {
+    alert("Session expired. Please log in again.");
+    window.location.href = "/login.html";
+    return;
+  }
   const taskId = document.getElementById("timeTask").value;
   const minutes = document.getElementById("timeMinutes").value;
   const date = document.getElementById("timeDate").value;
@@ -142,7 +148,7 @@ function createTimeEntry() {
   fetch("/api/time-entries", {
     method: "POST",
     headers: {
-      "Authorization": "Bearer " + token,
+      "Authorization": "Bearer " + authToken,
       "Content-Type": "application/json"
     },
     body: JSON.stringify(body)

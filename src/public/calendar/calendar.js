@@ -201,14 +201,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Add weekday headers
             const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-            weekdays.forEach(day => {
-                const dayHeader = document.createElement('div');
-                dayHeader.className = 'year-day';
-                dayHeader.textContent = day;
-                dayHeader.style.fontWeight = '600';
-                dayHeader.style.color = '#198754';
-                monthGrid.appendChild(dayHeader);
-            });
+weekdays.forEach(day => {
+  const dayHeader = document.createElement('div');
+  dayHeader.className = 'year-day year-weekday';
+  dayHeader.textContent = day;
+  monthGrid.appendChild(dayHeader);
+});
 
             // Get first day of month
             const firstDay = new Date(year, month, 1);

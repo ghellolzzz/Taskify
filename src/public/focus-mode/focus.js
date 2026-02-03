@@ -98,17 +98,14 @@ startTimer: function() {
     },
 
 // 5. Giving Up
-    giveUp: function() {
+   giveUp: function() {
         if(confirm("Are you sure? You'll spill the drink!")) {
-            // Stop the timer logic
+            
             clearInterval(this.timerInterval);
             
             const liquid = document.getElementById('liquid');
+            liquid.style.height = '0%'; // 1. Drain the cup
 
-            // Give up drink animation
-            liquid.style.height = '0%'; 
-
-            // Log failure to backend
             const token = localStorage.getItem('token');
             
             fetch('/api/focus/log', {
@@ -123,11 +120,12 @@ startTimer: function() {
                     status: 'ABANDONED'
                 })
             }).then(() => {
-                // 4. Wait for the 1-second animation to finish before reloading
+                // 2. Wait for animation
                 setTimeout(() => {
-                    location.reload(); 
+                    document.getElementById('focus-status').innerText = "Session Abandoned";
+                    document.getElementById('timer-display').innerText = "00:00";
                 }, 1000); 
             });
         }
     }
-};
+}

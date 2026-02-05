@@ -43,7 +43,6 @@ model User {
   timeEntries TimeEntry[]
   activityLogs ActivityLog[]
   ownedThemes   UserOwnedTheme[]
-  activityLogs  ActivityLog[]
 
   passwordResets PasswordReset[]
   communityNotes CommunityNote[]

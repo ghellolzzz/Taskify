@@ -21,7 +21,6 @@ const teamRouter = require("./routers/teamRouter.js");
 const passwordResetRouter = require('./routers/passwordResetRouter');
 const timeEntryRouter = require('./routers/timeEntryRouter');
 const communityRouter = require('./routers/communityRouter.js');
-const communityRouter = require('./routers/communityRouter.js')
 const shopRouter = require('./routers/shopRoutes.js');
 
 const app = express();

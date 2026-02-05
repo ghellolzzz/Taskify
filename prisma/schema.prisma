@@ -24,6 +24,7 @@ model User {
   lastActive  DateTime?
   theme       String?
   accentColor String?
+  points   Int    @default(0)
 
   // Relations
   tasks         Task[]
@@ -41,6 +42,8 @@ model User {
   assignedTasks Task[] @relation("TaskAssignees")
   timeEntries TimeEntry[]
   activityLogs ActivityLog[]
+  ownedThemes   UserOwnedTheme[]
+  activityLogs  ActivityLog[]
 
   passwordResets PasswordReset[]
   communityNotes CommunityNote[]
@@ -350,6 +353,27 @@ model TeamMember {
   @@map("team_members")
 }
 
+model Theme {
+  id          Int      @id @default(autoincrement())
+  name        String
+  cost        Int
+  cssClass    String
+  description String?
+
+  owners      UserOwnedTheme[]
+}
+
+model UserOwnedTheme {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  themeId     Int
+  purchasedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  theme       Theme    @relation(fields: [themeId], references: [id])
+
+  @@unique([userId, themeId]) 
+}
 model ActivityLog {
   id          Int        @id @default(autoincrement())
   teamId      Int

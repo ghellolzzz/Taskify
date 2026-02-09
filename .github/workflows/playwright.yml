@@ -71,11 +71,19 @@ jobs:
           JWT_ALGORITHM=HS256
           EOF
 
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
       - name: Run Playwright E2E tests
         run: npm test
+            
+      - name: Trigger Render Deployment
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          echo "All tests passed! Triggering Render deployment via Webhook..."
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4

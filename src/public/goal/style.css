@@ -1,18 +1,27 @@
 /* ======================================================
    GLOBAL
 ====================================================== */
-body, html {
-    background: #F6FFF9;
-    font-family: 'Inter', 'Poppins', sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    color: #2E2E2E;
+:root {
+  --accent-color: #198754;
 }
 
-body {
-    display: block;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', 'Poppins', sans-serif;
 }
+
+body.profile-theme-light {
+  background: #F6FFF9;
+  color: #2E2E2E;
+}
+
+body.profile-theme-dark {
+  background: radial-gradient(circle at top left, #151a2f, #0a0f1c 60%, #06080f 100%);
+  color: #e2e8f0;
+}
+
 
 /* ======================================================
    SIDEBAR
@@ -39,7 +48,7 @@ body {
     align-items:center;
     gap:10px;
     font-weight:600;
-    color:#198754;
+    color: var(--accent-color);
 }
 
 .sidebar ul li {
@@ -66,7 +75,7 @@ body {
 .sidebar a.active,
 .sidebar a:hover {
     background: #e9f7ef;
-    color: #198754;
+    color: var(--accent-color);
 }
 
 /* Sidebar footer */
@@ -408,3 +417,140 @@ body {
     100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Accent buttons / progress */
+.goals-page .btn-success {
+  background-color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+}
+
+.goals-page .progress-bar.bg-success {
+  background-color: var(--accent-color) !important;
+}
+
+/* Dark mode: sidebar */
+body.profile-theme-dark .sidebar {
+  background: rgba(2, 6, 23, 0.92);
+  border-right: 1px solid #1f2937;
+}
+
+body.profile-theme-dark .sidebar a {
+  color: #cbd5e1;
+}
+
+body.profile-theme-dark .sidebar a.active,
+body.profile-theme-dark .sidebar a:hover {
+  background: color-mix(in srgb, var(--accent-color) 18%, transparent);
+  color: var(--accent-color);
+}
+
+body.profile-theme-dark .sidebar-footer {
+  border-top: 1px solid #1f2937;
+}
+
+body.profile-theme-dark .sidebar-footer a {
+  color: #cbd5e1;
+}
+
+/* Dark mode: main surfaces */
+body.profile-theme-dark .filter-bar,
+body.profile-theme-dark .goal-progress-card,
+body.profile-theme-dark .smart-card,
+body.profile-theme-dark #add-goal-card,
+body.profile-theme-dark .task-card {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #e2e8f0;
+}
+
+body.profile-theme-dark .goal-title {
+  color: #e2e8f0;
+}
+
+body.profile-theme-dark .goal-desc,
+body.profile-theme-dark .smart-list,
+body.profile-theme-dark .filter-item label,
+body.profile-theme-dark .footer {
+  color: #94a3b8;
+}
+
+/* Dark mode: form controls */
+body.profile-theme-dark .form-select,
+body.profile-theme-dark .form-control,
+body.profile-theme-dark textarea {
+  background: #020617 !important;
+  border: 1px solid #1f2937 !important;
+  color: #e2e8f0 !important;
+}
+
+body.profile-theme-dark .form-control::placeholder {
+  color: #64748b;
+}
+
+/* Dark mode: icons hover backgrounds */
+body.profile-theme-dark .goal-actions button:hover {
+  background: #0b1120;
+}
+
+/* Dark mode: completed card */
+body.profile-theme-dark .goal-completed {
+  background: color-mix(in srgb, var(--accent-color) 10%, rgba(15, 23, 42, 0.88)) !important;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 25%, #1f2937) !important;
+}
+
+/* Dark mode: modal */
+body.profile-theme-dark .modal-content {
+  background: #0b1220;
+  color: #e2e8f0;
+  border: 1px solid #1f2937;
+}
+
+body.profile-theme-dark .modal-header,
+body.profile-theme-dark .modal-footer {
+  border-color: #1f2937;
+}
+
+body.profile-theme-dark .btn-close {
+  filter: invert(1) grayscale(100%);
+}
+
+/* Dark mode: scrollbar */
+body.profile-theme-dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.profile-theme-dark ::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+body.profile-theme-dark ::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 999px;
+  border: 2px solid #020617;
+}
+
+body.profile-theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent-color) 40%, #1f2937);
+}
+
+body.profile-theme-dark {
+  scrollbar-color: #1f2937 #020617;
+  scrollbar-width: thin;
+}
+
+/* Dark mode: progress track should not be white */
+body.profile-theme-dark .goals-page .progress {
+  background-color: #0b1220 !important;        /* dark rail */
+  border: 1px solid #1f2937 !important;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+}
+
+body.profile-theme-dark .goals-page .progress-bar {
+  background-color: var(--accent-color) !important;
+  color: #ffffff !important;
+}
+
+/* When 0%, your bar text can disappear; keep it readable */
+body.profile-theme-dark .goals-page #progressBar {
+  min-width: 44px; /* so 0% text doesn't vanish */
+}

@@ -25,6 +25,7 @@ model User {
   theme       String?
   accentColor String?
   points   Int    @default(0)
+  preferredTheme String  @default("theme-classic")
 
   // Relations
   tasks         Task[]

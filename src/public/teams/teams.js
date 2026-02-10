@@ -1011,14 +1011,8 @@ function loadActivityFeed(teamId) {
                         actionText = `updated ${log.details}`
                         break;
                     case 'ADD_MEMBER':
-                        iconClass = 'bi-person-plus-fill text-info';
-                        if (log.details && log.details.startsWith('invited')) {
-                            
-                            actionText = `${log.details} to the team (Pending)`
-                        } else {
-                           
-                            actionText = `added <strong>${log.details}</strong> to the team`
-                        }
+                        iconClass = 'bi-person-plus-fill text-info'
+                        actionText = ` <strong>${log.details}</strong> to the team`
                         break;
                     case 'REMOVE_MEMBER':
                         iconClass = 'bi-person-dash-fill text-danger'

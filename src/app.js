@@ -17,9 +17,10 @@ const goalRouter = require("./routers/goalRouter.js");
 const habitRouter = require('./routers/Habit.router.js');
 const feedbackRouter = require('./routers/feedbackRoutes.js');
 const focusRoutes = require('./routers/focusRouter.js');
-const teamRouter=require("./routers/teamRouter.js")
+const teamRouter = require("./routers/teamRouter.js");
 const passwordResetRouter = require('./routers/passwordResetRouter');
-const communityRouter = require('./routers/communityRouter.js')
+const timeEntryRouter = require('./routers/timeEntryRouter');
+const communityRouter = require('./routers/communityRouter.js');
 const shopRouter = require('./routers/shopRoutes.js');
 
 const app = express();
@@ -45,7 +46,8 @@ app.use("/api/feedback", feedbackRouter);
 app.use('/api/focus', focusRoutes);
 app.use("/api/teams", teamRouter);
 app.use('/api/password-reset', passwordResetRouter);
-app.use("/api/community", communityRouter);
+app.use('/api/time-entries', timeEntryRouter);
+app.use('/api/community', communityRouter);
 
 app.use('/api/shop', shopRouter);
 app.get('/.well-known/appspecific/*', (req, res) => {

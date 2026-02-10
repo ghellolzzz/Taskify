@@ -158,7 +158,7 @@ test.describe('Password Reset Feature (E2E)', () => {
                 
                 // Check if error message appears
                 const errorMessage = page.locator('#errorMessage');
-                await expect(errorMessage).toContainText(/match/i, { timeout: 3000 });
+                await expect(errorMessage).toContainText(/match/i, { timeout: 3001 });
             }
         }
     });

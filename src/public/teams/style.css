@@ -214,3 +214,383 @@
     padding-top: 15px;
     border-top: 1px solid #e0e6ed;
 }
+
+
+/* =========================================
+   Accent + Dark Theme Support (Teams)
+   ========================================= */
+
+
+/* --- Sidebar: use accent variable --- */
+.sidebar .brand{ color: var(--accent-color) !important; }
+
+.sidebar a.active,
+.sidebar a:hover{
+  background: color-mix(in srgb, var(--accent-color) 14%, transparent) !important;
+  color: var(--accent-color) !important;
+}
+
+.team-card{
+  cursor: pointer;
+  border: 1px solid rgba(148,163,184,0.18);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.team-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.18);
+  border-color: rgba(148,163,184,0.28);
+}
+
+/* --- Dark theme base --- */
+body.profile-theme-dark .team-card,
+body.profile-theme-dark .team-task-card,
+body.profile-theme-dark .card{
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
+}
+
+body.profile-theme-dark .text-muted{ color: #94a3b8 !important; }
+
+/* team task title */
+body.profile-theme-dark .task-title{ color: #e2e8f0 !important; }
+
+/* action buttons on cards */
+body.profile-theme-dark .action-btn{
+  color: #cbd5e1 !important;
+}
+body.profile-theme-dark .action-btn:hover{
+  background: rgba(148,163,184,0.10) !important;
+  color: #e2e8f0 !important;
+}
+
+/* status select colors in dark */
+body.profile-theme-dark .status-pending{
+  background: rgba(148,163,184,0.14) !important;
+  color: #cbd5e1 !important;
+}
+body.profile-theme-dark .status-inprogress{
+  background: rgba(59,130,246,0.18) !important;
+  color: #93c5fd !important;
+}
+body.profile-theme-dark .status-completed{
+  background: rgba(34,197,94,0.18) !important;
+  color: #86efac !important;
+}
+
+/* comment section */
+body.profile-theme-dark .comment-section{
+  background: rgba(2, 6, 23, 0.55) !important;
+  border-top: 1px solid rgba(148,163,184,0.18) !important;
+}
+body.profile-theme-dark .comment-bubble{
+  background: rgba(15,23,42,0.95) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148,163,184,0.18) !important;
+}
+body.profile-theme-dark .comment-bubble .text-dark{
+  color: #e2e8f0 !important;
+}
+
+/* members list */
+body.profile-theme-dark .list-group-item{
+  background: rgba(15,23,42,0.92) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148,163,184,0.18) !important;
+}
+
+/* modals + form controls */
+body.profile-theme-dark .modal-content{
+  background: rgba(15,23,42,0.96) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148,163,184,0.22) !important;
+}
+body.profile-theme-dark .form-control,
+body.profile-theme-dark .form-select,
+body.profile-theme-dark textarea{
+  background: #020617 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148,163,184,0.25) !important;
+}
+body.profile-theme-dark .form-control::placeholder{ color: #94a3b8 !important; }
+
+/* --- Scrollbars --- */
+html.profile-theme-dark,
+body.profile-theme-dark{
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0b1120;
+}
+html.profile-theme-dark::-webkit-scrollbar,
+body.profile-theme-dark::-webkit-scrollbar{ width: 10px; height: 10px; }
+html.profile-theme-dark::-webkit-scrollbar-track,
+body.profile-theme-dark::-webkit-scrollbar-track{ background: #0b1120; }
+html.profile-theme-dark::-webkit-scrollbar-thumb,
+body.profile-theme-dark::-webkit-scrollbar-thumb{
+  background: #334155;
+  border-radius: 999px;
+  border: 2px solid #0b1120;
+}
+html.profile-theme-dark::-webkit-scrollbar-thumb:hover,
+body.profile-theme-dark::-webkit-scrollbar-thumb:hover{ background: #475569; }
+
+body.profile-theme-dark .sidebar{
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0b1120;
+}
+body.profile-theme-dark .sidebar::-webkit-scrollbar{ width: 10px; }
+body.profile-theme-dark .sidebar::-webkit-scrollbar-track{ background: #0b1120; }
+body.profile-theme-dark .sidebar::-webkit-scrollbar-thumb{
+  background: #334155;
+  border-radius: 999px;
+  border: 2px solid #0b1120;
+}
+
+/* =========================================
+   Accent + Dark Theme Support (Teams)
+   ========================================= */
+
+.sidebar .brand{ color: var(--accent-color) !important; }
+
+.sidebar a.active,
+.sidebar a:hover{
+  background: color-mix(in srgb, var(--accent-color) 14%, transparent) !important;
+  color: var(--accent-color) !important;
+}
+
+.team-card{
+  cursor: pointer;
+  border: 1px solid rgba(148,163,184,0.18);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.team-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.18);
+  border-color: rgba(148,163,184,0.28);
+}
+
+/* --- Dark theme base --- */
+body.profile-theme-dark .team-card,
+body.profile-theme-dark .team-task-card,
+body.profile-theme-dark .card{
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
+}
+
+body.profile-theme-dark .text-muted{ color: #94a3b8 !important; }
+
+body.profile-theme-dark .task-title{ color: #e2e8f0 !important; }
+
+body.profile-theme-dark .action-btn{
+  color: #cbd5e1 !important;
+}
+body.profile-theme-dark .action-btn:hover{
+  background: rgba(148,163,184,0.10) !important;
+  color: #e2e8f0 !important;
+}
+
+body.profile-theme-dark .status-pending{
+  background: rgba(148,163,184,0.14) !important;
+  color: #cbd5e1 !important;
+}
+body.profile-theme-dark .status-inprogress{
+  background: rgba(59,130,246,0.18) !important;
+  color: #93c5fd !important;
+}
+body.profile-theme-dark .status-completed{
+  background: rgba(34,197,94,0.18) !important;
+  color: #86efac !important;
+}
+
+body.profile-theme-dark .comment-section{
+  background: rgba(2, 6, 23, 0.55) !important;
+  border-top: 1px solid rgba(148,163,184,0.18) !important;
+}
+body.profile-theme-dark .comment-bubble{
+  background: rgba(15,23,42,0.95) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148,163,184,0.18) !important;
+}
+body.profile-theme-dark .comment-bubble .text-dark{
+  color: #e2e8f0 !important;
+}
+
+body.profile-theme-dark .list-group-item{
+  background: rgba(15,23,42,0.92) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148,163,184,0.18) !important;
+}
+
+body.profile-theme-dark .modal-content{
+  background: rgba(15,23,42,0.96) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148,163,184,0.22) !important;
+}
+body.profile-theme-dark .form-control,
+body.profile-theme-dark .form-select,
+body.profile-theme-dark textarea{
+  background: #020617 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148,163,184,0.25) !important;
+}
+body.profile-theme-dark .form-control::placeholder{ color: #94a3b8 !important; }
+
+html.profile-theme-dark,
+body.profile-theme-dark{
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0b1120;
+}
+html.profile-theme-dark::-webkit-scrollbar,
+body.profile-theme-dark::-webkit-scrollbar{ width: 10px; height: 10px; }
+html.profile-theme-dark::-webkit-scrollbar-track,
+body.profile-theme-dark::-webkit-scrollbar-track{ background: #0b1120; }
+html.profile-theme-dark::-webkit-scrollbar-thumb,
+body.profile-theme-dark::-webkit-scrollbar-thumb{
+  background: #334155;
+  border-radius: 999px;
+  border: 2px solid #0b1120;
+}
+html.profile-theme-dark::-webkit-scrollbar-thumb:hover,
+body.profile-theme-dark::-webkit-scrollbar-thumb:hover{ background: #475569; }
+
+body.profile-theme-dark .sidebar{
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0b1120;
+}
+body.profile-theme-dark .sidebar::-webkit-scrollbar{ width: 10px; }
+body.profile-theme-dark .sidebar::-webkit-scrollbar-track{ background: #0b1120; }
+body.profile-theme-dark .sidebar::-webkit-scrollbar-thumb{
+  background: #334155;
+  border-radius: 999px;
+  border: 2px solid #0b1120;
+}
+
+/* ============================================================
+   TEAMS: Accent + Dark fixes
+   ============================================================ */
+
+:root, body{
+  --teams-accent: var(--accent-color, var(--accent, var(--accentColor, #198754)));
+}
+
+.btn-success{
+  background-color: var(--teams-accent) !important;
+  border-color: var(--teams-accent) !important;
+}
+.btn-success:hover,
+.btn-success:focus{
+  background-color: color-mix(in srgb, var(--teams-accent) 88%, #000) !important;
+  border-color: color-mix(in srgb, var(--teams-accent) 88%, #000) !important;
+}
+
+.btn-outline-success{
+  color: var(--teams-accent) !important;
+  border-color: color-mix(in srgb, var(--teams-accent) 70%, transparent) !important;
+}
+.btn-outline-success:hover,
+.btn-outline-success:focus{
+  background-color: var(--teams-accent) !important;
+  border-color: var(--teams-accent) !important;
+  color: #fff !important;
+}
+
+.spinner-border.text-success{
+  color: var(--teams-accent) !important;
+}
+
+.team-card .card-title.text-success{
+  color: var(--teams-accent) !important;
+}
+
+.team-card .badge.bg-light{
+  background: color-mix(in srgb, var(--teams-accent) 14%, transparent) !important;
+  border-color: color-mix(in srgb, var(--teams-accent) 35%, transparent) !important;
+}
+.team-card .badge.bg-light.text-dark{
+  color: var(--teams-accent) !important;
+}
+
+.sidebar .brand{ color: var(--teams-accent) !important; }
+.sidebar a.active,
+.sidebar a:hover{
+  background: color-mix(in srgb, var(--teams-accent) 14%, transparent) !important;
+  color: var(--teams-accent) !important;
+}
+
+body.profile-theme-dark .card-header.bg-white,
+body.profile-theme-dark .card-header.bg-light{
+  background: rgba(15,23,42,0.92) !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid rgba(148,163,184,0.18) !important;
+}
+
+body.profile-theme-dark .modal .bg-light{
+  background: rgba(2,6,23,0.55) !important;
+  color: #e2e8f0 !important;
+}
+body.profile-theme-dark .modal .text-muted{ color:#94a3b8 !important; }
+
+body.profile-theme-dark .border-light{
+  border-color: rgba(148,163,184,0.18) !important;
+}
+
+/* =========================================================
+   TEAMS: Accent + Dark Theme fixes (paste ONCE at bottom)
+   ========================================================= */
+
+:root{
+  --teams-accent: var(--accent-color, var(--accent, #198754));
+}
+
+.btn-success{
+  background-color: var(--teams-accent) !important;
+  border-color: var(--teams-accent) !important;
+}
+.btn-success:hover{
+  filter: brightness(0.95);
+}
+
+.btn-outline-success{
+  color: var(--teams-accent) !important;
+  border-color: var(--teams-accent) !important;
+}
+.btn-outline-success:hover{
+  background-color: var(--teams-accent) !important;
+  border-color: var(--teams-accent) !important;
+  color: #fff !important;
+}
+
+#teams-container .text-success,
+.team-card .text-success{
+  color: var(--teams-accent) !important;
+}
+
+.spinner-border.text-success{
+  color: var(--teams-accent) !important;
+}
+
+.btn-success:focus,
+.btn-outline-success:focus{
+  box-shadow: 0 0 0 .25rem color-mix(in srgb, var(--teams-accent) 25%, transparent) !important;
+}
+
+body.profile-theme-dark #teams-container .badge.bg-light{
+  background: rgba(148,163,184,0.14) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148,163,184,0.25) !important;
+}
+body.profile-theme-dark #teams-container .badge.text-dark{
+  color: #e2e8f0 !important;
+}
+
+body.profile-theme-dark .card-header.bg-white{
+  background: rgba(15, 23, 42, 0.92) !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid rgba(148,163,184,0.18) !important;
+}
+
+body.profile-theme-dark .bg-light{
+  background: rgba(2, 6, 23, 0.45) !important;
+}

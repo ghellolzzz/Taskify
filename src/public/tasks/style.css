@@ -11,7 +11,7 @@ body,html{
 body {
     display: flex;
     flex-direction: column;
-    background: #F6FFF9; /* soft mint white */
+    background: #F6FFF9; 
     font-family: 'Inter', 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
@@ -179,12 +179,12 @@ body {
 
 /* Main content spacing */
 .main-content {
-    margin-left: 260px;
+    margin-left: 230px;
     padding: 30px;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    max-width: calc(100vw - 260px);
+    max-width: calc(100vw - 230px);
     overflow-x: hidden; 
     padding-bottom: 200px;
 }
@@ -210,7 +210,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     margin-top: 20px;
-    width: 100%; /* NEW */
+    width: 100%; 
 }
 
 .task-card {
@@ -315,7 +315,6 @@ padding: 4px 10px;
     padding: 20px 0;
 }
 
-/*animation effect when user completes the card*/
 .task-complete-anim {
     animation: completePop 0.5s ease forwards;
     background: #d4f7d0 !important;
@@ -356,3 +355,204 @@ padding: 4px 10px;
     opacity: 0;
 }
 
+/* =========================
+   Accent (Tasks)
+   ========================= */
+:root{
+  --accent-color: var(--accent, #198754);
+}
+
+.sidebar .brand{ color: var(--accent-color); }
+
+.sidebar a.active,
+.sidebar a:hover{
+  background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+  color: var(--accent-color);
+}
+
+.filter-bar .form-select:focus,
+.filter-bar .form-control:focus{
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color) 25%, transparent);
+}
+
+/* Buttons (Add / Apply / Create / Post) */
+#show-add-form.btn-success,
+#applyFiltersBtn,
+#add-task-form .btn.btn-success,
+.task-card .input-group .btn.btn-success{
+  background: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+}
+
+#show-add-form.btn-success:hover,
+#applyFiltersBtn:hover,
+#add-task-form .btn.btn-success:hover,
+.task-card .input-group .btn.btn-success:hover{
+  filter: brightness(0.92);
+}
+
+/* Task cards use accent stripe */
+.task-card{
+  border-left-color: var(--accent-color);
+}
+.task-actions .edit-btn{ color: var(--accent-color); }
+
+/* =========================
+   Dark Theme (Tasks)
+   Uses body.profile-theme-dark
+   ========================= */
+body.profile-theme-dark{
+  background: radial-gradient(circle at top left, #151a2f, #0a0f1c 60%, #06080f 100%);
+  color: #e2e8f0;
+}
+
+/* sidebar */
+body.profile-theme-dark .sidebar{
+  background: linear-gradient(#0b1120, #020617);
+  border-right: 1px solid rgba(148, 163, 184, 0.25);
+}
+body.profile-theme-dark .sidebar a{ color: #cbd5e1; }
+body.profile-theme-dark .sidebar a.active,
+body.profile-theme-dark .sidebar a:hover{
+  background: color-mix(in srgb, var(--accent-color) 18%, transparent);
+  color: #e2e8f0;
+}
+
+/* headings */
+body.profile-theme-dark .top-greeting,
+body.profile-theme-dark .section-title{
+  color: #e2e8f0;
+}
+
+/* filter bar surface */
+body.profile-theme-dark .filter-bar{
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+}
+body.profile-theme-dark .filter-item label{ color: #cbd5e1; }
+body.profile-theme-dark .filter-bar .form-select,
+body.profile-theme-dark .filter-bar .form-control{
+  background: #020617;
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+body.profile-theme-dark .filter-bar .form-select::placeholder,
+body.profile-theme-dark .filter-bar .form-control::placeholder{
+  color: #94a3b8;
+}
+
+/* add task form card */
+body.profile-theme-dark .add-task-card{
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: #e2e8f0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+}
+body.profile-theme-dark .add-task-card .form-control,
+body.profile-theme-dark .add-task-card .form-select{
+  background: #020617;
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* task cards */
+body.profile-theme-dark .task-card{
+  background: rgba(15, 23, 42, 0.92);
+  color: #e2e8f0;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.55);
+  border-left: 6px solid var(--accent-color);
+}
+body.profile-theme-dark .task-title{ color: #e2e8f0; }
+body.profile-theme-dark .text-muted{ color: #94a3b8 !important; }
+
+/* completed cards */
+body.profile-theme-dark .task-completed{
+  background: color-mix(in srgb, var(--accent-color) 14%, rgba(15, 23, 42, 0.92)) !important;
+  border-left-color: var(--accent-color) !important;
+  opacity: 0.98;
+}
+
+/* comment blocks */
+body.profile-theme-dark .comment{
+  background: rgba(2, 6, 23, 0.55);
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+body.profile-theme-dark .comment strong{ color: #e2e8f0; }
+body.profile-theme-dark .comment p{ color: #cbd5e1; }
+
+/* comment input */
+body.profile-theme-dark .task-card .input-group .form-control{
+  background: #020617;
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* edit modal */
+body.profile-theme-dark .modal-content{
+  background: rgba(15, 23, 42, 0.95);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+body.profile-theme-dark .modal-header{
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+body.profile-theme-dark .modal-body .form-control,
+body.profile-theme-dark .modal-body .form-select,
+body.profile-theme-dark .modal-body textarea{
+  background: #020617;
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+body.profile-theme-dark #edit-task-form .btn.btn-primary{
+  background: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+}
+body.profile-theme-dark #edit-task-form .btn.btn-primary:hover{
+  filter: brightness(0.92);
+}
+
+html.profile-theme-dark,
+body.profile-theme-dark{
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0b1120;
+}
+
+html.profile-theme-dark::-webkit-scrollbar,
+body.profile-theme-dark::-webkit-scrollbar{
+  width: 10px;
+  height: 10px;
+}
+
+html.profile-theme-dark::-webkit-scrollbar-track,
+body.profile-theme-dark::-webkit-scrollbar-track{
+  background: #0b1120;
+}
+
+html.profile-theme-dark::-webkit-scrollbar-thumb,
+body.profile-theme-dark::-webkit-scrollbar-thumb{
+  background: #334155;
+  border-radius: 999px;
+  border: 2px solid #0b1120;
+}
+
+html.profile-theme-dark::-webkit-scrollbar-thumb:hover,
+body.profile-theme-dark::-webkit-scrollbar-thumb:hover{
+  background: #475569;
+}
+
+
+.task-actions .complete-btn{
+  color: var(--accent-color);
+}
+
+body.profile-theme-dark .task-actions .complete-btn{
+  color: var(--accent-color); 
+  opacity: 0.9;
+}
+
+body.profile-theme-dark .task-actions .complete-btn:hover{
+  opacity: 1;
+}

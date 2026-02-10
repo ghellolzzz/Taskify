@@ -66,7 +66,7 @@
 body {
     display: flex;
     flex-direction: column;
-    background: #F6FFF9; /* soft mint white */
+    background: #F6FFF9;
     font-family: 'Inter', 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
@@ -94,7 +94,7 @@ body {
     color: #111;
 }
 
-/* Add Category Button (Spotify Green) */
+/* Add Category Button */
 .add-category-btn {
     background: #1DB954;
     border: none;
@@ -175,8 +175,8 @@ body {
 /* Individual Category Card */
 .category-card {
     background-color: #fff; 
-    border-radius: 20px;    /* rounded corners */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* soft shadow */
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
     border-radius: 20px; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
     padding: 20px;
@@ -192,35 +192,44 @@ body {
 }
 
 /* Edit/Delete Buttons */
-.category-card .btn-container {
-    margin-top: 10px;
-    display: flex;
-    gap: 5px;
+.category-card .category-actions{
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
 }
 
-.category-card button {
-    background-color: rgba(0, 0, 0, 0.05);
-    border: none;
-    border-radius: 12px;
-    padding: 5px 12px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
+.category-card .category-actions .btn{
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
-.category-card button:hover {
-    background-color: rgba(0,0,0,0.15);
+.category-card .category-actions .update-category-btn{
+  background: rgba(13, 202, 240, 0.18) !important; 
+  border: 1px solid rgba(13, 202, 240, 0.35) !important;
+  color: #e2e8f0 !important;
 }
+
+
+body:not(.profile-theme-dark) .category-card .category-actions .update-category-btn{
+  background: #0dcaf0 !important;
+  border-color: #0dcaf0 !important;
+  color: #052c3a !important;
+}
+
 
 .category-card .btn-danger {
-    background-color: #dc3545; /* Solid Bootstrap Red */
-    color: white; /* Ensure text is white */
-    font-weight: 600; /* Bolder text helps visibility */
-    border: 1px solid #dc3545; /* Ensure border is also solid red */
+    background-color: #dc3545; 
+    color: white;
+    font-weight: 600;
+    border: 1px solid #dc3545; 
 }
 
 .category-card .btn-danger:hover {
-    background-color: #c82333; /* Slightly darker red on hover */
+    background-color: #c82333;
 }
 
 .color-swatch {
@@ -234,14 +243,12 @@ body {
     box-shadow: 0 0 2px rgba(0,0,0,0.2);
 }
 
-/*Display tasks*/
 .tasks-card {
   width: 95%;
   max-width: 1100px;
   background: #ffffff;
   padding: 25px;
   border-radius: 15px;
-  /* Dynamic border and shadow */
   border: 2px solid var(--category-color, #198754);
   box-shadow: 0 0 18px rgba(var(--category-color-rgb, 25, 135, 84), 0.18);
 }
@@ -254,7 +261,6 @@ body {
 }
 
 .tasks-header h2 {
-  /* Dynamic header text color */
   color: var(--category-color, #198754);
   font-size: 1.8rem;
   font-weight: 700;
@@ -262,7 +268,6 @@ body {
 
 .back-btn {
   padding: 10px 20px;
-  /* Dynamic button background */
   background: var(--category-color, #198754);
   border: none;
   border-radius: 10px;
@@ -273,7 +278,6 @@ body {
   transition: 0.25s;
 }
 .back-btn:hover {
-  /* Keeps the fixed hover color for simplicity */
   background: #146c43;
 }
 
@@ -287,7 +291,6 @@ body {
 }
 
 #tasks-table thead {
-  /* Dynamic table header background */
   background: var(--category-color, #198754);
 }
 
@@ -301,15 +304,12 @@ body {
 
 #tasks-table td {
   padding: 14px 12px;
-  /* Dynamic cell text color */
   color: var(--category-color, #198754);
-  /* Dynamic transparent border line */
   border-bottom: 1px solid rgba(var(--category-color-rgb, 25, 135, 84), 0.25);
   font-size: 0.95rem;
 }
 
 #tasks-table tbody tr:hover {
-  /* Dynamic transparent hover background */
   background: rgba(var(--category-color-rgb, 25, 135, 84), 0.08);
   transition: 0.25s;
 }
@@ -319,3 +319,140 @@ body {
     margin-top: 40px;
     color: #6c757d;
 }
+
+/* =========================
+   Dark Theme (Categories)
+   ========================= */
+
+body.profile-theme-dark {
+  background: radial-gradient(circle at top left, #151a2f, #0a0f1c 60%, #06080f 100%);
+  color: #e2e8f0;
+}
+
+body.profile-theme-dark .main-content {
+  color: #e2e8f0;
+}
+
+body.profile-theme-dark .page-header h2 {
+  color: #e2e8f0;
+}
+
+/* Sidebar */
+body.profile-theme-dark .sidebar {
+  background: linear-gradient(#0b1120, #020617);
+  border-right: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+body.profile-theme-dark .sidebar a {
+  color: #cbd5e1;
+}
+
+body.profile-theme-dark .sidebar a.active,
+body.profile-theme-dark .sidebar a:hover {
+  background: rgba(25, 135, 84, 0.14);
+  color: #7ee2b8;
+}
+
+body.profile-theme-dark .sidebar-footer {
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* Category cards */
+body.profile-theme-dark .category-card {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  color: #e2e8f0 !important;
+}
+
+body.profile-theme-dark .category-card h4 {
+  color: #e2e8f0;
+}
+
+body.profile-theme-dark .category-card p {
+  color: #94a3b8;
+}
+
+body.profile-theme-dark .category-card:hover {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+}
+
+body.profile-theme-dark .category-card i {
+  color: var(--category-color, #7ee2b8);
+  opacity: 0.95;
+}
+
+body.profile-theme-dark .category-card .btn {
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+
+body.profile-theme-dark #new-category-container,
+body.profile-theme-dark #edit-category-container {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.profile-theme-dark #new-category-name,
+body.profile-theme-dark #edit-category-name {
+  background: #020617 !important;
+  color: #e2e8f0 !important;
+}
+
+body.profile-theme-dark #new-category-name::placeholder,
+body.profile-theme-dark #edit-category-name::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Swatches border */
+body.profile-theme-dark .color-swatch {
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+/* =========================
+   Tasks table view (category tasks)
+   ========================= */
+
+body.profile-theme-dark .tasks-card {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(var(--category-color-rgb, 25, 135, 84), 0.65);
+  box-shadow: 0 0 18px rgba(var(--category-color-rgb, 25, 135, 84), 0.22);
+}
+
+body.profile-theme-dark #tasks-table td {
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+body.profile-theme-dark #tasks-table tbody tr:hover {
+  background: rgba(var(--category-color-rgb, 25, 135, 84), 0.14);
+}
+/* =========================
+   Dark theme scrollbar
+   ========================= */
+
+body.profile-theme-dark {
+  scrollbar-width: thin; 
+  scrollbar-color: #334155 #0b1120;  
+}
+
+body.profile-theme-dark::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.profile-theme-dark::-webkit-scrollbar-track {
+  background: #0b1120;  
+}
+
+body.profile-theme-dark::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+  border: 2px solid #0b1120;
+}
+
+body.profile-theme-dark::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+

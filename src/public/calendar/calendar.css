@@ -47,10 +47,12 @@ body {
     border-radius: 8px;
 }
 
-.sidebar a.active,
-.sidebar a:hover {
-    background: #e9f7ef;
-    color: #198754;
+.sidebar a.active{
+  border-left: 4px solid var(--cal-accent);
+  padding-left: 12px;
+  background: rgba(25, 135, 84, 0.14);
+  background: color-mix(in srgb, var(--cal-accent) 16%, transparent);
+  color: var(--cal-accent) !important;
 }
 
 /* Sidebar footer */
@@ -630,3 +632,163 @@ body {
     border-top: 1px solid #e6e6e6;
 }
 
+/* =========================================
+   Accent + Dark Theme Support (Calendar)
+   ========================================= */
+
+:root{
+  --cal-accent: var(--accent, var(--accentColor, var(--accent-color, var(--primary, #198754))));
+}
+
+.sidebar .brand{ color: var(--cal-accent) !important; }
+
+.sidebar a.active,
+.sidebar a:hover{
+  background: color-mix(in srgb, var(--cal-accent) 14%, transparent) !important;
+  color: var(--cal-accent) !important;
+}
+
+.back-btn{ color: var(--cal-accent) !important; }
+.back-btn:hover{ border-color: var(--cal-accent) !important; }
+
+.nav-btn{ background: var(--cal-accent) !important; }
+.nav-btn:hover{
+  background: color-mix(in srgb, var(--cal-accent) 88%, #000) !important;
+}
+
+.calendar-day:hover{
+  border-color: var(--cal-accent) !important;
+  background: color-mix(in srgb, var(--cal-accent) 10%, #f8f9fa) !important;
+}
+.calendar-day.today{
+  border-color: var(--cal-accent) !important;
+}
+
+.task-item{
+  background: var(--cal-accent) !important;
+}
+.task-item:hover{
+  background: color-mix(in srgb, var(--cal-accent) 88%, #000) !important;
+}
+
+.more-tasks{ color: var(--cal-accent) !important; }
+
+.year-month:hover{
+  border-color: var(--cal-accent) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--cal-accent) 28%, transparent) !important;
+}
+.year-month-title{ color: var(--cal-accent) !important; }
+.year-day.has-tasks{ background: var(--cal-accent) !important; }
+
+.year-weekday{
+  font-weight: 600;
+  color: var(--cal-accent) !important;
+}
+
+.calendar-day.drag-over{
+  border-color: var(--cal-accent) !important;
+  background: color-mix(in srgb, var(--cal-accent) 16%, #ffffff) !important;
+}
+
+.priority-suggestions-panel{
+  background: linear-gradient(
+    135deg,
+    var(--cal-accent) 0%,
+    color-mix(in srgb, var(--cal-accent) 55%, #ffffff) 100%
+  ) !important;
+  border-color: color-mix(in srgb, var(--cal-accent) 80%, #000) !important;
+}
+.apply-suggestion-btn{
+  color: var(--cal-accent) !important;
+}
+
+body.profile-theme-dark{
+  background: radial-gradient(900px 600px at 35% 25%, rgba(56,189,248,0.10), transparent 55%),
+              radial-gradient(900px 600px at 75% 10%, rgba(167,139,250,0.10), transparent 55%),
+              #050b18 !important;
+  color: #e2e8f0 !important;
+}
+
+/* sidebar in dark */
+body.profile-theme-dark .sidebar{
+  background: rgba(2, 6, 23, 0.86) !important;
+  border-right: 1px solid rgba(148,163,184,0.18) !important;
+}
+body.profile-theme-dark .sidebar a{
+  color: #cbd5e1 !important;
+}
+body.profile-theme-dark .sidebar-footer a{
+  color: #cbd5e1 !important;
+}
+
+/* titles + labels */
+body.profile-theme-dark .month-year-title{ color: var(--cal-accent)!important; }
+body.profile-theme-dark .weekday{ color: #94a3b8 !important; }
+
+/* calendar surface */
+body.profile-theme-dark .calendar-view{
+  background: transparent !important;
+}
+body.profile-theme-dark .calendar-day{
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.20) !important;
+}
+body.profile-theme-dark .calendar-day.other-month{
+  background: rgba(15, 23, 42, 0.55) !important;
+  color: #64748b !important;
+}
+body.profile-theme-dark .day-number{ color: #e2e8f0 !important; }
+
+body.profile-theme-dark .task-item.medium-priority{ color: #111827 !important; }
+body.profile-theme-dark .task-item.completed{ opacity: 0.65 !important; }
+
+/* footer */
+body.profile-theme-dark .footer{
+  border-top: 1px solid rgba(148,163,184,0.18) !important;
+  color: #94a3b8 !important;
+}
+
+body.profile-theme-dark .back-btn{
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: var(--cal-accent) !important;
+}
+
+body.profile-theme-dark .back-btn:hover{
+  background: rgba(15, 23, 42, 1) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+/* Year view tiles (dark theme) */
+body.profile-theme-dark .year-month{
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(148, 163, 184, 0.20) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+}
+
+body.profile-theme-dark .year-month:hover{
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  transform: translateY(-2px);
+}
+
+body.profile-theme-dark .year-month-title{
+  color: var(--cal-accent) !important;
+}
+
+
+body.profile-theme-dark .year-day{
+  background: rgba(2, 6, 23, 0.35) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+body.profile-theme-dark .year-day.has-tasks{
+  background: var(--cal-accent) !important;
+  color: #0b1220 !important;
+  font-weight: 800;
+}
+
+body.profile-theme-dark .year-day.today{
+  background: #fbbf24 !important;
+  color: #111827 !important;
+  font-weight: 900;
+}

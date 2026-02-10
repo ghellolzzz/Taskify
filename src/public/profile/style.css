@@ -597,3 +597,33 @@ body.profile-theme-dark .modal-content .avatar-dropzone {
   background: rgba(15, 23, 42, 0.9);
   border-color: color-mix(in srgb, var(--accent-color) 40%, #475569);
 }
+
+/* =========================
+   Dark theme scrollbar
+   ========================= */
+
+/* Firefox */
+body.profile-theme-dark {
+  scrollbar-width: thin;                /* auto | thin | none */
+  scrollbar-color: #334155 #0b1120;     /* thumb track */
+}
+
+/* Chrome / Edge / Safari */
+body.profile-theme-dark::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.profile-theme-dark::-webkit-scrollbar-track {
+  background: #0b1120;      /* track */
+}
+
+body.profile-theme-dark::-webkit-scrollbar-thumb {
+  background: #334155;      /* thumb */
+  border-radius: 999px;
+  border: 2px solid #0b1120; /* gives nice spacing */
+}
+
+body.profile-theme-dark::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

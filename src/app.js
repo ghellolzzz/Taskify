@@ -58,8 +58,7 @@ app.post('/api/test/reset', async (req, res) => {
     // 1. Force Points to 5000
     await prisma.user.update({
       where: { email: 'MGF_21@ICLOUD.COM' },
-      data: { points: 5000 },
-      preferredTheme: 'theme-classic'
+      data: { points: 5000, preferredTheme: 'theme-classic' },
     });
 
     // 2. Reset Theme to default

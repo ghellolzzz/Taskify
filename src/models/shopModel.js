@@ -12,6 +12,8 @@ module.exports.getUserInventory = (userId) => {
         where: { id: Number(userId) },
         select: {
             points: true,
+            preferredTheme: true, 
+
             ownedThemes: {
                 include: { theme: true }
             },

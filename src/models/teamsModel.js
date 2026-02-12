@@ -371,5 +371,40 @@ module.exports.leaveTeam = async function (teamId, userId) {
     ]);
 };
 
+module.exports.getTeamWorkload = function(teamId) {
+    return prisma.user.findMany({
+        where: {
+            teams: { some: { teamId: parseInt(teamId), status: 'ACCEPTED' } }
+        },
+        include: {
+            assignedTasks: {
+                where: { teamId: parseInt(teamId), NOT: { status: 'Completed' } }
+            }
+        }
+    })
+    .then(users => {
+      
+        return users.map(user => {
+            let totalPoints = 0;
+            
+            user.assignedTasks.forEach(task => {
+                // mapping priority strings to numeric Weights
+                if (task.priority === 'High') totalPoints += 3;
+                else if (task.priority === 'Medium') totalPoints += 2;
+                else totalPoints += 1;
+            });
+
+            return {
+                userId: user.id,
+                name: user.name,
+                workloadScore: totalPoints,
+                activeTaskCount: user.assignedTasks.length,
+              //adding satus based on the score
+                loadStatus: totalPoints > 7 ? 'Overloaded' : totalPoints > 4 ? 'Optimal' : 'Available'
+            };
+        });
+    });
+};
+
 
 

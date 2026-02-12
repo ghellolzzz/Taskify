@@ -268,6 +268,53 @@ function setupCreateTeam() {
     })
 }
 
+//displaying the workload for each member
+function loadWorkloadAnalytics(teamId) {
+    fetch(`/api/teams/${teamId}/workload`, {
+        headers: { 
+            "Authorization": "Bearer " + localStorage.getItem("token") 
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const memberList = document.getElementById("member-list");
+       //looping through the calculated workload data
+        data.forEach(member => {
+           
+            const listItems = memberList.querySelectorAll('li');
+            
+            listItems.forEach(li => {
+              //match by the nmame
+                if (li.querySelector('.fw-bold').textContent === member.name) {
+                    
+                  //displaying the badge color based ono member workload
+                    let badgeColor = "";
+                    if (member.loadStatus === 'Overloaded') badgeColor = 'text-danger';
+                    else if (member.loadStatus === 'Optimal') badgeColor = 'text-success';
+                    else badgeColor = 'text-muted';
+
+                 
+                    const infoDiv = li.querySelector('.flex-grow-1')
+                    
+                   
+                    const oldInfo = infoDiv.querySelector('.workload-tag')
+                    if (oldInfo) {
+                        oldInfo.remove()
+                    }
+
+                    infoDiv.innerHTML += `
+                        <div class="workload-tag mt-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                            <span class="${badgeColor} fw-bold text-uppercase">${member.loadStatus}</span> 
+                            <span class="text-muted">• ${member.workloadScore} pts</span>
+                        </div>
+                    `;
+                }
+            });
+        });
+    })
+    .catch(err => console.error("Workload Analytics failed:", err));
+}
+
 //loading the team details
 function loadTeamDetails(teamId) {
     fetch(`/api/teams/${teamId}`, {
@@ -447,6 +494,7 @@ function loadTeamDetails(teamId) {
             else activeTasks.forEach(task => activeContainer.innerHTML += createCardHTML(task))
 
             completedTasks.forEach(task => completedContainer.innerHTML += createCardHTML(task))
+            loadWorkloadAnalytics(teamId);
         })
         .catch(err => {
             if (err.message.includes("Access Denied")) window.location.href = "teams.html"

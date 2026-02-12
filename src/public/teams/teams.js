@@ -1031,7 +1031,8 @@ function loadActivityFeed(teamId) {
                 }
 
 
-                const timeDisplay = new Date(log.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+               
+                const timeDisplay = getRelativeTime(log.createdAt);
 
                 return `
             <div class="d-flex mb-3">
@@ -1049,4 +1050,34 @@ function loadActivityFeed(teamId) {
             container.innerHTML = `<p class="text-danger small mt-3">Could not load activity.</p>`
             console.error(err)
         });
+}
+
+function getRelativeTime(timestamp) {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffInMs = now - past;
+    
+    const seconds = Math.floor(diffInMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60){
+        return 'just now'
+    }
+    if (minutes < 60){
+        return `${minutes}m ago`
+    }
+    if (hours < 24){
+        return `${hours}h ago`
+    }
+    if (days === 1){
+        return 'yesterday'
+    }
+    if (days < 7){
+        return `${days}d ago`
+    }
+    
+    //return past date if its older than a week
+    return past.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }

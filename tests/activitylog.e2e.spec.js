@@ -40,6 +40,8 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
         
         
         await expect(activityContainer).toContainText(`E2E Test User created task: "${taskTitle}"`);
+
+        await expect(activityContainer.locator('small.text-muted').first()).toHaveText(/just now|1m ago/);
         
        //updating the status
         await page.locator('.status-select').first().selectOption('In Progress');
@@ -47,6 +49,8 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
 
       
         await expect(activityContainer).toContainText('E2E Test User updated status of "Core Log Test Task" to In Progress');
+
+         await expect(activityContainer.locator('small.text-muted').first()).toHaveText(/just now|1m ago/);
 
         //posting a commment
         const commentText = 'Test log comment';
@@ -57,6 +61,8 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
 
        
         await expect(activityContainer).toContainText(`E2E Test User commented on task "${taskTitle}"`);
+
+         await expect(activityContainer.locator('small.text-muted').first()).toHaveText(/just now|1m ago/);
 
        
         const logEntries = activityContainer.locator('.d-flex.mb-3');

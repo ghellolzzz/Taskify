@@ -27,6 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
             loadTeamDetails(teamId);
             loadTeamStats(teamId);
             loadActivityFeed(teamId);
+
+            document.getElementById('activity-filter').addEventListener('change', (e) => {
+                loadActivityFeed(teamId, e.target.value);
+            });
+
             setupAddMember(teamId);
             setupAddTeamTask(teamId);
             setupEditTaskForm();
@@ -925,7 +930,7 @@ function deleteTeam() {
         })
         .then(() => {
             alert("Team deleted successfully.");
-            window.location.href = 'teams.html'; 
+            window.location.href = 'teams.html';
         })
         .catch(err => showToast(err.message, "error"));
 }
@@ -971,7 +976,7 @@ function leaveTeam() {
 
 
 //gets the activity logs
-function loadActivityFeed(teamId) {
+function loadActivityFeed(teamId,filterType="") {
     const container = document.getElementById('activity-feed-container')
     if (!container) return;
 
@@ -979,17 +984,21 @@ function loadActivityFeed(teamId) {
     container.innerHTML = `<div class="text-center mt-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`
 
 
-    fetch(`/api/teams/${teamId}/activity`, {
+    let url = `/api/teams/${teamId}/activity`;
+    //getting the filter type
+    if (filterType) {
+        url += `?type=${filterType}`;
+    }
+
+    fetch(url, {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
-        .then(res => {
-            if (!res.ok) throw new Error("Failed to fetch activity feed.")
-            return res.json()
-        })
+        .then(res => res.json())
         .then(logs => {
+        
             if (!logs || logs.length === 0) {
-                container.innerHTML = `<p class="text-muted small fst-italic text-center mt-2">No activity to show.</p>`
-                return
+                container.innerHTML = `<p class="text-muted small fst-italic text-center mt-2">No activity found for this filter.</p>`;
+                return;
             }
 
 
@@ -1031,7 +1040,7 @@ function loadActivityFeed(teamId) {
                 }
 
 
-               
+
                 const timeDisplay = getRelativeTime(log.createdAt);
 
                 return `
@@ -1052,32 +1061,33 @@ function loadActivityFeed(teamId) {
         });
 }
 
+//calculating the relative timestamp
 function getRelativeTime(timestamp) {
     const now = new Date();
     const past = new Date(timestamp);
     const diffInMs = now - past;
-    
+
     const seconds = Math.floor(diffInMs / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (seconds < 60){
+    if (seconds < 60) {
         return 'just now'
     }
-    if (minutes < 60){
+    if (minutes < 60) {
         return `${minutes}m ago`
     }
-    if (hours < 24){
+    if (hours < 24) {
         return `${hours}h ago`
     }
-    if (days === 1){
+    if (days === 1) {
         return 'yesterday'
     }
-    if (days < 7){
+    if (days < 7) {
         return `${days}d ago`
     }
-    
+
     //return past date if its older than a week
     return past.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }

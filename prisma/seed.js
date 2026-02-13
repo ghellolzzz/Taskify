@@ -17,13 +17,17 @@ async function main() {
       { name: "Alice",  email: "alice@example.com",   password: hashedPassword },
       { name: "Bob",    email: "bob@example.com",     password: hashedPassword },
       { name: "Charlie",email: "charlie@example.com", password: hashedPassword },
-       { name: "E2E Test User", email: "MGF_21@ICLOUD.COM", password: hashedPassword }
+       { name: "E2E Test User", email: "MGF_21@ICLOUD.COM", password: hashedPassword, points: 5000, preferredTheme: 'theme-classic' }
     ],
     skipDuplicates: true
   });
-
+await prisma.user.update({
+      where: { email: "MGF_21@ICLOUD.COM" },
+      data: { points: 5000, preferredTheme: 'theme-classic' } 
+  });
   const allUsers = await prisma.user.findMany();
   console.log("✓ Users seeded");
+  console.log("✓ Points updated");
 
   // ==========================================
   // 2. CATEGORIES (for every user)

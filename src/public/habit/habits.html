@@ -270,6 +270,39 @@
               </div>
               <input type="hidden" id="habitColor" value="#198754" />
             </div>
+
+            <hr class="my-3" />
+
+<h6 class="mb-2">Reminder</h6>
+
+<div class="form-check mb-2">
+  <input class="form-check-input" type="checkbox" id="habitReminderEnabled" />
+  <label class="form-check-label" for="habitReminderEnabled">
+    Send me a reminder for this habit
+  </label>
+</div>
+
+<div class="row g-2">
+  <div class="col-6">
+    <label class="form-label">Time</label>
+    <input type="time" class="form-control" id="habitReminderTime" value="09:00" disabled />
+  </div>
+
+  <div class="col-6">
+    <label class="form-label">Repeat</label>
+    <select class="form-select" id="habitReminderRepeat" disabled>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+      <option value="none">None</option>
+    </select>
+  </div>
+</div>
+
+<small class="text-muted d-block mt-2">
+  When enabled, Taskify will auto-create/update a Reminder linked to this habit.
+</small>
+
           </div>
           <div class="modal-footer">
   <button

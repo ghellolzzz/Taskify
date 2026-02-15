@@ -32,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupColourSwatches();
   setupHabitCreateButton();
   setupHabitForm();
+    const reminderEnabledEl = document.getElementById("habitReminderEnabled");
+  if (reminderEnabledEl) {
+    reminderEnabledEl.addEventListener("change", syncReminderInputsEnabled);
+  }
+  syncReminderInputsEnabled();
+
   setupDeleteModal();
   loadHabitsBoard();
 });
@@ -63,6 +69,18 @@ function loadHabitsBoard() {
       console.error('Failed to load habits board:', err);
     });
 }
+
+function syncReminderInputsEnabled() {
+  const enabledEl = document.getElementById("habitReminderEnabled");
+  const timeEl = document.getElementById("habitReminderTime");
+  const repeatEl = document.getElementById("habitReminderRepeat");
+  if (!enabledEl || !timeEl || !repeatEl) return;
+
+  const enabled = !!enabledEl.checked;
+  timeEl.disabled = !enabled;
+  repeatEl.disabled = !enabled;
+}
+
 
 
 function renderHabitsBoard(board) {
@@ -312,6 +330,10 @@ function resetHabitFormFields(habit) {
   const targetInput = document.getElementById('habitTargetPerWeek');
   const colorInput = document.getElementById('habitColor');
   const swatches = document.querySelectorAll('.habit-color-swatch');
+    const reminderEnabledEl = document.getElementById("habitReminderEnabled");
+  const reminderTimeEl = document.getElementById("habitReminderTime");
+  const reminderRepeatEl = document.getElementById("habitReminderRepeat");
+
 
   if (habit) {
     if (titleInput) titleInput.value = habit.title || '';
@@ -326,6 +348,11 @@ function resetHabitFormFields(habit) {
     swatches.forEach((sw) => {
       sw.classList.toggle('active', sw.dataset.color === colorInput.value);
     });
+
+        if (reminderEnabledEl) reminderEnabledEl.checked = !!habit.reminderEnabled;
+    if (reminderTimeEl) reminderTimeEl.value = habit.reminderTime || "09:00";
+    if (reminderRepeatEl) reminderRepeatEl.value = habit.reminderRepeat || "daily";
+
   } else {
     if (titleInput) titleInput.value = '';
     if (targetInput) targetInput.value = '';
@@ -334,7 +361,13 @@ function resetHabitFormFields(habit) {
     swatches.forEach((sw, idx) => {
       sw.classList.toggle('active', idx === 0);
     });
+
+        if (reminderEnabledEl) reminderEnabledEl.checked = false;
+    if (reminderTimeEl) reminderTimeEl.value = "09:00";
+    if (reminderRepeatEl) reminderRepeatEl.value = "daily";
+
   }
+    syncReminderInputsEnabled();
 }
 
 
@@ -612,16 +645,20 @@ function setupHabitForm() {
     const targetInput = document.getElementById('habitTargetPerWeek');
     const colorInput = document.getElementById('habitColor');
 
+        const reminderEnabledEl = document.getElementById("habitReminderEnabled");
+    const reminderTimeEl = document.getElementById("habitReminderTime");
+    const reminderRepeatEl = document.getElementById("habitReminderRepeat");
+
     const payload = {
       title: titleInput.value.trim(),
       targetPerWeek: targetInput.value,
       color: colorInput.value,
+
+      reminderEnabled: reminderEnabledEl ? reminderEnabledEl.checked : false,
+      reminderTime: reminderTimeEl ? reminderTimeEl.value : "09:00",
+      reminderRepeat: reminderRepeatEl ? reminderRepeatEl.value : "daily",
     };
 
-    if (!payload.title) {
-      alert('Please enter a habit name.');
-      return;
-    }
 
     const isEdit = !!editingHabitId;
     const url = isEdit ? `/api/habits/${editingHabitId}` : '/api/habits';

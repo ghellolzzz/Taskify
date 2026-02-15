@@ -43,7 +43,8 @@ function renderTable(reminders) {
 
   reminders.forEach((r, index) => {
     const status = getStatusBadge(r);
-    const taskName = r.task ? r.task.title : "-";
+    const linkedName = r.task?.title || r.habit?.title || "-";
+
 
     tbody.innerHTML += `
     <tr>
@@ -58,7 +59,7 @@ function renderTable(reminders) {
       })}</td>
       <td>${r.title}</td>
       <td>${r.notes}</td>
-      <td>${taskName}</td>
+      <td>${linkedName}</td>
       <td>${status}</td>
       <td>
         <button class="btn btn-sm btn-success" onclick="markDone(${r.id})">
@@ -92,7 +93,7 @@ function createReminder() {
     title: document.getElementById("rTitle").value,
     notes: document.getElementById("rNotes").value,
     taskId: document.getElementById("rTask").value || null,
-    remindAt: document.getElementById("rDate").value,
+    remindAt: new Date(document.getElementById("rDate").value).toISOString(),
     repeatType: document.getElementById("rRepeat").value
   };
 
@@ -191,7 +192,7 @@ function saveReminderChanges() {
     title: document.getElementById("editTitle").value,
     notes: document.getElementById("editNotes").value,
     taskId: Number(document.getElementById("editTask").value) || null,
-    remindAt: document.getElementById("editDate").value,
+    remindAt: new Date(document.getElementById("editDate").value).toISOString(),
     repeatType: document.getElementById("editRepeat").value
   };
 

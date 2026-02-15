@@ -16,6 +16,14 @@ function addDays(date, offset) {
   d.setUTCDate(d.getUTCDate() + offset);
   return d;
 }
+function nextDateTimeFromHHmm(hhmm) {
+  const [h, m] = (hhmm || "09:00").split(":").map(Number);
+  const now = new Date();
+  const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+  if (dt <= now) dt.setDate(dt.getDate() + 1);
+  return dt;
+}
+
 
 /** ISO week start (Monday) for a given date */
 function getMonday(d) {
@@ -137,6 +145,9 @@ async function getHabitsBoard(userId) {
       week,
       streak,
       completionThisWeek,
+      reminderEnabled: h.reminderEnabled,
+reminderTime: h.reminderTime,
+reminderRepeat: h.reminderRepeat,
     };
   });
 
@@ -179,7 +190,7 @@ async function getHabitsBoard(userId) {
 async function createHabit(userId, data) {
   const numericId = Number(userId);
 
-  await prisma.habit.create({
+  const created = await prisma.habit.create({
     data: {
       userId: numericId,
       title: (data.title || 'Untitled habit').trim(),
@@ -188,9 +199,30 @@ async function createHabit(userId, data) {
         data.targetPerWeek !== undefined && data.targetPerWeek !== ''
           ? Number(data.targetPerWeek)
           : null,
+
+      reminderEnabled: !!data.reminderEnabled,
+      reminderTime: data.reminderTime ? String(data.reminderTime).trim() : null,
+      reminderRepeat: data.reminderRepeat ? String(data.reminderRepeat) : null,
     },
   });
+
+  if (created.reminderEnabled) {
+    const remindAt = nextDateTimeFromHHmm(created.reminderTime || "09:00");
+
+    await prisma.reminder.create({
+      data: {
+        userId: numericId,
+        habitId: created.id,
+        title: `Habit: ${created.title}`,
+        notes: "Auto reminder from habit",
+        remindAt,
+        repeatType: created.reminderRepeat || "daily",
+        isDone: false,
+      },
+    });
+  }
 }
+
 
 /** Toggle completion for a given habit on a given date */
 async function toggleHabitCheck(userId, habitId, dateStr) {
@@ -252,22 +284,66 @@ async function updateHabitMeta(userId, habitId, data) {
   }
 
   const payload = {};
-  if (typeof data.title === 'string') payload.title = data.title.trim();
-  if (typeof data.color === 'string') payload.color = data.color;
-  if (data.targetPerWeek !== undefined) {
-    payload.targetPerWeek =
-      data.targetPerWeek === '' ? null : Number(data.targetPerWeek);
-  }
-  if (data.isArchived !== undefined) {
-    payload.isArchived = Boolean(data.isArchived);
-  }
 
-  if (Object.keys(payload).length === 0) return;
+if (typeof data.title === "string") payload.title = data.title.trim();
+if (typeof data.color === "string") payload.color = data.color;
 
+if (data.targetPerWeek !== undefined) {
+  payload.targetPerWeek = data.targetPerWeek === "" ? null : Number(data.targetPerWeek);
+}
+
+if (data.isArchived !== undefined) {
+  payload.isArchived = Boolean(data.isArchived);
+}
+
+if (data.reminderEnabled !== undefined) {
+  payload.reminderEnabled = Boolean(data.reminderEnabled);
+}
+if (data.reminderTime !== undefined) {
+  payload.reminderTime = data.reminderTime ? String(data.reminderTime).trim() : null; // "HH:mm"
+}
+if (data.reminderRepeat !== undefined) {
+  payload.reminderRepeat = data.reminderRepeat ? String(data.reminderRepeat) : null; // daily/weekly/monthly/none
+}
+
+
+  const hasAnyUpdate = Object.keys(payload).length > 0;
+
+if (hasAnyUpdate) {
   await prisma.habit.update({
     where: { id: numericHabitId },
     data: payload,
   });
+}
+
+
+const latest = await prisma.habit.findUnique({ where: { id: numericHabitId } });
+
+if (latest.reminderEnabled) {
+  const remindAt = nextDateTimeFromHHmm(latest.reminderTime || "09:00");
+
+  await prisma.reminder.upsert({
+    where: { habitId: numericHabitId },
+    update: {
+      userId: numericUserId,
+      title: `Habit: ${latest.title}`,
+      remindAt,
+      repeatType: latest.reminderRepeat || "daily",
+      isDone: false,
+    },
+    create: {
+      userId: numericUserId,
+      habitId: numericHabitId,
+      title: `Habit: ${latest.title}`,
+      notes: "Auto reminder from habit",
+      remindAt,
+      repeatType: latest.reminderRepeat || "daily",
+    },
+  });
+} else {
+  await prisma.reminder.deleteMany({ where: { habitId: numericHabitId, userId: numericUserId } });
+}
+
 }
 
 /** Permanently delete a habit (and cascade its logs) */

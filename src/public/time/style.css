@@ -1,0 +1,158 @@
+/* ===== SIDEBAR ===== */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+    background: linear-gradient(#e9f5ee, #ffffff);
+    border-right: 1px solid #e0e6ed;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+}
+
+.sidebar .brand {
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #198754;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    padding-left: 0;
+}
+
+.sidebar ul li {
+    list-style: none;
+    margin: 8px 0;
+}
+
+.sidebar a {
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 10px 12px;
+    color: #535353;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.sidebar a.active,
+.sidebar a:hover {
+    background: #e9f7ef;
+    color: #198754;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #e0e6ed;
+}
+
+/* ===== MAIN DISPLAY AREA ===== */
+body {
+    background: #F6FFF9;
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #2E2E2E;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+.container {
+    margin-left: 230px !important;
+    max-width: calc(100% - 230px) !important;
+    padding: 30px;
+    width: auto;
+}
+
+.content-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.table-section {
+    flex: 1;
+    min-width: 300px;
+}
+
+.form-section {
+    flex: 0 0 320px;
+}
+
+.summary-box {
+    background: white;
+    border: 1px solid #e0e6ed;
+}
+
+.mini-card {
+    background: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    font-weight: 500;
+}
+
+.mini-card i {
+    margin-right: 7px;
+    color: #198754;
+}
+
+/* ===== MODAL ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    width: 450px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.modal-close:hover {
+    color: #000;
+}
+
+.modal-content label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.modal-content .form-control {
+    margin-bottom: 12px;
+}

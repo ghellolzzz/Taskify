@@ -17,13 +17,17 @@ async function main() {
       { name: "Alice",  email: "alice@example.com",   password: hashedPassword },
       { name: "Bob",    email: "bob@example.com",     password: hashedPassword },
       { name: "Charlie",email: "charlie@example.com", password: hashedPassword },
-       { name: "E2E Test User", email: "MGF_21@ICLOUD.COM", password: hashedPassword }
+       { name: "E2E Test User", email: "MGF_21@ICLOUD.COM", password: hashedPassword, points: 5000, preferredTheme: 'theme-classic' }
     ],
     skipDuplicates: true
   });
-
+await prisma.user.update({
+      where: { email: "MGF_21@ICLOUD.COM" },
+      data: { points: 5000, preferredTheme: 'theme-classic' } 
+  });
   const allUsers = await prisma.user.findMany();
   console.log("✓ Users seeded");
+  console.log("✓ Points updated");
 
   // ==========================================
   // 2. CATEGORIES (for every user)
@@ -178,6 +182,43 @@ async function main() {
   });
 
   console.log("✓ Habits & habit logs seeded");
+
+  // ==========================================
+  // 8. SHOP THEMES
+  // ==========================================
+  console.log("... adding Shop Themes");
+  await prisma.theme.deleteMany({});
+  await prisma.theme.createMany({
+      data: [
+          { 
+              name: "Classic Coffee", 
+              cost: 0, 
+              cssClass: "theme-coffee", 
+              description: "The original reliable choice." 
+          },
+          { 
+              name: "Matcha", 
+              cost: 100, 
+              cssClass: "theme-matcha", 
+              description: "Green, calm, and focused." 
+          },
+          { 
+              name: "Cyberpunk City", 
+              cost: 500, 
+              cssClass: "theme-cyberpunk", 
+              description: "Neon lights and deep focus." 
+          },
+          { 
+              name: "Midnight Blue", 
+              cost: 300, 
+              cssClass: "theme-midnight", 
+              description: "Deep colors for late night grinders." 
+          }
+      ],
+      skipDuplicates: true, 
+  });
+  console.log("Shop Themes added");
+  
   console.log("🎉 Seed completed!");
 
 }

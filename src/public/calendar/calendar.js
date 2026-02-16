@@ -69,6 +69,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${year}-${month}-${day}`;
     }
 
+    // Get highest priority among tasks for year-view styling (High > Medium > Low)
+    function getHighestPriority(taskList) {
+        if (!taskList || taskList.length === 0) return 'low';
+        const p = taskList.map(t => (t.priority || '').toLowerCase());
+        if (p.some(pri => pri === 'high')) return 'high';
+        if (p.some(pri => pri === 'medium')) return 'medium';
+        return 'low';
+    }
+
     // Render month view
     function renderMonthView() {
         const year = currentDate.getFullYear();
@@ -232,7 +241,8 @@ weekdays.forEach(day => {
                 if (isToday) {
                     dayElement.classList.add('today');
                 } else if (dayTasks.length > 0) {
-                    dayElement.classList.add('has-tasks');
+                    const priority = getHighestPriority(dayTasks);
+                    dayElement.classList.add('has-tasks', 'has-tasks-' + priority);
                 }
                 dayElement.textContent = day;
                 monthGrid.appendChild(dayElement);
@@ -262,6 +272,7 @@ weekdays.forEach(day => {
 
     prevBtn.addEventListener('click', () => {
         if (currentView === 'month') {
+            currentDate.setDate(1);
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderMonthView();
         } else {
@@ -272,6 +283,7 @@ weekdays.forEach(day => {
 
     nextBtn.addEventListener('click', () => {
         if (currentView === 'month') {
+            currentDate.setDate(1);
             currentDate.setMonth(currentDate.getMonth() + 1);
             renderMonthView();
         } else {

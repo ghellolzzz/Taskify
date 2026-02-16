@@ -28,16 +28,18 @@
     </div>
 
     <ul class="nav flex-column mt-4">
-        <li><a href="../dashboard/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-        <li> <a class="active" href="../tasks/task.html"><i class="bi bi-check2-square"></i> Tasks</a></li>
-        <li><a href="../categories/categories.html"><i class="bi bi-tags"></i> Task Categories</a></li>
-        <li><a href="../reminder/reminder.html"><i class="bi bi-bell"></i> Reminder</a></li>
-        <li><a href="../goal/goal.html"><i class="bi bi-bullseye"></i> Goals</a></li>
-        <li><a href="../teams/teams.html"><i class="bi bi-people-fill"></i> Teams</a></li>
-        <li><a href="../habit/habits.html"><i class="bi bi-repeat"></i> Habits</a></li>
-        <li><a href ="../calendar/calendar.html"><i class="bi bi-calendar-event"></i>Calender</a></li>
-        <li><a href="../profile/profile.html"><i class="bi bi-person-circle"></i> Profile</a></li>
-        <li><a href="../feedback/feedback.html"><i class="bi bi-envelope-paper"></i> Feedback</a></li>
+      <li><a href="../dashboard/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li> <a class="active" href="../tasks/task.html"><i class="bi bi-check2-square"></i> Tasks</a></li>
+      <li><a href="../categories/categories.html"><i class="bi bi-tags"></i> Task Categories</a></li>
+      <li><a href="../reminder/reminder.html"><i class="bi bi-bell"></i> Reminder</a></li>
+      <li><a href="../goal/goal.html"><i class="bi bi-bullseye"></i> Goals</a></li>
+      <li><a href="../teams/teams.html"><i class="bi bi-people-fill"></i> Teams</a></li>
+      <li><a href="../community/community.html" ><i class="bi bi-chat-heart"></i> Community</a></li>
+      <li><a href="../habit/habits.html"><i class="bi bi-repeat"></i> Habits</a></li>
+      <li><a href="../time/time.html"><i class="bi bi-clock-history"></i> Time tracking</a></li>
+      <li><a href="../calendar/calendar.html"><i class="bi bi-calendar-event"></i> Calendar</a></li>
+      <li><a href="../profile/profile.html"><i class="bi bi-person-circle"></i> Profile</a></li>
+      <li><a href="../feedback/feedback.html"><i class="bi bi-envelope-paper"></i> Feedback</a></li>
     </ul>
 
     <div class="sidebar-footer">
@@ -129,9 +131,17 @@
             </div>
 
             <div class="col-md-3">
-              <select id="category" class="form-select">
-                <option value="">Select Category</option>
-              </select>
+              <label for="category" class="form-label visually-hidden">Category</label>
+              <div class="input-group">
+                <select id="category" class="form-select">
+                  <option value="">Select Category</option>
+                </select>
+              
+                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                  data-bs-target="#newCategoryModal" title="Add New Category">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
             </div>
 
           </div>
@@ -143,18 +153,18 @@
 
 
     <h4 class="section-title mt-4">Active Tasks</h4>
-<div id="active-task-container" class="task-card-container"></div>
+    <div id="active-task-container" class="task-card-container"></div>
 
-<div class="completed-wrapper">
-    <h4 class="section-title mt-4 collapsible-header" onclick="toggleCompleted()">
-      Completed Tasks <span id="completedCount">(0)</span>
-      <i id="completedArrow" class="bi bi-chevron-down"></i>
-    </h4>
-    <div id="completed-task-container" class="task-card-container collapsed"></div>
-</div>
- <footer class="footer mt-4">
-    <p>© 2025 Taskify. All rights reserved.</p>
-  </footer>
+    <div class="completed-wrapper">
+      <h4 class="section-title mt-4 collapsible-header" onclick="toggleCompleted()">
+        Completed Tasks <span id="completedCount">(0)</span>
+        <i id="completedArrow" class="bi bi-chevron-down"></i>
+      </h4>
+      <div id="completed-task-container" class="task-card-container collapsed"></div>
+    </div>
+    <footer class="footer mt-4">
+      <p>© 2025 Taskify. All rights reserved.</p>
+    </footer>
   </main>
   <!-- editing modal for the user to edit the task -->
   <div class="modal fade" id="editModal" tabindex="-1">
@@ -218,7 +228,33 @@
     </div>
   </div>
 
-  
+
+<!-- adding the category model -->
+<div class="modal fade" id="newCategoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Task Category</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="add-category-form">
+          <div class="mb-3">
+            <label class="form-label">Category Name</label>
+            <input type="text" id="new-category-name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Color (Optional)</label>
+            <input type="color" id="new-category-color" class="form-control form-control-color">
+          </div>
+          <button type="submit" class="btn btn-success w-100">Create Category</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <!--Js-->
   <script defer src="task.js"></script>

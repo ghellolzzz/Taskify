@@ -1,5 +1,5 @@
 body {
-    background-color: #e3fde4;
+    /* REMOVED background-color: #e3fde4; -> Let the theme variables handle this! */
     font-family: 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -7,6 +7,11 @@ body {
     height: 100vh;
     margin: 0;
     text-align: center;
+    
+    /* Transition when switching themes */
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 .hidden { display: none !important; }
@@ -29,28 +34,43 @@ body {
     gap: 20px;
     margin-top: 30px;
     justify-content: center;
+    flex-wrap: wrap; /* Prevents breaking on small screens */
 }
 
 .drink-card {
-    background: white;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    
     padding: 20px;
     border-radius: 12px;
     width: 140px;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-    border: 2px solid transparent;
+    border: 2px solid transparent; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
 }
 
 .drink-card:hover {
     transform: translateY(-5px);
-    border-color: #8bbd5e;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px var(--accent-color);
 }
 
-/* Card */
 .drink-card.featured {
-    border-color: #8bbd5e;
-    background-color: #f1f8e9;
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.drink-card.featured:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px var(--primary-color);
+}
+
+/* The Icon inside the card */
+.drink-card .icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
 }
 
 /* Cup */
@@ -64,7 +84,7 @@ body {
 .cup-body {
     width: 100%;
     height: 100%;
-    border: 5px solid #4e342e;
+    border: 5px solid var(--border-color);
     border-top: none;
     border-radius: 0 0 40px 40px;
     background: rgba(255,255,255,0.4);
@@ -78,7 +98,7 @@ body {
     top: 30px;
     width: 35px;
     height: 70px;
-    border: 5px solid #4e342e;
+    border: 5px solid var(--border-color);
     border-left: none;
     border-radius: 0 20px 20px 0;
 }
@@ -118,10 +138,10 @@ body {
 .btn-home {
     display: inline-block;
     text-decoration: none;
-    color: #795548;
+    color: var(--primary-color);
     font-weight: 600;
     padding: 10px 25px;
-    border: 2px solid #795548;
+    border: 2px solid var(--primary-color);
     border-radius: 50px;
     transition: all 0.3s ease;
     font-size: 0.9rem;
@@ -133,4 +153,75 @@ body {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(121, 85, 72, 0.2);
+}
+
+/* Default Theme */
+:root {
+    --bg-color: #fdf6e3;
+    --text-color: #654321; /* Coffee brown */
+    --card-bg: #ffffff;
+    --primary-color: #8b4513;
+    --accent-color: #d2691e;
+    --modal-bg: #fff8dc;
+}
+
+/* Matcha Theme */
+body.theme-matcha {
+    --bg-color: #e8f5e9;
+    --text-color: #1b5e20;
+    --card-bg: #ffffff;
+    --primary-color: #4caf50;  /* Matcha Green */
+    --accent-color: #81c784;
+    --modal-bg: #f1f8e9;
+}
+
+/* Cyberpunk City Theme */
+body.theme-cyberpunk {
+    --bg-color: #050510;       /* Deep Black/Blue */
+    --text-color: #00ff41;     /* Matrix Green */
+    --card-bg: #1a1a2e;        /* Dark Blue */
+    --primary-color: #ff00ff;  /* Neon Magenta */
+    --accent-color: #00e5ff;   /* Cyan */
+    --modal-bg: #16213e;
+}
+
+/* Midnight Blue Theme */
+body.theme-midnight {
+    --bg-color: #0f172a;
+    --text-color: #e2e8f0;
+    --card-bg: #1e293b;
+    --primary-color: #3b82f6;
+    --accent-color: #60a5fa;
+    --modal-bg: #1e293b;
+}
+
+/* Shop UI Styles */
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.theme-card {
+    background: var(--card-bg);
+    border: 2px solid var(--primary-color);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.theme-card:hover {
+    transform: translateY(-5px);
+}
+
+.currency-display {
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 10px;
 }

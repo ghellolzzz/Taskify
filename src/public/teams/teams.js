@@ -26,10 +26,12 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             loadTeamDetails(teamId);
             loadTeamStats(teamId);
+            loadActivityFeed(teamId);
             setupAddMember(teamId);
             setupAddTeamTask(teamId);
             setupEditTaskForm();
             setupEditTeamForm();
+
         }
     }
 
@@ -46,7 +48,7 @@ function getTeamIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const teamId = urlParams.get('id');
     return teamId;
-} 
+}
 
 //setting up the edit team form
 function setupEditTeamForm() {
@@ -73,30 +75,30 @@ function setupEditTeamForm() {
             },
             body: JSON.stringify(body)
         })
-        .then(res => {
-            if (!res.ok) return res.json().then(e => { throw new Error(e.error) })
-            return res.json()
-        })
-        .then(() => {
-            
+            .then(res => {
+                if (!res.ok) return res.json().then(e => { throw new Error(e.error) })
+                return res.json()
+            })
+            .then(() => {
 
-           
-            document.getElementById('team-title-header').textContent = body.name
-            document.getElementById('team-desc-header').textContent = body.description
 
-           //closing the model
-            const modalEl = document.getElementById('editTeamModal')
-            const modal = bootstrap.Modal.getInstance(modalEl)
-            if(modal){
-                modal.hide()
-            }
 
-           
-            showToast("Team updated successfully!", "success");
+                document.getElementById('team-title-header').textContent = body.name
+                document.getElementById('team-desc-header').textContent = body.description
 
-           
-        })
-        .catch(err => showToast(err.message, "error"))
+                //closing the model
+                const modalEl = document.getElementById('editTeamModal')
+                const modal = bootstrap.Modal.getInstance(modalEl)
+                if (modal) {
+                    modal.hide()
+                }
+
+
+                showToast("Team updated successfully!", "success");
+
+
+            })
+            .catch(err => showToast(err.message, "error"))
     });
 }
 //loading pending invites
@@ -154,71 +156,71 @@ function respondToInvite(teamId, status) {
         },
         body: JSON.stringify({ status: status })
     })
-    .then(res => {
-        if (!res.ok) {
-            
-            return res.json().then(errData => {
-                throw new Error(errData.error || "Response failed");
-            }).catch(() => {
-                throw new Error(`Server error: ${res.status}`);
-            });
-        }
-        return res.json();
-    })
-    .then(() => {
-        // Show toast
-        if (status === 'ACCEPTED') {
-            showToast('Welcome to the team!', 'success');
-        } else {
-            showToast('Invite declined.', 'success');
-        }
+        .then(res => {
+            if (!res.ok) {
 
-       //animation
-        if (card) {
-            card.style.transition = 'all 0.4s ease';
-            card.style.transform = 'scale(0.95)';
-            card.style.opacity = '0';
-            
-            setTimeout(() => {
-                //reloading both invitations and teams
-                loadPendingInvites();
-                if (status === 'ACCEPTED') {
-                    loadMyTeams();
-                }
-            }, 450);
-        }
-    })
-    .catch(err => {
-        console.error('Error responding to invite:', err)
-        if (card) {
-            card.style.opacity = '1';
-            card.querySelectorAll('button').forEach(btn => btn.disabled = false)
-        }
-        showToast(err.message || "Could not respond to invite.", "error")
-    });
+                return res.json().then(errData => {
+                    throw new Error(errData.error || "Response failed");
+                }).catch(() => {
+                    throw new Error(`Server error: ${res.status}`);
+                });
+            }
+            return res.json();
+        })
+        .then(() => {
+            // Show toast
+            if (status === 'ACCEPTED') {
+                showToast('Welcome to the team!', 'success');
+            } else {
+                showToast('Invite declined.', 'success');
+            }
+
+            //animation
+            if (card) {
+                card.style.transition = 'all 0.4s ease';
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+
+                setTimeout(() => {
+                    //reloading both invitations and teams
+                    loadPendingInvites();
+                    if (status === 'ACCEPTED') {
+                        loadMyTeams();
+                    }
+                }, 450);
+            }
+        })
+        .catch(err => {
+            console.error('Error responding to invite:', err)
+            if (card) {
+                card.style.opacity = '1';
+                card.querySelectorAll('button').forEach(btn => btn.disabled = false)
+            }
+            showToast(err.message || "Could not respond to invite.", "error")
+        });
 }
 
 function loadMyTeams() {
     const container = document.getElementById("teams-container");
-    if (!container) return; 
+    if (!container) return;
 
     fetch("/api/teams", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
-    .then(res => res.json())
-    .then(teams => {
-        //if the user have no teams
-        if (!teams || teams.length === 0) {
-            container.innerHTML = `
+        .then(res => res.json())
+        .then(teams => {
+            //if the user have no teams
+            if (!teams || teams.length === 0) {
+                container.innerHTML = `
                 <div class="col-12 text-center text-muted mt-5">
                     <i class="bi bi-people display-1 opacity-25"></i>
                     <p class="mt-2">You haven't joined any teams yet.</p>
                 </div>`;
-            return;
-        }
+                return;
+            }
 
-        //rendering the teams
-        container.innerHTML = teams.map(team => `
+            //rendering the teams
+            container.innerHTML = teams.map(team => `
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm border-0 team-card" onclick="window.location.href='team-view.html?id=${team.id}'">
                     <div class="card-body">
@@ -238,8 +240,8 @@ function loadMyTeams() {
                 </div>
             </div>
         `).join('');
-    })
-    .catch(err => console.error("Failed to load teams:", err));
+        })
+        .catch(err => console.error("Failed to load teams:", err));
 }
 
 //setting up the create team
@@ -271,52 +273,52 @@ function loadTeamDetails(teamId) {
     fetch(`/api/teams/${teamId}`, {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Failed to load team details");
-        return res.json();
-    })
-    .then(team => {
-       
-        document.getElementById("team-title-header").textContent = team.name;
-        document.getElementById("team-desc-header").textContent = team.description || ""
-        const editNameInput = document.getElementById('edit-team-name')
-        const editDescInput = document.getElementById('edit-team-desc')
-        if(editNameInput) editNameInput.value = team.name
-        if(editDescInput) editDescInput.value = team.description || ""
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to load team details");
+            return res.json();
+        })
+        .then(team => {
 
-     
-        const checkboxList = document.getElementById("assignee-checkbox-list");
-        if (checkboxList) {
-            checkboxList.innerHTML = "";
-            team.members.forEach(m => {
-                const div = document.createElement("div");
-                div.className = "form-check";
-                div.innerHTML = `
+            document.getElementById("team-title-header").textContent = team.name;
+            document.getElementById("team-desc-header").textContent = team.description || ""
+            const editNameInput = document.getElementById('edit-team-name')
+            const editDescInput = document.getElementById('edit-team-desc')
+            if (editNameInput) editNameInput.value = team.name
+            if (editDescInput) editDescInput.value = team.description || ""
+
+
+            const checkboxList = document.getElementById("assignee-checkbox-list");
+            if (checkboxList) {
+                checkboxList.innerHTML = "";
+                team.members.forEach(m => {
+                    const div = document.createElement("div");
+                    div.className = "form-check";
+                    div.innerHTML = `
                     <input class="form-check-input" type="checkbox" value="${m.user.id}" id="assign-${m.user.id}">
                     <label class="form-check-label" for="assign-${m.user.id}">${m.user.name}</label>`
-                checkboxList.appendChild(div);
-            });
-        }
+                    checkboxList.appendChild(div);
+                });
+            }
 
-     
-        const memberListContainer = document.getElementById("member-list");
-        const currentUserId = parseInt(localStorage.getItem('userId'));
-        const isOwner = team.members.some(m => m.user.id === currentUserId && m.role === 'OWNER')
 
-        // Safety check
-        if (!team.members || team.members.length === 0) {
-            memberListContainer.innerHTML = `<li class="list-group-item text-muted small">No members found.</li>`;
-        } else {
-            memberListContainer.innerHTML = team.members.map(m => {
-                // Conditionally render the Kick button
-                const kickButtonHtml = (isOwner && m.role !== 'OWNER')
-                    ? `<button class="btn btn-sm btn-link text-danger ms-auto" 
+            const memberListContainer = document.getElementById("member-list");
+            const currentUserId = parseInt(localStorage.getItem('userId'));
+            const isOwner = team.members.some(m => m.user.id === currentUserId && m.role === 'OWNER')
+
+            // Safety check
+            if (!team.members || team.members.length === 0) {
+                memberListContainer.innerHTML = `<li class="list-group-item text-muted small">No members found.</li>`;
+            } else {
+                memberListContainer.innerHTML = team.members.map(m => {
+                    // Conditionally render the Kick button
+                    const kickButtonHtml = (isOwner && m.role !== 'OWNER')
+                        ? `<button class="btn btn-sm btn-link text-danger ms-auto" 
                                  onclick="removeMember(${m.user.id}, '${m.user.name}', event)" title="Remove ${m.user.name}">
                            <i class="bi bi-x-circle"></i>
                        </button>`
-                    : '';
+                        : '';
 
-                return `
+                    return `
                 <li class="list-group-item d-flex align-items-center px-3 py-2">
                     <img src="https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(m.user.name)}&backgroundColor=00897b,43a047,8e24aa"
                          class="rounded-circle me-3" style="width:32px; height:32px;" alt="${m.user.name}">
@@ -327,26 +329,26 @@ function loadTeamDetails(teamId) {
                     </div>
                     ${kickButtonHtml}
                 </li>`;
-            }).join("");
-        }
+                }).join("");
+            }
 
-       //role based buttons
-        const leaveBtn = document.getElementById('leave-team-btn');
-        const deleteBtn = document.getElementById('delete-team-btn');
-        const editBtn = document.getElementById('edit-team-btn');
+            //role based buttons
+            const leaveBtn = document.getElementById('leave-team-btn');
+            const deleteBtn = document.getElementById('delete-team-btn');
+            const editBtn = document.getElementById('edit-team-btn');
 
-        if (isOwner) {
-            if (deleteBtn) deleteBtn.classList.remove('d-none');
-            if (editBtn) editBtn.classList.remove('d-none');
-        } else {
-            if (leaveBtn) leaveBtn.classList.remove('d-none');
-        }
+            if (isOwner) {
+                if (deleteBtn) deleteBtn.classList.remove('d-none');
+                if (editBtn) editBtn.classList.remove('d-none');
+            } else {
+                if (leaveBtn) leaveBtn.classList.remove('d-none');
+            }
 
-               document.getElementById('edit-team-name').value = team.name;
-        document.getElementById('edit-team-desc').value = team.description || ""
+            document.getElementById('edit-team-name').value = team.name;
+            document.getElementById('edit-team-desc').value = team.description || ""
 
-      
-     
+
+
 
             const activeContainer = document.getElementById("active-team-task-container")
             const completedContainer = document.getElementById("completed-team-task-container")
@@ -397,7 +399,7 @@ function loadTeamDetails(teamId) {
                 let statusClass = task.status === "In Progress" ? "status-inprogress" : task.status === "Completed" ? "status-completed" : "status-pending"
                 const dateDisplay = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
 
-               //rendering the html
+                //rendering the html
                 return `
             <div id="task-card-${task.id}" class="card mb-3 team-task-card ${cardBorderClass} ${task.status === 'Completed' ? 'task-completed' : ''} style="cursor: pointer;" onclick="openTaskDetailModal(${task.id})">
                 <div class="card-body p-3">
@@ -545,14 +547,14 @@ function setupAddMember(teamId) {
 function showToast(message, type = 'success') {
     const toastEl = document.getElementById('liveToast')
     const toastBody = document.getElementById('toast-message')
-    
-  
+
+
     if (!toastEl || !toastBody) {
         console.error('Toast elements not found in DOM');
-        alert(message); 
+        alert(message);
         return;
     }
-    
+
     toastBody.textContent = message;
     toastEl.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-primary')
     //color of the toast message
@@ -563,13 +565,13 @@ function showToast(message, type = 'success') {
     } else {
         toastEl.classList.add('bg-primary')
     }
-    
+
     const toast = new bootstrap.Toast(toastEl);
     toast.show();
 }
 
 //tpggling the comment
-function toggleComments(taskId,event) {
+function toggleComments(taskId, event) {
     event.stopPropagation();
     const section = document.getElementById(`comments-section-${taskId}`)
     const isHidden = section.classList.contains('d-none')
@@ -583,7 +585,7 @@ function toggleComments(taskId,event) {
     }
 }
 //loading team comments
-function loadTeamComments(taskId,event) {
+function loadTeamComments(taskId, event) {
     const listContainer = document.getElementById(`comments-list-${taskId}`)
 
     fetch(`/api/comments/${taskId}`, {
@@ -623,10 +625,12 @@ function loadTeamComments(taskId,event) {
         });
 }
 //posting team comments
-function postTeamComment(taskId,event) {
+function postTeamComment(taskId, event) {
     event.stopPropagation()
     const input = document.getElementById(`comment-input-${taskId}`)
     const content = input.value.trim()
+    const teamId = getTeamIdFromUrl();
+
 
     if (!content) return
 
@@ -642,6 +646,7 @@ function postTeamComment(taskId,event) {
         .then(() => {
             input.value = ""
             loadTeamComments(taskId)
+            loadActivityFeed(teamId)
         })
         .catch(err => alert("Failed to post comment"))
 }
@@ -681,11 +686,11 @@ function updateTaskStatus(taskId, newStatus) {
 }
 
 //deleting the tam task
-function deleteTeamTask(taskId,event) {
+function deleteTeamTask(taskId, event) {
     event.stopPropagation()
 
     if (!confirm("Are you sure you want to delete this task? This cannot be undone.")) return
-    
+
     fetch(`/api/tasks/${taskId}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
@@ -703,7 +708,7 @@ function deleteTeamTask(taskId,event) {
 
 
 //edit team task model
-function openEditTeamTaskModal(taskId,event) {
+function openEditTeamTaskModal(taskId, event) {
     event.stopPropagation()
     const addList = document.getElementById("assignee-checkbox-list");
     const editList = document.getElementById("edit-assignee-checkbox-list");
@@ -714,7 +719,7 @@ function openEditTeamTaskModal(taskId,event) {
         editList.innerHTML = addList.innerHTML.replaceAll('assign-', 'edit-assign-');
     }
 
-    
+
     fetch(`/api/tasks/${taskId}`, {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
@@ -882,22 +887,25 @@ function removeMember(userIdToRemove, userName, event) {
     if (!confirm(`Are you sure you want to remove ${userName} from the team?`)) {
         return;
     }
-    
+
     const teamId = getTeamIdFromUrl();
 
     fetch(`/api/teams/${teamId}/members/${userIdToRemove}`, {
         method: 'DELETE',
-        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            "X-Removed-User-Name": userName
+        }
     })
-    .then(res => {
-        if (!res.ok) return res.json().then(e => { throw new Error(e.error) })
-        return res.json()
-    })
-    .then(() => {
-        showToast(`${userName} has been removed.`, "success")
-        setTimeout(() => location.reload(), 1000)
-    })
-    .catch(err => showToast(err.message, "error"))
+        .then(res => {
+            if (!res.ok) return res.json().then(e => { throw new Error(e.error) })
+            return res.json()
+        })
+        .then(() => {
+            showToast(`${userName} has been removed.`, "success")
+            setTimeout(() => location.reload(), 1000)
+        })
+        .catch(err => showToast(err.message, "error"))
 }
 
 //deleting the teams
@@ -906,57 +914,139 @@ function deleteTeam() {
     if (!confirm("DANGER: Are you sure you want to delete this team? This action is permanent and will remove all associated tasks.")) {
         return;
     }
-    
+
     fetch(`/api/teams/${teamId}`, {
         method: 'DELETE',
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
-    .then(res => {
-        if (!res.ok) return res.json().then(e => { throw new Error(e.error) });
-        return res.json();
-    })
-    .then(() => {
-        alert("Team deleted successfully.");
-        window.location.href = 'teams.html'; // Redirect back to the hub
-    })
-    .catch(err => showToast(err.message, "error"));
+        .then(res => {
+            if (!res.ok) return res.json().then(e => { throw new Error(e.error) });
+            return res.json();
+        })
+        .then(() => {
+            alert("Team deleted successfully.");
+            window.location.href = 'teams.html'; 
+        })
+        .catch(err => showToast(err.message, "error"));
 }
 
 //leave team button
 function leaveTeam() {
-   
+
     const teamId = getTeamIdFromUrl();
     if (!teamId) {
         showToast("Could not identify the team.", "error");
         return;
     }
 
-  
+
     if (!confirm("Are you sure you want to leave this team? You will lose access to its tasks and members.")) {
-        return; 
+        return;
     }
 
-  
+
     fetch(`/api/teams/${teamId}/leave`, {
         method: 'DELETE',
-        headers: { 
-            "Authorization": "Bearer " + localStorage.getItem("token") 
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
         }
     })
-    .then(res => {
-        
-        if (!res.ok) {
-            return res.json().then(errData => { throw new Error(errData.error) })
-        }
-        return res.json();
+        .then(res => {
+
+            if (!res.ok) {
+                return res.json().then(errData => { throw new Error(errData.error) })
+            }
+            return res.json();
+        })
+        .then(() => {
+
+            alert("You have successfully left the team.");
+            window.location.href = 'teams.html'; // Redirect to the main teams hub
+        })
+        .catch(err => {
+
+            showToast(err.message, "error")
+        });
+}
+
+
+//gets the activity logs
+function loadActivityFeed(teamId) {
+    const container = document.getElementById('activity-feed-container')
+    if (!container) return;
+
+
+    container.innerHTML = `<div class="text-center mt-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`
+
+
+    fetch(`/api/teams/${teamId}/activity`, {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
-    .then(() => {
-     
-        alert("You have successfully left the team.");
-        window.location.href = 'teams.html'; // Redirect to the main teams hub
-    })
-    .catch(err => {
-        
-        showToast(err.message, "error")
-    });
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to fetch activity feed.")
+            return res.json()
+        })
+        .then(logs => {
+            if (!logs || logs.length === 0) {
+                container.innerHTML = `<p class="text-muted small fst-italic text-center mt-2">No activity to show.</p>`
+                return
+            }
+
+
+            container.innerHTML = logs.map(log => {
+                let iconClass = 'bi-info-circle text-secondary'
+                let actionText = '';
+
+                //log the user name
+                const userName = log.user?.name || 'A user'
+
+
+                switch (log.actionType) {
+                    case 'CREATE_TASK':
+                        iconClass = 'bi-plus-circle-fill text-success';
+                        actionText = `created task: <strong>"${log.details}"</strong>`
+                        break;
+                    case 'UPDATE_STATUS':
+                        iconClass = 'bi-check-circle-fill text-primary'
+                        actionText = `updated ${log.details}`
+                        break;
+                    case 'ADD_MEMBER':
+                        iconClass = 'bi-person-plus-fill text-info'
+                        actionText = ` <strong>${log.details}</strong> to the team`
+                        break;
+                    case 'REMOVE_MEMBER':
+                        iconClass = 'bi-person-dash-fill text-danger'
+                        actionText = `removed ${log.details} from the team`
+                        break;
+                    case 'LEAVE_TEAM':
+                        iconClass = 'bi-box-arrow-left text-warning'
+                        actionText = `left the team`
+                        break;
+                    case 'POST_COMMENT':
+                        iconClass = 'bi-chat-left-text-fill text-secondary'
+                        actionText = `commented ${log.details}`
+                        break;
+                    default:
+                        actionText = `performed an unclassified action`
+                }
+
+
+                const timeDisplay = new Date(log.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
+                return `
+            <div class="d-flex mb-3">
+                <div class="me-2 mt-1" style="min-width: 24px;"><i class="bi ${iconClass}"></i></div>
+                <div class="flex-grow-1 lh-sm">
+                    <p class="mb-0 small">
+                        <span class="fw-bold">${userName}</span> ${actionText}
+                    </p>
+                    <small class="text-muted" style="font-size: 0.7rem;">${timeDisplay}</small>
+                </div>
+            </div>`;
+            }).join('')
+        })
+        .catch(err => {
+            container.innerHTML = `<p class="text-danger small mt-3">Could not load activity.</p>`
+            console.error(err)
+        });
 }

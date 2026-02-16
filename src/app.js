@@ -1,7 +1,7 @@
 // src/app.js
 const express = require('express');
 const createError = require('http-errors');
-
+const prisma = require('./models/prismaClient');
 const path = require('path');
 
 // Routers
@@ -17,8 +17,11 @@ const goalRouter = require("./routers/goalRouter.js");
 const habitRouter = require('./routers/Habit.router.js');
 const feedbackRouter = require('./routers/feedbackRoutes.js');
 const focusRoutes = require('./routers/focusRouter.js');
-const teamRouter=require("./routers/teamRouter.js")
+const teamRouter = require("./routers/teamRouter.js");
 const passwordResetRouter = require('./routers/passwordResetRouter');
+const timeEntryRouter = require('./routers/timeEntryRouter');
+const communityRouter = require('./routers/communityRouter.js');
+const shopRouter = require('./routers/shopRoutes.js');
 
 const app = express();
 app.use(express.json());
@@ -43,6 +46,28 @@ app.use("/api/feedback", feedbackRouter);
 app.use('/api/focus', focusRoutes);
 app.use("/api/teams", teamRouter);
 app.use('/api/password-reset', passwordResetRouter);
+app.use('/api/time-entries', timeEntryRouter);
+app.use('/api/community', communityRouter);
+
+app.use('/api/shop', shopRouter);
+
+app.post('/api/test/reset', async (req, res) => {
+  try {
+    console.log("🔄 Resetting MGF_21 points for testing...");
+    
+    // 1. Force Points to 5000
+    await prisma.user.update({
+      where: { email: 'MGF_21@ICLOUD.COM' },
+      data: { points: 5000, preferredTheme: 'theme-classic' },
+    });
+
+    // 2. Reset Theme to default
+    res.json({ success: true, message: "User reset to 5000 points" });
+  } catch (error) {
+    console.error("Reset failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.get('/.well-known/appspecific/*', (req, res) => {
   res.status(204).end();

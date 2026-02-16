@@ -24,6 +24,8 @@ model User {
   lastActive  DateTime?
   theme       String?
   accentColor String?
+  points   Int    @default(0)
+  preferredTheme String  @default("theme-classic")
 
   // Relations
   tasks         Task[]
@@ -39,8 +41,13 @@ model User {
   focusSessions FocusSession[]
   teams       TeamMember[] 
   assignedTasks Task[] @relation("TaskAssignees")
+  timeEntries TimeEntry[]
+  activityLogs ActivityLog[]
+  ownedThemes   UserOwnedTheme[]
 
   passwordResets PasswordReset[]
+  communityNotes CommunityNote[]
+  noteReactions  NoteReaction[]
 
   @@map("users")
 }
@@ -135,8 +142,27 @@ model Task {
 
   comments    Comment[]
   reminders   Reminder[]
+  timeEntries TimeEntry[]
 
   @@map("tasks")
+}
+
+//////////////////////////////////////////////////////
+// TIME ENTRY TABLE (time tracking)
+//////////////////////////////////////////////////////
+model TimeEntry {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  taskId    Int
+  minutes   Int
+  date      DateTime @db.Date
+  note      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("time_entries")
 }
 
 //////////////////////////////////////////////////////
@@ -317,13 +343,14 @@ model Team {
   updatedAt   DateTime     @updatedAt
 
   members     TeamMember[]
-  tasks       Task[]       
+  tasks       Task[]
+  activityLogs ActivityLog[]  
 
   @@map("teams")
 }
 
 //////////////////////////////////////////////////////
-// TEAM_MEMBER TABLE 
+/// TEAM_MEMBER TABLE 
 //////////////////////////////////////////////////////
 model TeamMember {
   id        Int      @id @default(autoincrement())
@@ -341,3 +368,77 @@ model TeamMember {
   @@map("team_members")
 }
 
+model Theme {
+  id          Int      @id @default(autoincrement())
+  name        String
+  cost        Int
+  cssClass    String
+  description String?
+
+  owners      UserOwnedTheme[]
+}
+
+model UserOwnedTheme {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  themeId     Int
+  purchasedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  theme       Theme    @relation(fields: [themeId], references: [id])
+
+  @@unique([userId, themeId]) 
+}
+model ActivityLog {
+  id          Int        @id @default(autoincrement())
+  teamId      Int
+  userId      Int        
+  actionType  ActionType 
+  details     String?    
+  createdAt   DateTime   @default(now())
+
+  team        Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id])
+  
+  // Add a relation back to Team
+  @@map("activity_logs")
+}
+
+enum ActionType {
+  CREATE_TASK
+  UPDATE_STATUS
+  ADD_MEMBER
+  REMOVE_MEMBER
+  LEAVE_TEAM
+  POST_COMMENT
+}
+
+//////////////////////////////////////////////////////
+//// CommunityNote TABLE 
+//////////////////////////////////////////////////////
+model CommunityNote {
+  id        Int            @id @default(autoincrement())
+  content   String         @db.VarChar(280)
+  color     String         @default("yellow")
+  createdAt DateTime       @default(now())
+  userId    Int
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions NoteReaction[]
+
+  @@map("community_notes")
+}
+
+//////////////////////////////////////////////////////
+/// NoteReaction TABLE 
+//////////////////////////////////////////////////////
+model NoteReaction {
+  id     Int           @id @default(autoincrement())
+  type   String        // e.g., "HEART", "THUMBS_UP", "SMILE"
+  noteId Int
+  userId Int
+  note   CommunityNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, noteId, type])
+  @@map("note_reactions")
+}

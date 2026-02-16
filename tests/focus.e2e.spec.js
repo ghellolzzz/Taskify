@@ -108,18 +108,25 @@ test.describe('Focus Mode Integration', () => {
         if (btnText.includes('Buy')) {
             console.log(`Buying ${theme.name}...`);
             // Create the promise first
-            const buyRespPromise = page.waitForResponse(r => r.url().includes('/api/shop/buy') && r.status() === 200);
-            await getBtn().click(); 
-            await buyRespPromise; // Now it won't hang if the if-block is skipped
+            const [response] = await Promise.all([
+                page.waitForResponse(r => r.url().includes('/api/shop/buy')), 
+                getBtn().click()
+            ]);
+
+            // This prints the status if it fails!
+            console.log(`Buy Request Status: ${response.status()}`);
+            expect(response.ok()).toBeTruthy(); // Fails fast if not 200 OK
+            
             await expect(getBtn()).toHaveText('Equip');
         } else {
-            console.log(`${theme.name} already owned. Skipping purchase.`);
+             console.log(`${theme.name} already owned. Skipping purchase.`);
         }
 
         // 4. Equip Theme (Always wait for this because we always click it)
-        const equipRespPromise = page.waitForResponse(r => r.url().includes('/api/shop/equip') && r.status() === 200);
-        await getBtn().click();
-        await equipRespPromise;
+        const [equipResponse] = await Promise.all([
+            page.waitForResponse(r => r.url().includes('/api/shop/equip')),
+            getBtn().click()
+        ]);
 
         // 5. Verify & Reset UI
         await page.waitForTimeout(500); // Small visual wait

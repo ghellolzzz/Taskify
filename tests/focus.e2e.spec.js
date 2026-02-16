@@ -6,7 +6,7 @@ test.describe('Focus Mode Integration', () => {
   // Login & Navigate to Focus Mode before all tests
   test.beforeEach(async ({ page }) => {
     // 1. Login
-    await page.goto(`http://127.0.0.1:3001/login.html`);
+    await page.goto(`http://localhost:3001/login.html`);
     await page.fill('#email', 'MGF_21@ICLOUD.COM'); 
     await page.fill('#password', 'password123');
     await page.click('button[type="submit"]');
@@ -103,18 +103,23 @@ test.describe('Focus Mode Integration', () => {
         
         await card.scrollIntoViewIfNeeded();
 
-        // 3. Buy Theme (Check if button is 'Buy' or 'Equip')
-        if ((await getBtn().innerText()).includes('Buy')) {
-            const buyResp = page.waitForResponse(r => r.url().includes('/api/shop/buy'));
+        // 3. Buy Theme (Only wait for response IF we are clicking 'Buy')
+        const btnText = await getBtn().innerText();
+        if (btnText.includes('Buy')) {
+            console.log(`Buying ${theme.name}...`);
+            // Create the promise first
+            const buyRespPromise = page.waitForResponse(r => r.url().includes('/api/shop/buy') && r.status() === 200);
             await getBtn().click(); 
-            await buyResp; 
+            await buyRespPromise; // Now it won't hang if the if-block is skipped
             await expect(getBtn()).toHaveText('Equip');
+        } else {
+            console.log(`${theme.name} already owned. Skipping purchase.`);
         }
 
-        // 4. Equip Theme
-        const equipResp = page.waitForResponse(r => r.url().includes('/api/shop/equip'));
+        // 4. Equip Theme (Always wait for this because we always click it)
+        const equipRespPromise = page.waitForResponse(r => r.url().includes('/api/shop/equip') && r.status() === 200);
         await getBtn().click();
-        await equipResp;
+        await equipRespPromise;
 
         // 5. Verify & Reset UI
         await page.waitForTimeout(500); // Small visual wait

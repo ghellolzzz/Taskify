@@ -6,11 +6,10 @@ test.describe('Profile (E2E)', () => {
     await page.fill('#email', 'MGF_21@ICLOUD.COM');
     await page.fill('#password', 'password123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('http://localhost:3001/dashboard/dashboard.html');
+    await page.waitForURL(/\/dashboard\/dashboard\.html$/);
   });
 
   test('activity shows habits after logging + heatmap range switches', async ({ page }) => {
-
     await page.goto('http://localhost:3001/habit/habits.html');
     await page.waitForLoadState('networkidle');
 
@@ -73,4 +72,52 @@ test.describe('Profile (E2E)', () => {
     await swatch.click({ force: true });
     await expect(swatch).toHaveClass(/active/);
   });
+
+test('theme persists across all pages (accent selectable on profile only)', async ({ page }) => {
+  const isDark = async () => {
+    return await page.evaluate(() => {
+      const b = document.body;
+      const h = document.documentElement;
+      return (
+        b.classList.contains('profile-theme-dark') ||
+        b.classList.contains('theme-dark') ||
+        h.classList.contains('theme-dark') ||
+        h.classList.contains('dark')
+      );
+    });
+  };
+
+  // 1) Set dark theme on profile
+  await page.goto('http://localhost:3001/profile/profile.html');
+  await page.waitForLoadState('networkidle');
+
+  await page.click('#btnThemeDark');
+  await expect.poll(isDark, { timeout: 8000 }).toBe(true);
+
+  // 2) Accent selection works on profile page (UI active state)
+  const swatch = page.locator('.theme-swatch[data-color]').nth(1);
+  await expect(swatch).toBeVisible();
+  await swatch.click({ force: true });
+  await expect(page.locator('.theme-swatch.active')).toBeVisible();
+
+  // 3) Dark theme persists across pages
+  const pagesToCheck = [
+    'http://localhost:3001/dashboard/dashboard.html',
+    'http://localhost:3001/tasks/task.html',
+    'http://localhost:3001/categories/categories.html',
+    'http://localhost:3001/reminder/reminder.html',
+    'http://localhost:3001/goal/goal.html',
+    'http://localhost:3001/teams/teams.html',
+    'http://localhost:3001/habit/habits.html',
+    'http://localhost:3001/calendar/calendar.html',
+    'http://localhost:3001/feedback/feedback.html',
+  ];
+
+  for (const url of pagesToCheck) {
+    await page.goto(url);
+    await page.waitForLoadState('networkidle');
+    await expect.poll(isDark, { timeout: 8000, message: `Expected dark theme on ${url}` }).toBe(true);
+  }
 });
+});
+

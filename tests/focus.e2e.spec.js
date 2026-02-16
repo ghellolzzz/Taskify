@@ -1,6 +1,6 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
-const PORT = process.env.CI ? 3000 : 3001;
+const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 test.describe('Focus Mode Integration', () => {
 

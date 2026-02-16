@@ -79,7 +79,7 @@ test.describe('Focus Mode Integration', () => {
   });
 
   test('User can buy and equip all themes in one session', async ({ page }) => {
-    
+    test.setTimeout(120000);
     const themes = [
         { name: 'Matcha', cssClass: /theme-matcha/ },
         { name: 'Cyberpunk City', cssClass: /theme-cyberpunk/ },

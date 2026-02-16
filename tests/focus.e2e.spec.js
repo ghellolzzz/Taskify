@@ -1,38 +1,139 @@
-const { test, expect } = require('@playwright/test');
+// @ts-check
+import { test, expect } from '@playwright/test';
 
-test.describe('Focus Mode', () => {
+test.describe('Focus Mode Integration', () => {
 
-  test('User can select Matcha and see the timer start', async ({ page }) => {
-    // 1. Go to the page (Port 3001 matches your config)
-    await page.goto('http://127.0.0.1:3001/focus-mode/focus.html');
+  // Login & Navigate to Focus Mode before all tests
+  test.beforeEach(async ({ page }) => {
+    // 1. Login
+    await page.goto('http://127.0.0.1:3001/login.html');
+    await page.fill('#email', 'MGF_21@ICLOUD.COM'); 
+    await page.fill('#password', 'password123');
+    await page.click('button[type="submit"]');
 
-    // 2. Verify Menu is visible
+    // 2. Dashboard Integration (button to focus mode)
+    await expect(page).toHaveURL(/dashboard\.html/);
+    await page.locator('a[href="../focus-mode/focus.html"]').click();
+
+    // 3. Verify we are at the Menu
+    await expect(page).toHaveURL(/focus-mode\/focus\.html/);
     await expect(page.locator('#menu-view')).toBeVisible();
+  });
 
-    // 3. Select Matcha
+  // Mathca Latte Test
+  test('User can select Matcha and see 30:00 timer', async ({ page }) => {
     await page.locator('text=Matcha Latte').click();
-
-    // 4. Verify View Swaps
+    
+    // Check View
     await expect(page.locator('#menu-view')).toBeHidden();
     await expect(page.locator('#focus-view')).toBeVisible();
 
-    // 5. Verify Timer (Matcha is 30 mins)
+    // Check time accuracy
     await expect(page.locator('#timer-display')).toHaveText('30:00');
   });
 
-  test('User can Give Up', async ({ page }) => {
-    // 1. Setup
-    await page.goto('http://127.0.0.1:3001/focus-mode/focus.html');
-    await page.locator('text=Matcha Latte').click();
+  // Espresso Test
+  test('User can select Espresso and see correct timer', async ({ page }) => {
+    await page.locator('text=Espresso').click();
 
-    // 2. Handle the "Are you sure?" Popup
-    page.on('dialog', dialog => dialog.accept()); 
+    await expect(page.locator('#menu-view')).toBeHidden();
+    await expect(page.locator('#focus-view')).toBeVisible();
 
-    // 3. Click Give Up
-    await page.click('.btn-giveup');
-
-    // 4. Verify Liquid is gone
-    await expect(page.locator('#liquid')).toHaveCSS('height', '0px'); 
+    await expect(page.locator('#timer-display')).toHaveText('05:00'); 
   });
 
+  // Ice Water Test
+  test('User can select Ice Water and see correct timer', async ({ page }) => {
+    await page.locator('text=Ice Water').click();
+
+    await expect(page.locator('#menu-view')).toBeHidden();
+    await expect(page.locator('#focus-view')).toBeVisible();
+
+    await expect(page.locator('#timer-display')).toHaveText('60:00'); 
+  });
+
+  // Give Up Functionality Test
+  test('User can Give Up (Espresso) and Try Again', async ({ page }) => {
+    // Start Espresso
+    await page.locator('text=Espresso').click();
+
+    // Confirm give up
+    page.on('dialog', dialog => dialog.accept()); 
+
+    // Click give up
+    const actionBtn = page.locator('.btn-giveup');
+    await actionBtn.click();
+
+    // Verify liquid draining animation
+    await expect(page.locator('#liquid')).toHaveCSS('height', '0px');
+
+    // Verify button changes to "Try Again"
+    await expect(actionBtn).toHaveText('Try Again');
+
+    // Click "Try Again"
+    await actionBtn.click();
+
+    // Verify return to menu
+    await expect(page.locator('#menu-view')).toBeVisible();
+    await expect(page.locator('#focus-view')).toBeHidden();
+  });
+
+  test('User can buy and equip all themes in one session', async ({ page }) => {
+    
+    const themes = [
+        { name: 'Matcha', cssClass: /theme-matcha/ },
+        { name: 'Cyberpunk City', cssClass: /theme-cyberpunk/ },
+        { name: 'Midnight Blue', cssClass: /theme-midnight/ }
+    ];
+
+    for (const theme of themes) {
+        // Wait for BOTH responses
+        const shopResponse = page.waitForResponse(r => r.url().includes('/api/shop/themes') && r.status() === 200);
+        const inventoryResponse = page.waitForResponse(r => r.url().includes('/api/shop/inventory') && r.status() === 200);
+        
+        await page.click('#open-shop-btn');
+        
+        // Wait for both to finish before touching the UI
+        await Promise.all([shopResponse, inventoryResponse]);
+
+
+        const card = page.locator('.theme-card', { hasText: theme.name });
+        const getBtn = () => card.locator('button');
+        await expect(card).toBeVisible(); 
+        
+        await card.scrollIntoViewIfNeeded();
+
+        // 3. Buy Theme (Check if button is 'Buy' or 'Equip')
+        if ((await getBtn().innerText()).includes('Buy')) {
+            const buyResp = page.waitForResponse(r => r.url().includes('/api/shop/buy'));
+            await getBtn().click(); 
+            await buyResp; 
+            await expect(getBtn()).toHaveText('Equip');
+        }
+
+        // 4. Equip Theme
+        const equipResp = page.waitForResponse(r => r.url().includes('/api/shop/equip'));
+        await getBtn().click();
+        await equipResp;
+
+        // 5. Verify & Reset UI
+        await page.waitForTimeout(500); // Small visual wait
+        await page.click('#close-shop');
+        
+        await expect(page.locator('body')).toHaveClass(theme.cssClass);
+    }
+  });
+
+    // Turn Off Focus Mode Test
+  test('User can Turn Off Focus Mode and return to Dashboard', async ({ page }) => {
+    // Verify the button exists
+    const turnOffBtn = page.locator('.btn-home');
+    await expect(turnOffBtn).toBeVisible();
+
+    // Click it
+    await turnOffBtn.click();
+
+    // Verify user is back on the Dashboard
+    await expect(page).toHaveURL(/dashboard\/dashboard\.html/);
+  });
 });

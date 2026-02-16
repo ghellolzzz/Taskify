@@ -1,12 +1,13 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
-
+const PORT = process.env.CI ? 3000 : 3001;
+const BASE_URL = `http://127.0.0.1:${PORT}`;
 test.describe('Focus Mode Integration', () => {
 
   // Login & Navigate to Focus Mode before all tests
   test.beforeEach(async ({ page }) => {
     // 1. Login
-    await page.goto('http://127.0.0.1:3001/login.html');
+    await page.goto(`${BASE_URL}/login.html`);
     await page.fill('#email', 'MGF_21@ICLOUD.COM'); 
     await page.fill('#password', 'password123');
     await page.click('button[type="submit"]');

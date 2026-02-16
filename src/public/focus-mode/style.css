@@ -1,5 +1,4 @@
 body {
-    /* REMOVED background-color: #e3fde4; -> Let the theme variables handle this! */
     font-family: 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -8,7 +7,6 @@ body {
     margin: 0;
     text-align: center;
     
-    /* Transition when switching themes */
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.5s ease, color 0.5s ease;
@@ -34,7 +32,7 @@ body {
     gap: 20px;
     margin-top: 30px;
     justify-content: center;
-    flex-wrap: wrap; /* Prevents breaking on small screens */
+    flex-wrap: wrap;
 }
 
 .drink-card {
@@ -114,9 +112,9 @@ body {
 }
 
 /* drink themes */
-.liquid-matcha { background-color: #8bbd5e; } /* Green */
-.liquid-coffee { background-color: #6f4e37; } /* Brown */
-.liquid-water  { background-color: #29b6f6; } /* Blue */
+.liquid-matcha { background-color: #8bbd5e; }
+.liquid-coffee { background-color: #6f4e37; }
+.liquid-water  { background-color: #29b6f6; }
 
 /* giveup button */
 .btn-giveup {
@@ -177,11 +175,11 @@ body.theme-matcha {
 
 /* Cyberpunk City Theme */
 body.theme-cyberpunk {
-    --bg-color: #050510;       /* Deep Black/Blue */
-    --text-color: #00ff41;     /* Matrix Green */
-    --card-bg: #1a1a2e;        /* Dark Blue */
-    --primary-color: #ff00ff;  /* Neon Magenta */
-    --accent-color: #00e5ff;   /* Cyan */
+    --bg-color: #050510;
+    --text-color: #00ff41;
+    --card-bg: #1a1a2e;
+    --primary-color: #ff00ff;
+    --accent-color: #00e5ff;
     --modal-bg: #16213e;
 }
 

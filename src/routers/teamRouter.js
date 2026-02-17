@@ -15,6 +15,7 @@ router.put("/:teamId", verifyToken, teamController.updateTeam);
 router.delete("/:teamId/members/:userId", verifyToken, teamController.removeMember);
 router.delete("/:teamId/leave", verifyToken, teamController.leaveTeam);
 router.get("/:teamId/activity", verifyToken, teamController.getActivity);
+router.get("/:teamId/workload", verifyToken, teamController.getWorkload);
 
 
 module.exports=router

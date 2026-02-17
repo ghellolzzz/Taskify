@@ -167,3 +167,10 @@ module.exports.getActivity = function(req, res) {
         .then(logs => res.json(logs))
         .catch(err => res.status(500).json({ error: err.message }));
 };
+
+//getting the team workload
+module.exports.getWorkload = function(req, res) {
+    return teamModel.getTeamWorkload(req.params.teamId)
+        .then(data => res.json(data))
+        .catch(err => res.status(500).json({ error: err.message }));
+};

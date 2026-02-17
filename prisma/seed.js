@@ -17,7 +17,9 @@ async function main() {
       { name: "Alice",  email: "alice@example.com",   password: hashedPassword },
       { name: "Bob",    email: "bob@example.com",     password: hashedPassword },
       { name: "Charlie",email: "charlie@example.com", password: hashedPassword },
-       { name: "E2E Test User", email: "MGF_21@ICLOUD.COM", password: hashedPassword, points: 5000, preferredTheme: 'theme-classic' }
+       { name: "E2E Test User", email: "MGF_21@ICLOUD.COM", password: hashedPassword, points: 5000, preferredTheme: 'theme-classic' },
+       { name: "Siraj", email: "siraj@example.com", password: hashedPassword },
+      { name: "Joel", email: "joel@example.com", password: hashedPassword }
     ],
     skipDuplicates: true
   });

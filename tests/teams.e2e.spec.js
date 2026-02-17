@@ -347,4 +347,104 @@ test.describe('Team Collaboration UI (E2E)', () => {
         await expect(page.locator('#detail-description')).toHaveText(taskDesc);
         await expect(page.locator('#detail-priority')).toContainText('Medium');
     });
+
+    test('should calculate and display workload score correctly (Data Transformation)', async ({ page }) => {
+        await page.goto('http://localhost:3001/teams/teams.html');
+        await page.waitForLoadState('networkidle');
+
+        //creating a team
+        await page.click('button:has-text("Create New Team")');
+        const teamName = `Workload Test ${Date.now()}`;
+        await page.fill('#team-name', teamName);
+        await page.click('#create-team-form button[type="submit"]');
+        await page.waitForLoadState('networkidle');
+        
+        await page.click(`.team-card h5:has-text("${teamName}")`);
+        await page.waitForURL('**/team-view.html?id=*');
+        await page.waitForLoadState('networkidle');
+
+       
+        //creating 3 high priority task cards
+        for (let i = 1; i <= 3; i++) {
+            await page.click('button:has-text("New Team Task")');
+            await page.fill('#task-title', `Heavy Task ${i}`);
+            await page.selectOption('#task-priority', 'High');
+            
+            //assigning to self
+            await page.locator('#assignee-checkbox-list input[type="checkbox"]').first().check();
+            
+            await page.click('#add-team-task-form button[type="submit"]');
+            await page.waitForLoadState('networkidle');
+           
+            await page.waitForTimeout(500); 
+        }
+
+    
+       //finding the member from the member list
+        const memberCard = page.locator('#member-list li').first();
+
+        await expect(memberCard).toContainText('9 pts');
+
+       //status should be overloaded
+        await expect(memberCard).toContainText('Overloaded');
+        
+       
+        await expect(memberCard.locator('.text-danger')).toBeVisible();
+    });
+
+    test('should invite a member and allow them to accept the invitation', async ({ page }) => {
+      
+        await page.goto('http://localhost:3001/teams/teams.html');
+        await page.waitForLoadState('networkidle');
+
+    
+        await page.click('button:has-text("Create New Team")');
+        const inviteTeamName = `Invite Test Team ${Date.now()}`;
+        await page.fill('#team-name', inviteTeamName);
+        await page.click('#create-team-form button[type="submit"]');
+        await page.waitForLoadState('networkidle');
+
+      
+        await page.click(`.team-card h5:has-text("${inviteTeamName}")`);
+        await page.waitForURL('**/team-view.html?id=*');
+
+       
+        await page.click('button:has-text("Invite")');
+        await expect(page.locator('#addMemberModal')).toBeVisible();
+
+        // send Invite
+        const memberEmail = 'siraj@example.com'; 
+        await page.fill('#new-member-email', memberEmail);
+        await page.click('#add-member-form button[type="submit"]');
+
+        await expect(page.locator('.toast')).toContainText('Invitation sent successfully!');
+      
+        await page.click('a:has-text("Logout")');
+        await page.waitForURL('**/login.html');
+
+
+       
+        await page.fill('#email', memberEmail);
+        await page.fill('#password', 'password123');
+        await page.click('button[type="submit"]');
+        await page.waitForURL('**/dashboard.html');
+
+     
+        await page.goto('http://localhost:3001/teams/teams.html');
+        await page.waitForLoadState('networkidle');
+
+        // verify pending invitation card exists
+        const inviteCard = page.locator(`.card:has-text("You've been invited to join ${inviteTeamName}")`);
+        await expect(inviteCard).toBeVisible();
+
+        // click accept
+        await inviteCard.locator('button:has-text("Accept")').click();
+
+        //verify card disappears
+        await expect(inviteCard).not.toBeVisible();
+
+        //verify new team exists
+        const newTeamCard = page.locator(`.team-card h5:has-text("${inviteTeamName}")`);
+        await expect(newTeamCard).toBeVisible();
+    });
 });

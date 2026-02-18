@@ -187,6 +187,80 @@ function showUndoToast(message, actionLabel, onUndo, delayMs) {
   return el;
 }
 
+// --- Multi-tab sync (Part C) ---
+// Unique per-tab id (session scoped)
+const TASKIFY_TAB_ID =
+  sessionStorage.getItem('TASKIFY_TAB_ID') ||
+  (crypto?.randomUUID?.() || String(Math.random()).slice(2));
+
+sessionStorage.setItem('TASKIFY_TAB_ID', TASKIFY_TAB_ID);
+
+// Broadcast + fallback key
+const HABITS_SYNC_CHANNEL = 'taskify-habits-sync';
+const HABITS_SYNC_STORAGE_KEY = '__taskify_habits_sync__';
+
+let habitsBC = null;
+let lastRemoteSyncAt = 0;
+let refreshTimerId = null;
+
+function broadcastHabitsChanged(reason = 'changed') {
+  const msg = {
+    type: 'habits:changed',
+    reason,
+    at: Date.now(),
+    tabId: TASKIFY_TAB_ID,
+  };
+
+  // 1) Best: BroadcastChannel
+  if (habitsBC) {
+    try { habitsBC.postMessage(msg); } catch (_) {}
+  }
+
+  // 2) Fallback: storage event (fires in other tabs)
+  try {
+    localStorage.setItem(HABITS_SYNC_STORAGE_KEY, JSON.stringify(msg));
+  } catch (_) {}
+}
+
+function scheduleHabitsRefreshFromRemote(msg) {
+  if (!msg || msg.tabId === TASKIFY_TAB_ID) return;
+  if (!msg.at || msg.at <= lastRemoteSyncAt) return;
+
+  lastRemoteSyncAt = msg.at;
+
+  // Debounce multiple quick events
+  if (refreshTimerId) return;
+  refreshTimerId = setTimeout(() => {
+    refreshTimerId = null;
+
+    // refresh board, but preserve optimistic ops (we'll reapply after fetch)
+    loadHabitsBoard();
+
+    // optional tiny feedback (nice for demo)
+    if (!document.hidden) showToast('Synced changes from another tab.', 'secondary', 1200);
+  }, 250);
+}
+
+function setupMultiTabSync() {
+  // BroadcastChannel listener
+  if ('BroadcastChannel' in window) {
+    habitsBC = new BroadcastChannel(HABITS_SYNC_CHANNEL);
+    habitsBC.onmessage = (ev) => {
+      const msg = ev?.data;
+      if (msg?.type === 'habits:changed') scheduleHabitsRefreshFromRemote(msg);
+    };
+  }
+
+  // storage-event fallback listener
+  window.addEventListener('storage', (e) => {
+    if (e.key !== HABITS_SYNC_STORAGE_KEY || !e.newValue) return;
+    try {
+      const msg = JSON.parse(e.newValue);
+      if (msg?.type === 'habits:changed') scheduleHabitsRefreshFromRemote(msg);
+    } catch (_) {}
+  });
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   // Handle logout like other pages
@@ -212,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reminderEnabledEl.addEventListener("change", syncReminderInputsEnabled);
   }
   syncReminderInputsEnabled();
-
+  setupMultiTabSync(); 
   setupDeleteModal();
   loadHabitsBoard();
 });
@@ -236,10 +310,15 @@ function loadHabitsBoard() {
       return res.json();
     })
     .then((board) => {
-      if (!board) return; // already handled (e.g. redirected)
-      currentBoard = board;
-      renderHabitsBoard(board);
-    })
+  if (!board) return;
+
+  currentBoard = board;
+
+  reapplyPendingOps(currentBoard);
+
+  renderHabitsBoard(currentBoard);
+})
+
     .catch((err) => {
       console.error('Failed to load habits board:', err);
     });
@@ -809,6 +888,7 @@ function toggleHabitDay(habitId, date) {
 
       reapplyPendingOps(currentBoard);
       renderHabitsBoard(currentBoard);
+      broadcastHabitsChanged('toggle');
     })
     .catch((err) => {
       console.error('Failed to toggle habit day:', err);
@@ -855,7 +935,7 @@ function archiveHabit(habitId, rowEl) {
     .then((board) => {
       if (!board) return;
       currentBoard = board;
-      // IMPORTANT: still keep undo window running; undo will unarchive
+      broadcastHabitsChanged('archive');
       reapplyPendingOps(currentBoard);
       renderHabitsBoard(currentBoard);
     })
@@ -897,6 +977,7 @@ function archiveHabit(habitId, rowEl) {
       .then((board) => {
         if (!board) return;
         currentBoard = board;
+        broadcastHabitsChanged('undo-archive');
         reapplyPendingOps(currentBoard);
         renderHabitsBoard(currentBoard);
       })
@@ -941,7 +1022,9 @@ function unarchiveHabit(habitId, itemEl) {
     .then((board) => {
       if (!board) return;
       currentBoard = board;
-      renderHabitsBoard(board);
+       reapplyPendingOps(currentBoard);
+  renderHabitsBoard(currentBoard);
+  broadcastHabitsChanged('restore');
     })
     .catch((err) => {
       console.error('Failed to unarchive habit:', err);
@@ -1171,6 +1254,7 @@ function setupHabitForm() {
         form.reset();
         setHabitModalMode('create');
         resetHabitFormFields(null);
+        broadcastHabitsChanged(isEdit ? 'edit-habit' : 'create-habit');
 
         // Close modal
         const modalEl = document.getElementById('habitModal');
@@ -1248,6 +1332,7 @@ function setupDeleteModal() {
         if (!board) return;
         undoState.pending.delete(idNum);
         currentBoard = board;
+        broadcastHabitsChanged('hard-delete');
         reapplyPendingOps(currentBoard);
         renderHabitsBoard(currentBoard);
       })

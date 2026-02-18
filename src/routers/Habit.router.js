@@ -20,7 +20,7 @@ router.patch('/:habitId', habitController.updateMeta);
 // DELETE /api/habits/:habitId/hard → permanent delete
 router.delete('/:habitId/hard', habitController.hardDelete);
 
-// DELETE /api/habits/:habitId → archive habit
+// DELETE /api/habits/:habitId → archive habita
 router.delete('/:habitId', habitController.archive);
 
 // POST /api/habits/:habitId/toggle → toggle one day check-in

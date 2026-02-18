@@ -170,18 +170,55 @@ function renderHabitsBoard(board) {
         `;
       });
 
+      const tp = habit.targetProgress || {};
+      const ot = habit.onTrack || {};
+
+      const done = Number(tp.done ?? habit.completionThisWeek ?? 0);
+      const target = tp.target; // null = flexible
+      const progressText = target ? `${done}/${target} this week` : `${done} done this week`;
+
+      const badgeClass =
+        ot.status === 'completed' ? 'ontrack-badge completed' :
+        ot.status === 'ontrack'   ? 'ontrack-badge ontrack'   :
+        ot.status === 'behind'    ? 'ontrack-badge behind'    :
+        ot.status === 'atrisk'    ? 'ontrack-badge atrisk'    :
+                                   'ontrack-badge flex';
+
+      const badgeLabel = ot.label || (target ? 'On track' : 'Flexible');
+      const hint = ot.hint ? String(ot.hint).replace(/"/g, '&quot;') : '';
+
       tr.innerHTML = `
         <td>
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-start gap-2">
             <span class="habit-color-dot" style="background:${color};"></span>
-            <span class="habit-title">${habit.title}</span>
+
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="habit-title">${habit.title}</span>
+                <span class="${badgeClass}" title="${hint}">
+                  ${badgeLabel}
+                </span>
+              </div>
+
+              <div class="habit-submeta">
+                <span class="habit-progress-text">${progressText}</span>
+                ${
+                  target
+                    ? `<span class="habit-expected">· expected by today: ${tp.expectedByToday ?? 0}</span>`
+                    : ''
+                }
+              </div>
+            </div>
           </div>
         </td>
+
         <td class="text-center">
           <span class="badge bg-light text-dark small">${targetLabel}</span>
         </td>
+
         ${daysHtml}
-                <td class="text-end">
+
+        <td class="text-end">
           <div class="dropdown habit-actions-dropdown">
             <button
               class="btn btn-sm btn-light habit-actions-toggle"

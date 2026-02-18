@@ -11,6 +11,8 @@ function authHeaders(extra = {}) {
 let currentBoard = null;
 let pendingDeleteHabit = null; // { id, title, rowEl }
 let editingHabitId = null;
+let habitsSortMode = localStorage.getItem('habitsSortMode') || 'created';
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -81,6 +83,66 @@ function syncReminderInputsEnabled() {
   repeatEl.disabled = !enabled;
 }
 
+function getSortedHabits(habits, sortMode) {
+  const list = Array.isArray(habits) ? [...habits] : [];
+
+  const safeNum = (v, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
+
+  // Stable fallback ordering: createdAt then id
+  const baseCompare = (a, b) => {
+    const aT = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bT = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aT !== bT) return aT - bT;
+    return safeNum(a?.id) - safeNum(b?.id);
+  };
+
+  if (sortMode === 'streak') {
+    return list.sort((a, b) => {
+      const diff = safeNum(b?.streak) - safeNum(a?.streak);
+      if (diff !== 0) return diff;
+      return baseCompare(a, b);
+    });
+  }
+
+  if (sortMode === 'consistency') {
+    return list.sort((a, b) => {
+      const diff = safeNum(b?.completionThisWeek) - safeNum(a?.completionThisWeek);
+      if (diff !== 0) return diff;
+      // tie-breaker: higher streak wins
+      const sdiff = safeNum(b?.streak) - safeNum(a?.streak);
+      if (sdiff !== 0) return sdiff;
+      return baseCompare(a, b);
+    });
+  }
+
+  if (sortMode === 'atrisk') {
+    return list.sort((a, b) => {
+      const ar = safeNum(a?.onTrack?.riskScore);
+      const br = safeNum(b?.onTrack?.riskScore);
+
+      // Higher riskScore first (needs attention)
+      const diff = br - ar;
+      if (diff !== 0) return diff;
+
+      // Put non-flex habits before flex if same score
+      const aFlex = a?.onTrack?.status === 'flex';
+      const bFlex = b?.onTrack?.status === 'flex';
+      if (aFlex !== bFlex) return aFlex ? 1 : -1;
+
+      // tie-breaker: lower completion then lower streak
+      const cdiff = safeNum(a?.completionThisWeek) - safeNum(b?.completionThisWeek);
+      if (cdiff !== 0) return cdiff;
+
+      const sdiff = safeNum(a?.streak) - safeNum(b?.streak);
+      if (sdiff !== 0) return sdiff;
+
+      return baseCompare(a, b);
+    });
+  }
+
+  // default: created
+  return list.sort(baseCompare);
+}
 
 
 function renderHabitsBoard(board) {
@@ -90,6 +152,7 @@ function renderHabitsBoard(board) {
   }
 
   const { week, habits, summary, archivedHabits = [] } = board;
+  const sortedHabits = getSortedHabits(habits, habitsSortMode);
 
   // Week header labels (second header row)
   const headerRow = document.getElementById('habitsWeekHeaderRow');
@@ -128,145 +191,146 @@ function renderHabitsBoard(board) {
   const tbody = document.getElementById('habitsTableBody');
   tbody.innerHTML = '';
 
-  if (habits.length === 0) {
+  if (sortedHabits.length === 0) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td colspan="10" class="text-center text-muted small py-4">
+      No habits yet. Click <strong>New habit</strong> to create your first one.
+    </td>
+  `;
+  tbody.appendChild(tr);
+} else {
+  sortedHabits.forEach((habit) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td colspan="10" class="text-center text-muted small py-4">
-        No habits yet. Click <strong>New habit</strong> to create your first one.
-      </td>
-    `;
-    tbody.appendChild(tr);
-  } else {
-    habits.forEach((habit) => {
-      const tr = document.createElement('tr');
 
-      const color = habit.color || 'var(--accent-color)';
-      const targetLabel = habit.targetPerWeek
-        ? `${habit.targetPerWeek}× / week`
-        : 'Flexible';
+    const color = habit.color || 'var(--accent-color)';
+    const targetLabel = habit.targetPerWeek
+      ? `${habit.targetPerWeek}× / week`
+      : 'Flexible';
 
-      let daysHtml = '';
-      week.days.forEach((day) => {
-        const entry = habit.week.find((w) => w.date === day.date);
-        const isDone = entry?.completed;
-        const extraClasses = [
-          'habit-dot',
-          isDone ? 'is-complete' : '',
-          day.isToday ? 'is-today' : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
+    let daysHtml = '';
+    week.days.forEach((day) => {
+      const entry = habit.week.find((w) => w.date === day.date);
+      const isDone = entry?.completed;
+      const extraClasses = [
+        'habit-dot',
+        isDone ? 'is-complete' : '',
+        day.isToday ? 'is-today' : '',
+      ]
+        .filter(Boolean)
+        .join(' ');
 
-        daysHtml += `
-          <td class="text-center">
-            <button
-              type="button"
-              class="${extraClasses}"
-              data-habit-id="${habit.id}"
-              data-date="${day.date}"
-              aria-label="Toggle ${habit.title} on ${day.label}"
-            ></button>
-          </td>
-        `;
-      });
-
-      const tp = habit.targetProgress || {};
-      const ot = habit.onTrack || {};
-
-      const done = Number(tp.done ?? habit.completionThisWeek ?? 0);
-      const target = tp.target; // null = flexible
-      const progressText = target ? `${done}/${target} this week` : `${done} done this week`;
-
-      const badgeClass =
-        ot.status === 'completed' ? 'ontrack-badge completed' :
-        ot.status === 'ontrack'   ? 'ontrack-badge ontrack'   :
-        ot.status === 'behind'    ? 'ontrack-badge behind'    :
-        ot.status === 'atrisk'    ? 'ontrack-badge atrisk'    :
-                                   'ontrack-badge flex';
-
-      const badgeLabel = ot.label || (target ? 'On track' : 'Flexible');
-      const hint = ot.hint ? String(ot.hint).replace(/"/g, '&quot;') : '';
-
-      tr.innerHTML = `
-        <td>
-          <div class="d-flex align-items-start gap-2">
-            <span class="habit-color-dot" style="background:${color};"></span>
-
-            <div class="flex-grow-1">
-              <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span class="habit-title">${habit.title}</span>
-                <span class="${badgeClass}" title="${hint}">
-                  ${badgeLabel}
-                </span>
-              </div>
-
-              <div class="habit-submeta">
-                <span class="habit-progress-text">${progressText}</span>
-                ${
-                  target
-                    ? `<span class="habit-expected">· expected by today: ${tp.expectedByToday ?? 0}</span>`
-                    : ''
-                }
-              </div>
-            </div>
-          </div>
-        </td>
-
+      daysHtml += `
         <td class="text-center">
-          <span class="badge bg-light text-dark small">${targetLabel}</span>
-        </td>
-
-        ${daysHtml}
-
-        <td class="text-end">
-          <div class="dropdown habit-actions-dropdown">
-            <button
-              class="btn btn-sm btn-light habit-actions-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="bi bi-three-dots-vertical"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <button
-                  class="dropdown-item habit-edit-btn"
-                  type="button"
-                  data-habit-id="${habit.id}"
-                >
-                  <i class="bi bi-pencil-square me-2"></i> Edit habit
-                </button>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li>
-                <button
-                  class="dropdown-item habit-archive-btn"
-                  type="button"
-                  data-habit-id="${habit.id}"
-                >
-                  <i class="bi bi-archive me-2"></i> Archive habit
-                </button>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li>
-                <button
-                  class="dropdown-item text-danger habit-delete-btn"
-                  type="button"
-                  data-habit-id="${habit.id}"
-                  data-habit-title="${habit.title.replace(/"/g, '&quot;')}"
-                >
-                  <i class="bi bi-trash3 me-2"></i> Delete permanently
-                </button>
-              </li>
-            </ul>
-          </div>
+          <button
+            type="button"
+            class="${extraClasses}"
+            data-habit-id="${habit.id}"
+            data-date="${day.date}"
+            aria-label="Toggle ${habit.title} on ${day.label}"
+          ></button>
         </td>
       `;
-
-      tbody.appendChild(tr);
     });
-  }
+
+    const tp = habit.targetProgress || {};
+    const ot = habit.onTrack || {};
+
+    const done = Number(tp.done ?? habit.completionThisWeek ?? 0);
+    const target = tp.target; // null = flexible
+    const progressText = target ? `${done}/${target} this week` : `${done} done this week`;
+
+    const badgeClass =
+      ot.status === 'completed' ? 'ontrack-badge completed' :
+      ot.status === 'ontrack'   ? 'ontrack-badge ontrack'   :
+      ot.status === 'behind'    ? 'ontrack-badge behind'    :
+      ot.status === 'atrisk'    ? 'ontrack-badge atrisk'    :
+                                 'ontrack-badge flex';
+
+    const badgeLabel = ot.label || (target ? 'On track' : 'Flexible');
+    const hint = ot.hint ? String(ot.hint).replace(/"/g, '&quot;') : '';
+
+    tr.innerHTML = `
+      <td>
+        <div class="d-flex align-items-start gap-2">
+          <span class="habit-color-dot" style="background:${color};"></span>
+
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="habit-title">${habit.title}</span>
+              <span class="${badgeClass}" title="${hint}">
+                ${badgeLabel}
+              </span>
+            </div>
+
+            <div class="habit-submeta">
+              <span class="habit-progress-text">${progressText}</span>
+              ${
+                target
+                  ? `<span class="habit-expected">· expected by today: ${tp.expectedByToday ?? 0}</span>`
+                  : ''
+              }
+            </div>
+          </div>
+        </div>
+      </td>
+
+      <td class="text-center">
+        <span class="badge bg-light text-dark small">${targetLabel}</span>
+      </td>
+
+      ${daysHtml}
+
+      <td class="text-end">
+        <div class="dropdown habit-actions-dropdown">
+          <button
+            class="btn btn-sm btn-light habit-actions-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <button
+                class="dropdown-item habit-edit-btn"
+                type="button"
+                data-habit-id="${habit.id}"
+              >
+                <i class="bi bi-pencil-square me-2"></i> Edit habit
+              </button>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <button
+                class="dropdown-item habit-archive-btn"
+                type="button"
+                data-habit-id="${habit.id}"
+              >
+                <i class="bi bi-archive me-2"></i> Archive habit
+              </button>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <button
+                class="dropdown-item text-danger habit-delete-btn"
+                type="button"
+                data-habit-id="${habit.id}"
+                data-habit-title="${habit.title.replace(/"/g, '&quot;')}"
+              >
+                <i class="bi bi-trash3 me-2"></i> Delete permanently
+              </button>
+            </li>
+          </ul>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
 
   // Attach click handlers for toggles
   tbody.querySelectorAll('.habit-dot').forEach((btn) => {
@@ -323,6 +387,21 @@ function renderHabitsBoard(board) {
       month: 'short',
     })}`;
   }
+
+
+  const sortEl = document.getElementById('habitsSortSelect');
+if (sortEl) {
+  sortEl.value = habitsSortMode;
+
+  // prevent stacking listeners on rerender
+  sortEl.onchange = null;
+
+  sortEl.onchange = () => {
+    habitsSortMode = sortEl.value || 'created';
+    localStorage.setItem('habitsSortMode', habitsSortMode);
+    renderHabitsBoard(currentBoard); // re-render using same board, different sort
+  };
+}
 
   // Sidebar stats
   updateSidebarStats(summary);

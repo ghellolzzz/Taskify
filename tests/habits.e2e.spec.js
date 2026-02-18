@@ -1,4 +1,4 @@
-
+const { test, expect } = require('@playwright/test');
 test.describe('Habits Lab (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3001/login.html');

@@ -163,7 +163,8 @@ module.exports.leaveTeam = function(req, res) {
 //get activity
 module.exports.getActivity = function(req, res) {
     const teamId=req.params.teamId
-    return activityLog.getByTeam(teamId)
+    const type=req.query.type;
+    return activityLog.getByTeam(teamId,type)
         .then(logs => res.json(logs))
         .catch(err => res.status(500).json({ error: err.message }));
 };

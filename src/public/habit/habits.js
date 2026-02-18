@@ -12,6 +12,8 @@ let currentBoard = null;
 let pendingDeleteHabit = null; // { id, title, rowEl }
 let editingHabitId = null;
 let habitsSortMode = localStorage.getItem('habitsSortMode') || 'created';
+
+
 // --- Optimistic UI state ---
 const appState = {
   // key: "habitId-YYYY-MM-DD" -> { habitId, date, prevCompleted, desiredCompleted, startedAt }
@@ -135,6 +137,55 @@ function reapplyPendingOps(board) {
   recomputeDerivedSummary(board);
 }
 
+// --- Undo state (Part B) ---
+const undoState = {
+  // habitId -> { type: 'archive'|'hardDelete', snapshot, timerId, toastEl }
+  pending: new Map(),
+};
+
+// shallow-safe clone for board snapshots
+function cloneBoard(board) {
+  return board ? JSON.parse(JSON.stringify(board)) : null;
+}
+
+function showUndoToast(message, actionLabel, onUndo, delayMs) {
+  const host = document.getElementById('toastHost');
+  if (!host || !window.bootstrap?.Toast) return null;
+
+  const el = document.createElement('div');
+  el.className = `toast align-items-center text-bg-dark border-0`;
+  el.role = 'alert';
+  el.ariaLive = 'assertive';
+  el.ariaAtomic = 'true';
+
+  el.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${escapeHtml(message)}</div>
+      <button type="button" class="btn btn-sm btn-outline-light me-2 my-2 undo-toast-btn">
+        ${escapeHtml(actionLabel)}
+      </button>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+
+  host.appendChild(el);
+
+  const undoBtn = el.querySelector('.undo-toast-btn');
+  if (undoBtn) {
+    undoBtn.addEventListener('click', () => {
+      try { onUndo?.(); } finally {
+        const inst = bootstrap.Toast.getInstance(el);
+        if (inst) inst.hide();
+      }
+    });
+  }
+
+  const t = bootstrap.Toast.getOrCreateInstance(el, { delay: delayMs, autohide: true });
+  t.show();
+
+  el.addEventListener('hidden.bs.toast', () => el.remove());
+  return el;
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -774,37 +825,94 @@ function toggleHabitDay(habitId, date) {
 
 
 function archiveHabit(habitId, rowEl) {
-  if (rowEl) {
-    rowEl.classList.add('habit-row-removing');
-  }
+  if (!currentBoard) return;
 
-  fetch(`/api/habits/${habitId}`, {
+  const idNum = Number(habitId);
+
+  // prevent stacking multiple pending actions on same habit
+  if (undoState.pending.has(idNum)) return;
+
+  const snapshot = cloneBoard(currentBoard);
+
+  // 1) optimistic UI: remove from active list immediately
+  currentBoard.habits = (currentBoard.habits || []).filter(h => h.id !== idNum);
+  recomputeDerivedSummary(currentBoard);
+  renderHabitsBoard(currentBoard);
+
+  // 2) call server immediately (archive), but allow undo within 5s
+  fetch(`/api/habits/${idNum}`, {
     method: 'DELETE',
     headers: authHeaders(),
   })
     .then((res) => {
       if (res.status === 401) {
-        console.warn('Not authenticated. Redirecting to login.');
         window.location.href = '../login.html';
         return null;
       }
-
-      if (!res.ok) {
-        throw new Error('Failed to archive habit. HTTP ' + res.status);
-      }
-
+      if (!res.ok) throw new Error('Failed to archive habit. HTTP ' + res.status);
       return res.json();
     })
     .then((board) => {
       if (!board) return;
       currentBoard = board;
-      renderHabitsBoard(board);
+      // IMPORTANT: still keep undo window running; undo will unarchive
+      reapplyPendingOps(currentBoard);
+      renderHabitsBoard(currentBoard);
     })
     .catch((err) => {
       console.error('Failed to archive habit:', err);
-      if (rowEl) rowEl.classList.remove('habit-row-removing');
+      // rollback immediately if archive request fails
+      currentBoard = snapshot;
+      renderHabitsBoard(currentBoard);
+      showToast('Archive failed. Change reverted.', 'danger');
     });
+
+  // 3) show undo toast (5s)
+  const toastEl = showUndoToast(`Archived.`, 'Undo', () => {
+    const pending = undoState.pending.get(idNum);
+    if (!pending) return;
+
+    // cancel timer + remove pending marker
+    clearTimeout(pending.timerId);
+    undoState.pending.delete(idNum);
+
+    // restore UI immediately (snapshot)
+    currentBoard = pending.snapshot;
+    renderHabitsBoard(currentBoard);
+
+    // sync undo to server: unarchive (PATCH isArchived:false)
+    fetch(`/api/habits/${idNum}`, {
+      method: 'PATCH',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ isArchived: false }),
+    })
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '../login.html';
+          return null;
+        }
+        if (!res.ok) throw new Error('Failed to undo archive. HTTP ' + res.status);
+        return res.json();
+      })
+      .then((board) => {
+        if (!board) return;
+        currentBoard = board;
+        reapplyPendingOps(currentBoard);
+        renderHabitsBoard(currentBoard);
+      })
+      .catch((err) => {
+        console.error('Undo archive failed:', err);
+        showToast('Undo failed. Please refresh.', 'danger');
+      });
+  }, 5000);
+
+  const timerId = setTimeout(() => {
+    undoState.pending.delete(idNum);
+  }, 5000);
+
+  undoState.pending.set(idNum, { type: 'archive', snapshot, timerId, toastEl });
 }
+
 
 
 function unarchiveHabit(habitId, itemEl) {
@@ -1084,32 +1192,78 @@ function setupDeleteModal() {
   if (!confirmBtn) return;
 
   confirmBtn.addEventListener('click', () => {
-    if (!pendingDeleteHabit) return;
+  if (!pendingDeleteHabit || !currentBoard) return;
 
-    const { id, rowEl } = pendingDeleteHabit;
-    const modalEl = document.getElementById('habitDeleteModal');
-    const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+  const idNum = Number(pendingDeleteHabit.id);
 
-    if (rowEl) {
-      rowEl.classList.add('habit-row-removing');
-    }
+  // prevent stacking
+  if (undoState.pending.has(idNum)) return;
 
-    fetch(`/api/habits/${id}/hard`, {
+  const snapshot = cloneBoard(currentBoard);
+
+  // close modal first
+  const modalEl = document.getElementById('habitDeleteModal');
+  const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+  if (modal) modal.hide();
+
+  // 1) optimistic UI remove immediately
+  currentBoard.habits = (currentBoard.habits || []).filter(h => h.id !== idNum);
+  currentBoard.archivedHabits = (currentBoard.archivedHabits || []).filter(h => h.id !== idNum);
+  recomputeDerivedSummary(currentBoard);
+  renderHabitsBoard(currentBoard);
+
+  pendingDeleteHabit = null;
+
+  // 2) show undo toast for 10s
+  const toastEl = showUndoToast(`Deleting in 10s…`, 'Undo', () => {
+    const pending = undoState.pending.get(idNum);
+    if (!pending) return;
+
+    clearTimeout(pending.timerId);
+    undoState.pending.delete(idNum);
+
+    // restore snapshot locally (no server call was made yet)
+    currentBoard = pending.snapshot;
+    renderHabitsBoard(currentBoard);
+  }, 10000);
+
+  // 3) after 10s, actually call server hard delete
+  const timerId = setTimeout(() => {
+    // if already undone, do nothing
+    if (!undoState.pending.has(idNum)) return;
+
+    fetch(`/api/habits/${idNum}/hard`, {
       method: 'DELETE',
       headers: authHeaders(),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '../login.html';
+          return null;
+        }
+        if (!res.ok) throw new Error('Failed to delete habit. HTTP ' + res.status);
+        return res.json();
+      })
       .then((board) => {
-        pendingDeleteHabit = null;
-        if (modal) modal.hide();
+        if (!board) return;
+        undoState.pending.delete(idNum);
         currentBoard = board;
-        renderHabitsBoard(board);
+        reapplyPendingOps(currentBoard);
+        renderHabitsBoard(currentBoard);
       })
       .catch((err) => {
-        console.error('Failed to delete habit:', err);
-        if (rowEl) rowEl.classList.remove('habit-row-removing');
+        console.error('Failed to hard delete habit:', err);
+        // rollback to snapshot if delete fails
+        const pending = undoState.pending.get(idNum);
+        undoState.pending.delete(idNum);
+        currentBoard = pending?.snapshot || currentBoard;
+        renderHabitsBoard(currentBoard);
+        showToast('Delete failed. Change reverted.', 'danger');
       });
-  });
+  }, 10000);
+
+  undoState.pending.set(idNum, { type: 'hardDelete', snapshot, timerId, toastEl });
+});
 }
 
 function openHabitDeleteModal(habitId, title, rowEl) {

@@ -326,6 +326,7 @@ function renderHabitsBoard(board) {
 
   // Sidebar stats
   updateSidebarStats(summary);
+  updatePatternsCard(board);
 }
 
 function findHabitById(habitId) {
@@ -662,6 +663,63 @@ if (weeklyDeltaLabel) {
     }
   }
 }
+
+function updatePatternsCard(board) {
+  const bestDayEl = document.getElementById('patternsBestDay');
+  const perfectEl = document.getElementById('patternsPerfectDays');
+  const hintEl = document.getElementById('patternsHint');
+
+  if (!bestDayEl || !perfectEl || !hintEl) return;
+
+  const habits = Array.isArray(board?.habits) ? board.habits : [];
+  const days = Array.isArray(board?.week?.days) ? board.week.days : [];
+
+  const activeHabitsCount = habits.length;
+
+  if (activeHabitsCount === 0 || days.length !== 7) {
+    bestDayEl.textContent = '—';
+    perfectEl.textContent = '0';
+    hintEl.textContent = 'Create a habit to start seeing your patterns.';
+    return;
+  }
+
+  // Count completions per day across all habits
+  const counts = days.map((day) => {
+    let completed = 0;
+
+    habits.forEach((h) => {
+      const entry = Array.isArray(h.week) ? h.week.find((w) => w.date === day.date) : null;
+      if (entry && entry.completed) completed++;
+    });
+
+    return { ...day, completed };
+  });
+
+  // Best day = max completed
+  const maxCompleted = Math.max(...counts.map((c) => c.completed));
+  const bestDays = counts.filter((c) => c.completed === maxCompleted);
+
+  // Prefer today if tie, else earliest best day
+  const best =
+    bestDays.find((d) => d.isToday) ||
+    bestDays[0];
+
+  bestDayEl.textContent = `${best.label} (${best.completed}/${activeHabitsCount})`;
+
+  // Perfect days = days where all habits done
+  const perfectDays = counts.filter((c) => c.completed === activeHabitsCount);
+
+  perfectEl.textContent = String(perfectDays.length);
+
+  if (maxCompleted === 0) {
+    hintEl.textContent = 'No check-ins yet this week — start with one small win today.';
+  } else if (perfectDays.length > 0) {
+    hintEl.textContent = `You had ${perfectDays.length} perfect day${perfectDays.length === 1 ? '' : 's'} this week. Nice consistency.`;
+  } else {
+    hintEl.textContent = `Your strongest day so far is ${best.label}. Aim for a full “perfect day”!`;
+  }
+}
+
 
 // --- New habit modal & colour swatches ---
 

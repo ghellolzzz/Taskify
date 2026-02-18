@@ -594,6 +594,7 @@ function updateSidebarStats(summary) {
 
   const weeklyBar = document.getElementById('weeklyProgressBar');
   const weeklyMessage = document.getElementById('weeklyMessage');
+  const weeklyDeltaLabel = document.getElementById('weeklyDeltaLabel');
   const streakHighlight = document.getElementById('streakHighlight');
 
   const todayTotal = summary.todayTotal || 0;
@@ -618,18 +619,36 @@ function updateSidebarStats(summary) {
   }
 
   const weeklyPct = summary.avgWeeklyCompletion || 0;
+  const prevWeeklyPct = summary.prevWeekCompletionPct ?? 0;
+const delta = weeklyPct - prevWeeklyPct;
+
+if (weeklyDeltaLabel) {
+  if (summary.activeHabits === 0) {
+    weeklyDeltaLabel.textContent = '';
+  } else if (delta === 0) {
+    weeklyDeltaLabel.textContent = `Same as last week (${prevWeeklyPct}%).`;
+  } else if (delta > 0) {
+    weeklyDeltaLabel.textContent = `▲ Up ${delta}% vs last week (${prevWeeklyPct}%).`;
+  } else {
+    weeklyDeltaLabel.textContent = `▼ Down ${Math.abs(delta)}% vs last week (${prevWeeklyPct}%).`;
+  }
+}
+
   if (weeklyBar) {
     weeklyBar.style.width = `${weeklyPct}%`;
   }
   if (weeklyMessage) {
-    if (weeklyPct === 0) {
-      weeklyMessage.textContent = 'Your week is still blank. Tiny actions add up fast.';
-    } else if (weeklyPct < 60) {
-      weeklyMessage.textContent = 'You are building momentum. Keep going!';
-    } else {
-      weeklyMessage.textContent = 'Strong consistency this week. Great job 🔥';
-    }
+  if (weeklyPct === 0) {
+    weeklyMessage.textContent = 'Your week is still blank. Tiny actions add up fast.';
+  } else if (delta > 0) {
+    weeklyMessage.textContent = 'Nice — you’re improving from last week. Keep it going!';
+  } else if (delta < 0) {
+    weeklyMessage.textContent = 'Slight dip from last week — you can still catch up.';
+  } else {
+    weeklyMessage.textContent = 'Steady consistency. Try to push a little higher!';
   }
+}
+
 
   if (streakHighlight) {
     const streakInfo = summary.longestStreakHabit;

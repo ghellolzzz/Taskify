@@ -12,6 +12,128 @@ let currentBoard = null;
 let pendingDeleteHabit = null; // { id, title, rowEl }
 let editingHabitId = null;
 let habitsSortMode = localStorage.getItem('habitsSortMode') || 'created';
+// --- Optimistic UI state ---
+const appState = {
+  // key: "habitId-YYYY-MM-DD" -> { habitId, date, prevCompleted, desiredCompleted, startedAt }
+  pendingOps: new Map(),
+};
+
+function opKey(habitId, date) {
+  return `${habitId}-${date}`;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function showToast(message, variant = 'danger', delayMs = 3000) {
+  const host = document.getElementById('toastHost');
+  if (!host || !window.bootstrap?.Toast) return;
+
+  const el = document.createElement('div');
+  el.className = `toast align-items-center text-bg-${variant} border-0`;
+  el.role = 'alert';
+  el.ariaLive = 'assertive';
+  el.ariaAtomic = 'true';
+
+  el.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${escapeHtml(message)}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+
+  host.appendChild(el);
+  const t = bootstrap.Toast.getOrCreateInstance(el, { delay: delayMs });
+  t.show();
+
+  el.addEventListener('hidden.bs.toast', () => el.remove());
+}
+
+function getTodayDateKey(board) {
+  const days = Array.isArray(board?.week?.days) ? board.week.days : [];
+  return days.find(d => d.isToday)?.date || null;
+}
+
+function getCellCompleted(board, habitId, date) {
+  const habits = Array.isArray(board?.habits) ? board.habits : [];
+  const hId = Number(habitId);
+  const habit = habits.find(h => h.id === hId);
+  if (!habit || !Array.isArray(habit.week)) return false;
+
+  const entry = habit.week.find(w => w.date === date);
+  return !!entry?.completed;
+}
+
+// idempotent set (NOT toggle) so reapplying pending ops is safe
+function setCellCompleted(board, habitId, date, completed) {
+  const habits = Array.isArray(board?.habits) ? board.habits : [];
+  const hId = Number(habitId);
+  const habit = habits.find(h => h.id === hId);
+  if (!habit) return;
+
+  if (!Array.isArray(habit.week)) habit.week = [];
+  const entry = habit.week.find(w => w.date === date);
+
+  if (entry) entry.completed = !!completed;
+  else habit.week.push({ date, completed: !!completed });
+
+  // keep weekly count consistent for sorting/labels
+  habit.completionThisWeek = habit.week.filter(d => d.completed).length;
+}
+
+function recomputeDerivedSummary(board) {
+  if (!board) return;
+
+  const habits = Array.isArray(board.habits) ? board.habits : [];
+  const archivedCount = Array.isArray(board.archivedHabits)
+    ? board.archivedHabits.length
+    : (board.summary?.archivedCount ?? 0);
+
+  const todayKey = getTodayDateKey(board);
+
+  let todayCompleted = 0;
+  let totalCompletedChecksThisWeek = 0;
+
+  habits.forEach(h => {
+    const weekArr = Array.isArray(h.week) ? h.week : [];
+    if (todayKey) {
+      const e = weekArr.find(w => w.date === todayKey);
+      if (e?.completed) todayCompleted++;
+    }
+    totalCompletedChecksThisWeek += weekArr.filter(w => w.completed).length;
+  });
+
+  const totalPossible = habits.length * 7;
+  const avgWeeklyCompletion = totalPossible > 0
+    ? Math.round((totalCompletedChecksThisWeek / totalPossible) * 100)
+    : 0;
+
+  board.summary = board.summary || {};
+  board.summary.activeHabits = habits.length;
+  board.summary.archivedCount = archivedCount;
+  board.summary.totalHabits = habits.length + archivedCount;
+
+  board.summary.todayTotal = habits.length;
+  board.summary.todayCompleted = todayCompleted;
+  board.summary.avgWeeklyCompletion = avgWeeklyCompletion;
+
+}
+
+function reapplyPendingOps(board) {
+  if (!board) return;
+
+  for (const op of appState.pendingOps.values()) {
+    setCellCompleted(board, op.habitId, op.date, op.desiredCompleted);
+  }
+
+  recomputeDerivedSummary(board);
+}
 
 
 
@@ -212,25 +334,31 @@ function renderHabitsBoard(board) {
     week.days.forEach((day) => {
       const entry = habit.week.find((w) => w.date === day.date);
       const isDone = entry?.completed;
-      const extraClasses = [
-        'habit-dot',
-        isDone ? 'is-complete' : '',
-        day.isToday ? 'is-today' : '',
-      ]
-        .filter(Boolean)
-        .join(' ');
+      const key = opKey(habit.id, day.date);
+const isPending = appState.pendingOps.has(key);
 
-      daysHtml += `
-        <td class="text-center">
-          <button
-            type="button"
-            class="${extraClasses}"
-            data-habit-id="${habit.id}"
-            data-date="${day.date}"
-            aria-label="Toggle ${habit.title} on ${day.label}"
-          ></button>
-        </td>
-      `;
+const extraClasses = [
+  'habit-dot',
+  isDone ? 'is-complete' : '',
+  day.isToday ? 'is-today' : '',
+  isPending ? 'is-pending' : '',
+]
+  .filter(Boolean)
+  .join(' ');
+
+daysHtml += `
+  <td class="text-center">
+    <button
+      type="button"
+      class="${extraClasses}"
+      data-habit-id="${habit.id}"
+      data-date="${day.date}"
+      ${isPending ? 'disabled aria-busy="true"' : ''}
+      aria-label="Toggle ${habit.title} on ${day.label}"
+    ></button>
+  </td>
+`;
+
     });
 
     const tp = habit.targetProgress || {};
@@ -583,20 +711,67 @@ function renderArchivedHabits(archivedHabits) {
 
 
 function toggleHabitDay(habitId, date) {
+  if (!currentBoard) return;
+
+  const key = opKey(habitId, date);
+
+  if (appState.pendingOps.has(key)) return;
+
+  const prevCompleted = getCellCompleted(currentBoard, habitId, date);
+  const desiredCompleted = !prevCompleted;
+
+  // 1) optimistic update immediately
+  appState.pendingOps.set(key, {
+    habitId: Number(habitId),
+    date,
+    prevCompleted,
+    desiredCompleted,
+    startedAt: Date.now(),
+  });
+
+  setCellCompleted(currentBoard, habitId, date, desiredCompleted);
+  recomputeDerivedSummary(currentBoard);
+  renderHabitsBoard(currentBoard);
+
+  // 2) sync to server
   fetch(`/api/habits/${habitId}/toggle`, {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ date }),
   })
-    .then((res) => res.json())
+    .then((res) => {
+      if (res.status === 401) {
+        window.location.href = '../login.html';
+        return null;
+      }
+      if (!res.ok) {
+        throw new Error('Toggle failed. HTTP ' + res.status);
+      }
+      return res.json();
+    })
     .then((board) => {
+      if (!board) return;
+
       currentBoard = board;
-      renderHabitsBoard(board);
+
+      appState.pendingOps.delete(key);
+
+      reapplyPendingOps(currentBoard);
+      renderHabitsBoard(currentBoard);
     })
     .catch((err) => {
       console.error('Failed to toggle habit day:', err);
+
+      appState.pendingOps.delete(key);
+
+      setCellCompleted(currentBoard, habitId, date, prevCompleted);
+      recomputeDerivedSummary(currentBoard);
+      renderHabitsBoard(currentBoard);
+
+      showToast('Sync failed. Change reverted.', 'danger');
     });
 }
+
 
 function archiveHabit(habitId, rowEl) {
   if (rowEl) {

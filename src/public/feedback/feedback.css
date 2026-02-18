@@ -170,3 +170,183 @@ body {
     margin-top: 40px;
     color: #6c757d;
 }
+
+/* =========================================
+   Accent + Dark Theme Support (Feedback)
+   Paste at BOTTOM of feedback.css
+   ========================================= */
+
+:root{
+  --fb-accent: var(--accent, #198754);
+}
+
+/* If you don't already have main-content styling like other pages */
+.main-content{
+  margin-left: 250px;
+  padding: 30px;
+  min-height: 100vh;
+}
+
+/* ---------- Accent overrides ---------- */
+.sidebar .brand{
+  color: var(--fb-accent) !important;
+}
+
+.sidebar a.active,
+.sidebar a:hover{
+  /* fallback */
+  background: rgba(25, 135, 84, 0.14);
+  /* modern */
+  background: color-mix(in srgb, var(--fb-accent) 14%, transparent) !important;
+  color: var(--fb-accent) !important;
+}
+
+#submitFeedbackBtn{
+  background-color: var(--fb-accent) !important;
+}
+#submitFeedbackBtn:hover{
+  background-color: color-mix(in srgb, var(--fb-accent) 88%, #000) !important;
+}
+
+/* ---------- Dark theme (matches your other pages) ---------- */
+body.profile-theme-dark{
+  background: radial-gradient(900px 600px at 35% 25%, rgba(56,189,248,0.10), transparent 55%),
+              radial-gradient(900px 600px at 75% 10%, rgba(167,139,250,0.10), transparent 55%),
+              #050b18 !important;
+  color: #e2e8f0 !important;
+}
+
+/* sidebar in dark */
+body.profile-theme-dark .sidebar{
+  background: rgba(2, 6, 23, 0.86) !important;
+  border-right: 1px solid rgba(148,163,184,0.18) !important;
+}
+body.profile-theme-dark .sidebar a{
+  color: #cbd5e1 !important;
+}
+body.profile-theme-dark .sidebar-footer{
+  border-top: 1px solid rgba(148,163,184,0.18) !important;
+}
+body.profile-theme-dark .sidebar-footer a{
+  color: #cbd5e1 !important;
+}
+
+/* page headings */
+body.profile-theme-dark .main-content h2{
+  color: #e2e8f0 !important;
+}
+
+/* feedback card */
+body.profile-theme-dark .feedback-form-card{
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(148,163,184,0.18) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* labels */
+body.profile-theme-dark .feedback-form-card label{
+  color: #e2e8f0 !important;
+}
+
+/* inputs/select/textarea */
+body.profile-theme-dark .feedback-form-card input[type="text"],
+body.profile-theme-dark .feedback-form-card select,
+body.profile-theme-dark .feedback-form-card textarea{
+  background: rgba(2, 6, 23, 0.55) !important;
+  border: 1px solid rgba(148,163,184,0.22) !important;
+  color: #e2e8f0 !important;
+}
+
+body.profile-theme-dark .feedback-form-card textarea::placeholder{
+  color: rgba(148,163,184,0.75) !important;
+}
+
+body.profile-theme-dark .feedback-form-card input[type="text"]:focus,
+body.profile-theme-dark .feedback-form-card select:focus,
+body.profile-theme-dark .feedback-form-card textarea:focus{
+  outline: none !important;
+  border-color: color-mix(in srgb, var(--fb-accent) 70%, #ffffff) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--fb-accent) 22%, transparent) !important;
+}
+
+/* alerts in dark */
+body.profile-theme-dark .alert-success{
+  background: rgba(34, 197, 94, 0.15) !important;
+  color: #bbf7d0 !important;
+  border: 1px solid rgba(34, 197, 94, 0.30) !important;
+}
+body.profile-theme-dark .alert-danger{
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #fecaca !important;
+  border: 1px solid rgba(239, 68, 68, 0.30) !important;
+}
+
+/* footer */
+body.profile-theme-dark .footer{
+  color: #94a3b8 !important;
+}
+
+/* =========================================
+   FIX: Accent var + Dark scrollbars (Feedback)
+   Paste at BOTTOM of feedback.css
+   ========================================= */
+
+/* ✅ IMPORTANT: define on BODY so it can read body-level --accent set by theme.js */
+body{
+  --fb-accent: var(--accent,
+              var(--accentColor,
+              var(--accent-color,
+              var(--primary, #198754))));
+}
+
+/* Accent: sidebar active/hover + button */
+.sidebar a.active,
+.sidebar a:hover{
+  background: rgba(255,255,255,0.06) !important;     /* works in dark + light */
+  border-left: 3px solid var(--fb-accent) !important; /* accent always visible */
+  padding-left: 12px !important;                      /* compensate for border */
+  color: var(--fb-accent) !important;
+}
+
+#submitFeedbackBtn{
+  background: var(--fb-accent) !important;
+}
+#submitFeedbackBtn:hover{
+  filter: brightness(0.92);
+}
+
+/* ---------- Sidebar scrollbar (Dark) ---------- */
+body.profile-theme-dark .sidebar{
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(148,163,184,0.55) rgba(2,6,23,0.25);
+}
+
+/* Chrome/Opera/Edge */
+body.profile-theme-dark .sidebar::-webkit-scrollbar{
+  width: 10px;
+}
+body.profile-theme-dark .sidebar::-webkit-scrollbar-track{
+  background: rgba(2,6,23,0.25);
+}
+body.profile-theme-dark .sidebar::-webkit-scrollbar-thumb{
+  background: rgba(148,163,184,0.35);
+  border-radius: 999px;
+  border: 2px solid rgba(2,6,23,0.25); /* makes it look “floating”, not a white bar */
+}
+body.profile-theme-dark .sidebar::-webkit-scrollbar-thumb:hover{
+  background: rgba(148,163,184,0.55);
+}
+
+/* Optional: textarea scrollbar too (nice polish) */
+body.profile-theme-dark textarea{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148,163,184,0.55) rgba(2,6,23,0.25);
+}
+body.profile-theme-dark textarea::-webkit-scrollbar{ width: 10px; }
+body.profile-theme-dark textarea::-webkit-scrollbar-track{ background: rgba(2,6,23,0.25); }
+body.profile-theme-dark textarea::-webkit-scrollbar-thumb{
+  background: rgba(148,163,184,0.35);
+  border-radius: 999px;
+  border: 2px solid rgba(2,6,23,0.25);
+}
+body.profile-theme-dark textarea::-webkit-scrollbar-thumb:hover{ background: rgba(148,163,184,0.55); }

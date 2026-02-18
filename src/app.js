@@ -73,6 +73,8 @@ app.get('/.well-known/appspecific/*', (req, res) => {
   res.status(204).end();
 });
 
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // 404 handler
 app.use((req, res, next) => {
   next(createError(404, `Unknown resource ${req.method} ${req.originalUrl}`));

@@ -511,3 +511,10 @@ body.profile-theme-dark .habit-expected {
   opacity: 0.25;
   cursor: not-allowed;
 }
+.habit-drag-handle {
+  opacity: 0.6;
+  padding-right: 6px;
+}
+.habit-drag-handle:hover {
+  opacity: 1;
+}

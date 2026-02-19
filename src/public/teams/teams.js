@@ -33,9 +33,21 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             setupAddMember(teamId);
-            setupAddTeamTask(teamId);
-            setupEditTaskForm();
-            setupEditTeamForm();
+            const addMemberModalEl = document.getElementById('addMemberModal');
+if (addMemberModalEl) {
+  addMemberModalEl.addEventListener('shown.bs.modal', () => {
+    loadFriendsIntoInviteDropdown();
+  });
+}
+setupInviteFriend(teamId);
+
+
+setupInviteFriend(teamId);
+
+setupAddTeamTask(teamId);
+setupEditTaskForm();
+setupEditTeamForm();
+
 
         }
     }
@@ -550,6 +562,74 @@ function setupAddTeamTask(teamId) {
             .then(() => location.reload())
     });
 }
+function loadFriendsIntoInviteDropdown() {
+  const select = document.getElementById('friend-select');
+  if (!select) return;
+
+  fetch('/api/friends', {
+    headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+  })
+    .then(res => res.json())
+    .then(data => {
+      const friends = data.friends || [];
+      if (!friends.length) {
+        select.innerHTML = `<option value="">No friends yet</option>`;
+        return;
+      }
+
+      select.innerHTML =
+        `<option value="">Select a friend...</option>` +
+        friends.map(f => {
+          const u = f.otherUser || {};
+          const label = `${u.name || 'Unknown'} (${u.email || ''})`;
+          return `<option value="${u.email}">${label}</option>`;
+        }).join('');
+    })
+    .catch(() => {
+      select.innerHTML = `<option value="">Failed to load friends</option>`;
+    });
+}
+
+function setupInviteFriend(teamId) {
+  const btn = document.getElementById('btn-invite-friend');
+  const select = document.getElementById('friend-select');
+  const modalEl = document.getElementById('addMemberModal');
+  if (!btn || !select || !modalEl) return;
+
+  btn.addEventListener('click', () => {
+    const email = (select.value || '').trim();
+    if (!email) return showToast("Select a friend first.", "error");
+
+    btn.disabled = true;
+
+    fetch(`/api/teams/${teamId}/members`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify({ email })
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(e => { throw new Error(e.error || "Invite failed"); });
+        }
+        return res.json();
+      })
+      .then(() => {
+        // close modal
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        select.value = "";
+        showToast("Invitation sent successfully!", "success");
+        setTimeout(() => location.reload(), 1200);
+      })
+      .catch(err => showToast(err.message, "error"))
+      .finally(() => { btn.disabled = false; });
+  });
+}
+
 
 //adding members
 function setupAddMember(teamId) {

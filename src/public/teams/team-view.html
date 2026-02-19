@@ -161,13 +161,29 @@
                 <div class="modal-body">
                     <p class="small text-muted">Enter the registered email of the user to invite.</p>
                     <form id="add-member-form">
-                        <div class="mb-3">
-                            <label class="form-label">User Email</label>
-                            <input id="new-member-email" type="email" class="form-control"
-                                placeholder="friend@example.com" required>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Send Invite</button>
-                    </form>
+  <div class="mb-3">
+    <label class="form-label">User Email</label>
+    <input id="new-member-email" type="email" class="form-control"
+      placeholder="friend@example.com" required>
+  </div>
+
+  <button type="submit" class="btn btn-success w-100">Send Invite</button>
+
+  <hr class="my-3" />
+
+  <label class="form-label">Invite a Friend</label>
+  <div class="input-group">
+    <select id="friend-select" class="form-select">
+      <option value="">Loading friends...</option>
+    </select>
+    <button id="btn-invite-friend" type="button" class="btn btn-outline-success">
+      Invite
+    </button>
+  </div>
+
+  <small class="text-muted">Uses your friends list (invites by their email).</small>
+</form>
+
                 </div>
             </div>
         </div>

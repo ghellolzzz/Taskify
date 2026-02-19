@@ -12,6 +12,7 @@ let currentBoard = null;
 let pendingDeleteHabit = null; // { id, title, rowEl }
 let editingHabitId = null;
 let habitsSortMode = localStorage.getItem('habitsSortMode') || 'created';
+let habitsSortable = null;
 
 
 // --- Optimistic UI state ---
@@ -528,10 +529,9 @@ function normalizeFriendsPayload(data) {
     : Array.isArray(data?.data) ? data.data
     : [];
 
-  // IMPORTANT: your /api/friends returns friendship view rows with `otherUser`
   const picked = arr
     .map((row) =>
-      row?.otherUser ||           // ✅ your Friends.model uses this
+      row?.otherUser ||
       row?.friend ||
       row?.user ||
       row?.addressee ||
@@ -540,7 +540,6 @@ function normalizeFriendsPayload(data) {
     )
     .filter(Boolean);
 
-  // Normalize shape: {id, name, email} (NOW uses USER id)
   const norm = picked
     .map(u => ({
       id: Number(u.id),
@@ -830,7 +829,10 @@ function syncReminderInputsEnabled() {
 function getSortedHabits(habits, sortMode) {
   const list = Array.isArray(habits) ? [...habits] : [];
 
-  const safeNum = (v, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
+  const safeNum = (v, fallback = 0) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
 
   // Stable fallback ordering: createdAt then id
   const baseCompare = (a, b) => {
@@ -839,6 +841,14 @@ function getSortedHabits(habits, sortMode) {
     if (aT !== bT) return aT - bT;
     return safeNum(a?.id) - safeNum(b?.id);
   };
+
+  if (sortMode === 'manual') {
+    return list.sort((a, b) => {
+      const diff = safeNum(a?.sortOrder) - safeNum(b?.sortOrder);
+      if (diff !== 0) return diff;
+      return baseCompare(a, b);
+    });
+  }
 
   if (sortMode === 'streak') {
     return list.sort((a, b) => {
@@ -852,9 +862,10 @@ function getSortedHabits(habits, sortMode) {
     return list.sort((a, b) => {
       const diff = safeNum(b?.completionThisWeek) - safeNum(a?.completionThisWeek);
       if (diff !== 0) return diff;
-      // tie-breaker: higher streak wins
+
       const sdiff = safeNum(b?.streak) - safeNum(a?.streak);
       if (sdiff !== 0) return sdiff;
+
       return baseCompare(a, b);
     });
   }
@@ -864,16 +875,13 @@ function getSortedHabits(habits, sortMode) {
       const ar = safeNum(a?.onTrack?.riskScore);
       const br = safeNum(b?.onTrack?.riskScore);
 
-      // Higher riskScore first (needs attention)
-      const diff = br - ar;
+      const diff = br - ar; // higher risk first
       if (diff !== 0) return diff;
 
-      // Put non-flex habits before flex if same score
       const aFlex = a?.onTrack?.status === 'flex';
       const bFlex = b?.onTrack?.status === 'flex';
       if (aFlex !== bFlex) return aFlex ? 1 : -1;
 
-      // tie-breaker: lower completion then lower streak
       const cdiff = safeNum(a?.completionThisWeek) - safeNum(b?.completionThisWeek);
       if (cdiff !== 0) return cdiff;
 
@@ -887,6 +895,7 @@ function getSortedHabits(habits, sortMode) {
   // default: created
   return list.sort(baseCompare);
 }
+
 
 
 function renderHabitsBoard(board) {
@@ -941,6 +950,7 @@ week.days.forEach((day) => {
 
   if (sortedHabits.length === 0) {
   const tr = document.createElement('tr');
+  tr.dataset.habitId = String(habit.id);
   tr.innerHTML = `
     <td colspan="10" class="text-center text-muted small py-4">
       No habits yet. Click <strong>New habit</strong> to create your first one.
@@ -1010,7 +1020,12 @@ week.days.forEach((day) => {
     tr.innerHTML = `
       <td>
         <div class="d-flex align-items-start gap-2">
-          <span class="habit-color-dot" style="background:${color};"></span>
+  <span class="habit-drag-handle" title="Drag to reorder" style="cursor:grab; user-select:none;">
+    <i class="bi bi-grip-vertical"></i>
+  </span>
+
+  <span class="habit-color-dot" style="background:${color};"></span>
+
 
           <div class="flex-grow-1">
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -1163,7 +1178,62 @@ if (sortEl) {
   // Sidebar stats
   updateSidebarStats(summary);
   updatePatternsCard(board);
+  setupDragDropIfNeeded();
+
 }
+
+function setupDragDropIfNeeded() {
+  const tbody = document.getElementById('habitsTableBody');
+  if (!tbody) return;
+
+  // Only allow drag in manual mode
+  if (habitsSortMode !== 'manual') {
+    if (habitsSortable) {
+      habitsSortable.destroy();
+      habitsSortable = null;
+    }
+    return;
+  }
+
+  if (habitsSortable) return; // already set up
+
+  habitsSortable = new Sortable(tbody, {
+    animation: 150,
+    handle: '.habit-drag-handle', // we will add this
+    draggable: 'tr',
+    onEnd: () => {
+      const ids = [...tbody.querySelectorAll('tr[data-habit-id]')]
+        .map(tr => Number(tr.dataset.habitId))
+        .filter(Number.isFinite);
+
+      // optimistic: update local board sortOrder immediately
+      const map = new Map(ids.map((id, idx) => [id, idx + 1]));
+      (currentBoard?.habits || []).forEach(h => {
+        if (map.has(h.id)) h.sortOrder = map.get(h.id);
+      });
+
+      // persist
+      fetch('/api/habits/reorder', {
+        method: 'PATCH',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ ids }),
+      })
+        .then(res => res.json().then(d => ({ ok: res.ok, d })))
+        .then(({ ok, d }) => {
+          if (!ok) throw new Error(d.error || 'Failed to save order');
+          currentBoard = d;
+          renderHabitsBoard(currentBoard);
+          broadcastHabitsChanged('reorder');
+        })
+        .catch(err => {
+          console.error(err);
+          showToast('Failed to save order. Refreshing…', 'danger', 1800);
+          loadHabitsBoard(); // reload from server
+        });
+    },
+  });
+}
+
 
 function findHabitById(habitId) {
   if (!currentBoard || !Array.isArray(currentBoard.habits)) return null;

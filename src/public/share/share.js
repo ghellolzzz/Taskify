@@ -4,6 +4,57 @@ function authHeaders(extra = {}) {
   return { ...extra, Authorization: 'Bearer ' + token };
 }
 
+const SHARE_SYNC_CHANNEL = 'taskify-habits-sync';
+const SHARE_SYNC_STORAGE_KEY = '__taskify_habits_sync__';
+
+let shareBC = null;
+let lastRemoteAt = 0;
+let refreshTimer = null;
+
+function scheduleShareRefresh(msg) {
+  if (!msg || msg.type !== 'habits:changed') return;
+  if (!msg.at || msg.at <= lastRemoteAt) return;
+
+  lastRemoteAt = msg.at;
+
+  if (refreshTimer) return;
+
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+
+    showUpdating(true);
+
+    load().finally(() => {
+      showUpdating(false);
+    });
+
+  }, 300);
+}
+
+
+function setupShareMultiTabSync() {
+  if ('BroadcastChannel' in window) {
+    shareBC = new BroadcastChannel(SHARE_SYNC_CHANNEL);
+    shareBC.onmessage = (ev) => {
+      scheduleShareRefresh(ev?.data);
+    };
+  }
+
+  window.addEventListener('storage', (e) => {
+    if (e.key !== SHARE_SYNC_STORAGE_KEY || !e.newValue) return;
+    try {
+      const msg = JSON.parse(e.newValue);
+      scheduleShareRefresh(msg);
+    } catch (_) {}
+  });
+}
+
+function showUpdating(on) {
+  const el = document.getElementById('liveBadge');
+  if (!el) return;
+  el.style.display = on ? '' : 'none';
+}
+
 function tokenFromPath() {
   // /share/habits/<token>
   const parts = window.location.pathname.split('/').filter(Boolean);
@@ -179,4 +230,5 @@ async function load() {
   setActiveWindow('d7');
 }
 
+setupShareMultiTabSync();
 load();

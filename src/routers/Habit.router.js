@@ -14,6 +14,8 @@ router.get('/', habitController.getBoard);
 // POST /api/habits → create habit
 router.post('/', habitController.create);
 
+router.patch('/reorder', habitController.reorder);
+
 // PATCH /api/habits/:habitId → update habit metadata
 router.patch('/:habitId', habitController.updateMeta);
 

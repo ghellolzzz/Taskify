@@ -11,8 +11,70 @@ const state = {
   pendingOps: new Set(), // e.g. "ACCEPT-12"
 };
 
-const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('friends-sync') : null;
-if (bc) bc.onmessage = () => load();
+// --- Multi-tab sync (Friends + Inbox) ---
+const TASKIFY_TAB_ID =
+  sessionStorage.getItem('TASKIFY_TAB_ID') ||
+  (crypto?.randomUUID?.() || String(Math.random()).slice(2));
+sessionStorage.setItem('TASKIFY_TAB_ID', TASKIFY_TAB_ID);
+
+const FRIENDS_SYNC_CHANNEL = 'taskify-friends-sync';
+const FRIENDS_SYNC_STORAGE_KEY = '__taskify_friends_sync__';
+
+let friendsBC = null;
+let lastFriendsRemoteAt = 0;
+let friendsRefreshTimer = null;
+
+function broadcastFriendsChanged(reason = 'changed') {
+  const msg = { type: 'friends:changed', reason, at: Date.now(), tabId: TASKIFY_TAB_ID };
+
+  // BroadcastChannel best
+  if (friendsBC) {
+    try { friendsBC.postMessage(msg); } catch (_) {}
+  }
+  // storage-event fallback
+  try { localStorage.setItem(FRIENDS_SYNC_STORAGE_KEY, JSON.stringify(msg)); } catch (_) {}
+}
+
+function scheduleFriendsRefreshFromRemote(msg) {
+  if (!msg || msg.tabId === TASKIFY_TAB_ID) return;
+  if (!msg.at || msg.at <= lastFriendsRemoteAt) return;
+
+  lastFriendsRemoteAt = msg.at;
+
+  if (friendsRefreshTimer) return;
+  friendsRefreshTimer = setTimeout(() => {
+    friendsRefreshTimer = null;
+
+    // refresh both friends + inbox (but keep UI responsive)
+    load(true);
+    loadInbox(true);
+
+    // optional small feedback
+    if (!document.hidden) toast('Synced Friends/Inbox from another tab.', 'info');
+  }, 250);
+}
+
+function setupFriendsMultiTabSync() {
+  // BroadcastChannel
+  if ('BroadcastChannel' in window) {
+    friendsBC = new BroadcastChannel(FRIENDS_SYNC_CHANNEL);
+    friendsBC.onmessage = (ev) => {
+      const msg = ev?.data;
+      if (msg?.type === 'friends:changed') scheduleFriendsRefreshFromRemote(msg);
+    };
+  }
+
+  // storage fallback
+  window.addEventListener('storage', (e) => {
+    if (e.key !== FRIENDS_SYNC_STORAGE_KEY || !e.newValue) return;
+    try {
+      const msg = JSON.parse(e.newValue);
+      if (msg?.type === 'friends:changed') scheduleFriendsRefreshFromRemote(msg);
+    } catch (_) {}
+  });
+}
+
+
 
 function opKey(action, id) {
   return `${action}-${id}`;
@@ -34,35 +96,42 @@ function escapeHtml(s) {
 
 function toast(msg, kind = 'info') {
   const host = document.getElementById('toastHost');
-  if (!host) return;
+  if (!host || !window.bootstrap?.Toast) return;
 
-  const id = 't' + Math.random().toString(16).slice(2);
   const icon = kind === 'success' ? 'bi-check-circle' :
-               kind === 'danger' ? 'bi-exclamation-triangle' :
+               kind === 'danger'  ? 'bi-exclamation-triangle' :
                kind === 'warning' ? 'bi-exclamation-circle' :
                'bi-info-circle';
+  const bgClass =
+    kind === 'danger'  ? 'text-bg-danger'  :
+    kind === 'success' ? 'text-bg-success' :
+    kind === 'warning' ? 'text-bg-warning' :
+    kind === 'info'    ? 'text-bg-secondary' :
+                         'text-bg-dark';
 
   const el = document.createElement('div');
-  el.className = 'toast align-items-center';
-  el.id = id;
+  el.className = `toast align-items-center border-0 ${bgClass}`;
   el.setAttribute('role', 'alert');
   el.setAttribute('aria-live', 'assertive');
   el.setAttribute('aria-atomic', 'true');
+
+  const closeBtnClass = (kind === 'warning') ? 'btn-close' : 'btn-close btn-close-white';
 
   el.innerHTML = `
     <div class="d-flex">
       <div class="toast-body">
         <i class="bi ${icon} me-2"></i>${escapeHtml(msg)}
       </div>
-      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      <button type="button" class="${closeBtnClass} me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
   `;
 
   host.appendChild(el);
-  const t = new bootstrap.Toast(el, { delay: 2600 });
+  const t = bootstrap.Toast.getOrCreateInstance(el, { delay: 2600 });
   t.show();
   el.addEventListener('hidden.bs.toast', () => el.remove());
 }
+
 
 function applyCounts() {
   const i = state.incoming.length;
@@ -235,7 +304,7 @@ async function sendRequest() {
 
   input.value = '';
   await load(true);
-  if (bc) bc.postMessage({ type: 'refresh' });
+  broadcastFriendsChanged('friend_request_sent');
 }
 
 async function transition(id, action) {
@@ -271,7 +340,7 @@ async function transition(id, action) {
   toast(msg, action === 'ACCEPT' || action === 'UNDO' ? 'success' : 'info');
 
   await load(true);
-  if (bc) bc.postMessage({ type: 'refresh' });
+  broadcastFriendsChanged(`friend_${action.toLowerCase()}`);
 }
 
 function timeAgo(iso) {
@@ -291,9 +360,14 @@ async function inboxAction(id, action) {
     method: 'PATCH',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ action }),
+    
   });
+  broadcastFriendsChanged(`inbox_${action.toLowerCase()}`);
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Failed');
+if (!res.ok) throw new Error(data.error || 'Failed');
+
+broadcastFriendsChanged(`inbox_${action.toLowerCase()}`);
+
 }
 
 function makeInboxRow(item) {
@@ -385,6 +459,8 @@ async function loadInbox(silent = false) {
   state.inboxUnread = data.counts?.unread || 0;
   renderInbox();
 }
+
+setupFriendsMultiTabSync();
 
 
 /* Wire up */

@@ -6,10 +6,19 @@ function bad(res, status, msg) {
 }
 
 module.exports.list = async (req, res) => {
-  const userId = res.locals.userId;
-  const data = await Friends.getAllForUser(userId);
-  res.json(data);
+  try {
+    const userId = res.locals.userId;
+    const data = await Friends.getAllForUser(userId);
+    res.json(data);
+  } catch (err) {
+    if (err?.code === 'P2021') {
+      return res.json({ incoming: [], outgoing: [], friends: [] });
+    }
+    console.error('friendsController.list error:', err);
+    return res.status(500).json({ error: 'Failed to load friends' });
+  }
 };
+
 
 module.exports.sendRequest = async (req, res) => {
   const userId = res.locals.userId;

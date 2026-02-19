@@ -249,6 +249,7 @@ model Habit {
   targetPerWeek Int?
   isArchived    Boolean  @default(false)
   createdAt     DateTime @default(now())
+  sortOrder Int @default(0)
 
   // NEW
   reminderEnabled Boolean @default(false)

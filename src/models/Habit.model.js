@@ -67,49 +67,47 @@ async function getHabitsBoard(userId) {
   const streakStart = addDays(todayStart, -streakWindowDays);
   const tomorrowStart = addDays(todayStart, 1); // exclusive upper bound
 
-  const [
-    activeHabits,
-    archivedHabits,
-    weekLogs,
-    prevWeekLogs,
-    streakLogs,
-  ] = await Promise.all([
-    prisma.habit.findMany({
-      where: { userId: numericId, isArchived: false },
-      orderBy: { createdAt: 'asc' },
-    }),
-    prisma.habit.findMany({
-      where: { userId: numericId, isArchived: true },
-      orderBy: { createdAt: 'asc' },
-    }),
+const [
+  activeHabits,
+  archivedHabits,
+  weekLogs,
+  prevWeekLogs,
+  streakLogs,
+] = await Promise.all([
+  prisma.habit.findMany({
+    where: { userId: numericId, isArchived: false },
+    orderBy: [
+      { sortOrder: 'asc' },
+      { createdAt: 'asc' },
+      { id: 'asc' },
+    ],
+  }),
 
-    // Logs for THIS WEEK grid + weekly stats
-    prisma.habitLog.findMany({
-      where: {
-        habit: { userId: numericId },
-        date: { gte: weekStart, lt: weekEnd },
-      },
-      orderBy: { date: 'asc' },
-    }),
+  prisma.habit.findMany({
+    where: { userId: numericId, isArchived: true },
+    orderBy: [
+      { sortOrder: 'asc' },
+      { createdAt: 'asc' },
+      { id: 'asc' },
+    ],
+  }),
 
-    // Logs for PREVIOUS WEEK (not shown in UI yet, but used for stats later)
-    prisma.habitLog.findMany({
-      where: {
-        habit: { userId: numericId },
-        date: { gte: prevWeekStart, lt: prevWeekEnd },
-      },
-      orderBy: { date: 'asc' },
-    }),
+  prisma.habitLog.findMany({
+    where: { habit: { userId: numericId }, date: { gte: weekStart, lt: weekEnd } },
+    orderBy: { date: 'asc' },
+  }),
 
-    // Logs for streak calculation (history window)
-    prisma.habitLog.findMany({
-      where: {
-        habit: { userId: numericId },
-        date: { gte: streakStart, lt: tomorrowStart },
-      },
-      orderBy: { date: 'asc' },
-    }),
-  ]);
+  prisma.habitLog.findMany({
+    where: { habit: { userId: numericId }, date: { gte: prevWeekStart, lt: prevWeekEnd } },
+    orderBy: { date: 'asc' },
+  }),
+
+  prisma.habitLog.findMany({
+    where: { habit: { userId: numericId }, date: { gte: streakStart, lt: tomorrowStart } },
+    orderBy: { date: 'asc' },
+  }),
+]);
+
 
   // Build 7 day labels
   const weekDays = [];
@@ -337,6 +335,7 @@ async function getHabitsBoard(userId) {
       color: h.color,
       targetPerWeek: h.targetPerWeek,
       archivedAt: h.createdAt,
+      sortOrder: h.sortOrder, 
     })),
     summary,
   };
@@ -357,11 +356,18 @@ async function createHabit(userId, data) {
     ? String(data.reminderRepeat || 'daily')
     : 'daily';
 
+    const max = await prisma.habit.aggregate({
+  where: { userId: numericId, isArchived: false },
+  _max: { sortOrder: true },
+});
+const nextSortOrder = (max._max.sortOrder || 0) + 1;
+
   const created = await prisma.habit.create({
     data: {
       userId: numericId,
       title: (data.title || 'Untitled habit').trim(),
       color: data.color || null,
+      sortOrder: nextSortOrder,
       targetPerWeek:
         data.targetPerWeek !== undefined && data.targetPerWeek !== ''
           ? Number(data.targetPerWeek)
@@ -557,10 +563,46 @@ async function deleteHabit(userId, habitId) {
   });
 }
 
+async function reorderHabits(userId, ids) {
+  const numericUserId = Number(userId);
+  if (!Array.isArray(ids) || !ids.length) return;
+
+  const clean = ids
+    .map(Number)
+    .filter((x) => Number.isFinite(x) && x > 0);
+
+  // ensure they belong to user + not archived
+  const rows = await prisma.habit.findMany({
+    where: { userId: numericUserId, isArchived: false, id: { in: clean } },
+    select: { id: true },
+  });
+
+  const allowed = new Set(rows.map((r) => r.id));
+
+  // Update using a transaction (position = array index)
+  const tx = [];
+  let pos = 1;
+
+  for (const id of clean) {
+    if (!allowed.has(id)) continue;
+    tx.push(
+      prisma.habit.update({
+        where: { id },
+        data: { sortOrder: pos++ },
+      })
+    );
+  }
+
+  if (tx.length) await prisma.$transaction(tx);
+}
+
+
+
 module.exports = {
   getHabitsBoard,
   createHabit,
   toggleHabitCheck,
   updateHabitMeta,
   deleteHabit,
+  reorderHabits,
 };

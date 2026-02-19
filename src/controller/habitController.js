@@ -82,3 +82,13 @@ module.exports.toggle = function (req, res, next) {
     .then((board) => res.json(board))
     .catch(next);
 };
+
+module.exports.reorder = function (req, res, next) {
+  const userId = res.locals.userId;
+  const { ids } = req.body || {};
+
+  habitModel.reorderHabits(userId, ids)
+    .then(() => habitModel.getHabitsBoard(userId))
+    .then((board) => res.json(board))
+    .catch(next);
+};

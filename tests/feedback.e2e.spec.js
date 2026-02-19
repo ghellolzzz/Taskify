@@ -67,6 +67,27 @@ test.describe('Feedback Form Feature', () => {
         await expect(page.locator('#feedback-message')).toContainText('successfully submitted');
     });
 
+    test('User can submit a Feature Request', async ({ page }) => {
+        const featureIdea = 'Feature Request: Add a dark mode toggle to the dashboard.';
+
+        // 1. Select Feature Request from the dropdown
+        await page.selectOption('#type', 'FEATURE_REQUEST');
+
+        // 2. Fill in the details
+        await page.fill('#description', featureIdea);
+
+        // 3. Submit and verify the 201 response
+        const [response] = await Promise.all([
+            page.waitForResponse(res => 
+                res.url().includes('/api/feedback') && res.status() === 201
+            ),
+            page.click('#submitFeedbackBtn')
+        ]);
+
+        // 4. Verify the UI reflects the success state
+        await expect(page.locator('#feedback-message')).toContainText('successfully submitted');
+    });
+
     // Verify empty description will not submit
     test('Form prevents submission with empty description', async ({ page }) => {
         // 1. Leave description empty

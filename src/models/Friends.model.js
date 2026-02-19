@@ -37,10 +37,11 @@ async function getAllForUser(userId) {
   const mapped = rows.map(r => viewFriendshipRow(r, userId));
 
   return {
-    incoming: mapped.filter(x => x.status === 'PENDING' && x.direction === 'INCOMING'),
-    outgoing: mapped.filter(x => x.status === 'PENDING' && x.direction === 'OUTGOING'),
-    friends: mapped.filter(x => x.status === 'ACCEPTED'),
-  };
+  incoming: mapped.filter(x => x.status === 'PENDING' && x.direction === 'INCOMING'),
+  outgoing: mapped.filter(x => x.status === 'PENDING' && x.direction === 'OUTGOING'),
+  friends: mapped.filter(x => x.status === 'ACCEPTED'),
+  removed: mapped.filter(x => x.status === 'REMOVED'),
+};
 }
 
 async function findUserByEmailInsensitive(email) {
@@ -62,10 +63,17 @@ async function findAnyRelationship(a, b) {
 }
 
 async function createRequest(requesterId, addresseeId) {
-  return prisma.friendship.create({
-    data: { requesterId, addresseeId, status: 'PENDING' },
+  return prisma.friendship.upsert({
+    where: {
+      requesterId_addresseeId: { requesterId, addresseeId },
+    },
+    update: {
+      status: 'PENDING',
+    },
+    create: { requesterId, addresseeId, status: 'PENDING' },
   });
 }
+
 
 async function updateStatus(id, status) {
   return prisma.friendship.update({

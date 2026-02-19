@@ -189,43 +189,78 @@
         </div>
 
         <!-- Right column -->
-        <div class="col-lg-7">
-          <div class="card profile-card friends-card">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <!-- Inbox -->
-<div class="card profile-card friends-card mb-3" id="inboxCard">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <div>
-        <h6 class="mb-0">Inbox</h6>
-        <div class="small text-muted">Shared habits & activity.</div>
+<div class="col-lg-7">
+
+  <!-- Inbox card (standalone) -->
+  <div class="card profile-card friends-card mb-3" id="inboxCard">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <h6 class="mb-0">Inbox</h6>
+          <div class="small text-muted">Shared habits & activity.</div>
+        </div>
+        <span class="badge rounded-pill text-bg-light small" id="badgeInbox">0</span>
       </div>
-      <span class="badge rounded-pill text-bg-light small" id="badgeInbox">0</span>
-    </div>
 
-    <div id="inboxEmpty" class="friends-empty" style="display:none;">
-      <div class="friends-empty-icon">🔔</div>
-      <div class="fw-semibold">All caught up</div>
-      <div class="small text-muted">Shares will appear here.</div>
-    </div>
+      <div id="inboxEmpty" class="friends-empty" style="display:none;">
+        <div class="friends-empty-icon">🔔</div>
+        <div class="fw-semibold">All caught up</div>
+        <div class="small text-muted">Shares will appear here.</div>
+      </div>
 
-    <ul class="list-group list-group-flush friends-list" id="inboxList"></ul>
+      <ul class="list-group list-group-flush friends-list" id="inboxList"></ul>
+    </div>
   </div>
+
+  <!-- Your friends card -->
+  <div class="card profile-card friends-card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <h6 class="mb-0">Your friends</h6>
+          <div class="small text-muted">Manage your connections (remove).</div>
+        </div>
+        <span class="badge rounded-pill text-bg-light small" id="badgeFriends">0</span>
+      </div>
+
+      <div id="friendsEmpty" class="friends-empty" style="display:none;">
+        <div class="friends-empty-icon">🤝</div>
+        <div class="fw-semibold">No friends yet</div>
+        <div class="small text-muted">Add someone by email to get started.</div>
+      </div>
+
+      <ul class="list-group list-group-flush friends-list" id="friendsList"></ul>
+
+      <div class="friends-hint small text-muted mt-3">
+        Friends-only habit share links require both users to be accepted friends.
+      </div>
+    </div>
+  </div>
+
+  <!-- Recently removed card -->
+  <div class="card profile-card friends-card mt-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <h6 class="mb-0">Recently removed</h6>
+          <div class="small text-muted">Undo a removal without re-sending a request.</div>
+        </div>
+        <span class="badge rounded-pill text-bg-light small" id="badgeRemoved">0</span>
+      </div>
+
+      <div id="removedEmpty" class="friends-empty" style="display:none;">
+        <div class="friends-empty-icon">🧼</div>
+        <div class="fw-semibold">Nothing removed</div>
+        <div class="small text-muted">Removed friends will appear here for undo.</div>
+      </div>
+
+      <ul class="list-group list-group-flush friends-list" id="removedList"></ul>
+    </div>
+  </div>
+
 </div>
 
-                <div>
-                  <h6 class="mb-0">Your friends</h6>
-                  <div class="small text-muted">Manage your connections (remove / undo).</div>
-                </div>
-                <span class="badge rounded-pill text-bg-light small" id="badgeFriends">0</span>
-              </div>
 
-              <div id="friendsEmpty" class="friends-empty" style="display:none;">
-                <div class="friends-empty-icon">🤝</div>
-                <div class="fw-semibold">No friends yet</div>
-                <div class="small text-muted">Add someone by email to get started.</div>
-              </div>
 
               <ul class="list-group list-group-flush friends-list" id="friendsList"></ul>
 

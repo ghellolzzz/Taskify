@@ -8,6 +8,7 @@ const state = {
   outgoing: [],
   friends: [],
   inbox: [],
+  removed: [],
   pendingOps: new Set(), // e.g. "ACCEPT-12"
 };
 
@@ -149,6 +150,14 @@ function applyCounts() {
   document.getElementById('incomingEmpty').style.display = i ? 'none' : '';
   document.getElementById('outgoingEmpty').style.display = o ? 'none' : '';
   document.getElementById('friendsEmpty').style.display = f ? 'none' : '';
+
+    const r = state.removed.length;
+
+  const badgeRemoved = document.getElementById('badgeRemoved');
+  if (badgeRemoved) badgeRemoved.textContent = r;
+
+  const removedEmpty = document.getElementById('removedEmpty');
+  if (removedEmpty) removedEmpty.style.display = r ? 'none' : '';
 }
 
 function matchesSearch(r, q) {
@@ -211,22 +220,24 @@ function makeRow(r, type) {
     actions.appendChild(cancel);
   }
 
-  if (type === 'friends') {
+    if (type === 'friends') {
     const remove = document.createElement('button');
     remove.className = 'btn btn-outline-danger btn-sm';
     remove.innerHTML = `<i class="bi bi-person-dash me-1"></i>Remove`;
     remove.disabled = state.pendingOps.has(opKey('REMOVE', r.id));
     remove.onclick = () => transition(r.id, 'REMOVE');
+    actions.appendChild(remove);
+  }
 
+    if (type === 'removed') {
     const undo = document.createElement('button');
     undo.className = 'btn btn-outline-success btn-sm';
     undo.innerHTML = `<i class="bi bi-arrow-counterclockwise me-1"></i>Undo`;
     undo.disabled = state.pendingOps.has(opKey('UNDO', r.id));
     undo.onclick = () => transition(r.id, 'UNDO');
-
-    actions.appendChild(remove);
     actions.appendChild(undo);
   }
+
 
   return li;
 }
@@ -236,18 +247,22 @@ function render() {
 
   const incomingEl = document.getElementById('incomingList');
   const outgoingEl = document.getElementById('outgoingList');
-  const friendsEl = document.getElementById('friendsList');
+  const friendsEl  = document.getElementById('friendsList');
+  const removedEl  = document.getElementById('removedList');
 
-  incomingEl.innerHTML = '';
-  outgoingEl.innerHTML = '';
-  friendsEl.innerHTML = '';
+  if (incomingEl) incomingEl.innerHTML = '';
+  if (outgoingEl) outgoingEl.innerHTML = '';
+  if (friendsEl)  friendsEl.innerHTML = '';
+  if (removedEl)  removedEl.innerHTML = '';
 
-  state.incoming.filter(r => matchesSearch(r, q)).forEach(r => incomingEl.appendChild(makeRow(r, 'incoming')));
-  state.outgoing.filter(r => matchesSearch(r, q)).forEach(r => outgoingEl.appendChild(makeRow(r, 'outgoing')));
-  state.friends.filter(r => matchesSearch(r, q)).forEach(r => friendsEl.appendChild(makeRow(r, 'friends')));
+  state.incoming.filter(r => matchesSearch(r, q)).forEach(r => incomingEl?.appendChild(makeRow(r, 'incoming')));
+  state.outgoing.filter(r => matchesSearch(r, q)).forEach(r => outgoingEl?.appendChild(makeRow(r, 'outgoing')));
+  state.friends.filter(r => matchesSearch(r, q)).forEach(r => friendsEl?.appendChild(makeRow(r, 'friends')));
+  state.removed.filter(r => matchesSearch(r, q)).forEach(r => removedEl?.appendChild(makeRow(r, 'removed')));
 
   applyCounts();
 }
+
 
 async function load(silent = false) {
   if (!silent) toast('Loading friends…', 'info');
@@ -268,7 +283,7 @@ async function load(silent = false) {
   state.incoming = data.incoming || [];
   state.outgoing = data.outgoing || [];
   state.friends = data.friends || [];
-
+  state.removed = data.removed || [];
   state.inbox = inbox.items || [];
   state.inboxUnread = inbox.counts?.unread || 0;
 
@@ -333,7 +348,7 @@ async function transition(id, action) {
     action === 'ACCEPT' ? 'Request accepted ✅' :
     action === 'REJECT' ? 'Request rejected.' :
     action === 'CANCEL' ? 'Request cancelled.' :
-    action === 'REMOVE' ? 'Friend removed.' :
+    action === 'REMOVE' ? 'Friend removed. Undo available in “Recently removed”.' :
     action === 'UNDO'   ? 'Undo complete ✅' :
     'Updated.';
 

@@ -280,29 +280,32 @@ const [
     }
 
     return {
-      id: h.id,
-      title: h.title,
-      color: h.color,
-      targetPerWeek: h.targetPerWeek,
-      createdAt: h.createdAt,
+  id: h.id,
+  userId: h.userId,  
+  sortOrder: h.sortOrder, 
 
-      week,
-      streak,
-      completionThisWeek,
+  title: h.title,
+  color: h.color,
+  targetPerWeek: h.targetPerWeek,
+  createdAt: h.createdAt,
 
-      // ✅ NEW fields used by Habits UI
-      targetProgress: {
-        done,
-        target,        // null = flexible
-        pct: target ? progressPct : null,
-        expectedByToday, // null if flexible
-      },
-      onTrack, // {status,label,hint,riskScore}
+  week,
+  streak,
+  completionThisWeek,
 
-      reminderEnabled: h.reminderEnabled,
-      reminderTime: h.reminderTime,
-      reminderRepeat: h.reminderRepeat,
-    };
+  targetProgress: {
+    done,
+    target,
+    pct: target ? progressPct : null,
+    expectedByToday,
+  },
+  onTrack,
+
+  reminderEnabled: h.reminderEnabled,
+  reminderTime: h.reminderTime,
+  reminderRepeat: h.reminderRepeat,
+};
+
   });
 
   const avgWeeklyCompletion =
@@ -351,10 +354,13 @@ async function createHabit(userId, data) {
     ? String(data.reminderTime || '09:00').trim()
     : null;
 
-  // Habit.reminderRepeat is NOT NULL in schema, so never write null
   const reminderRepeat = reminderEnabled
-    ? String(data.reminderRepeat || 'daily')
-    : 'daily';
+  ? String(data.reminderRepeat || 'daily').trim()
+  : 'daily';
+
+const reminderRepeatNormalized =
+  reminderRepeat === 'none' ? 'none' : reminderRepeat;
+
 
     const max = await prisma.habit.aggregate({
   where: { userId: numericId, isArchived: false },
@@ -375,7 +381,7 @@ const nextSortOrder = (max._max.sortOrder || 0) + 1;
 
       reminderEnabled,
       reminderTime,
-      reminderRepeat,
+      reminderRepeat: reminderRepeatNormalized,
     },
   });
 
@@ -390,7 +396,7 @@ const nextSortOrder = (max._max.sortOrder || 0) + 1;
         title: `Habit: ${created.title}`,
         notes: 'Auto reminder from habit',
         remindAt,
-        repeatType: created.reminderRepeat || 'daily',
+        repeatType: created.reminderRepeat === 'none' ? null : (created.reminderRepeat || 'daily'),
         isDone: false,
 
         // optional consistency fields (won't break if unused)
@@ -493,12 +499,11 @@ async function updateHabitMeta(userId, habitId, data) {
   if (data.reminderTime !== undefined) {
     payload.reminderTime = data.reminderTime ? String(data.reminderTime).trim() : null;
   }
-  if (data.reminderRepeat !== undefined) {
-    // Habit.reminderRepeat is NOT NULL -> never set null
-    payload.reminderRepeat = data.reminderRepeat
-      ? String(data.reminderRepeat)
-      : 'daily';
-  }
+ if (data.reminderRepeat !== undefined) {
+  // Habit.reminderRepeat is NOT NULL -> never set null
+  const rr = data.reminderRepeat ? String(data.reminderRepeat).trim() : 'daily';
+  payload.reminderRepeat = rr;
+}
 
   const hasAnyUpdate = Object.keys(payload).length > 0;
 
@@ -529,7 +534,7 @@ async function updateHabitMeta(userId, habitId, data) {
         title: `Habit: ${latest.title}`,
         notes: 'Auto reminder from habit',
         remindAt,
-        repeatType: latest.reminderRepeat || 'daily',
+        repeatType: latest.reminderRepeat === 'none' ? null : (latest.reminderRepeat || 'daily'),
         isDone: false,
         sourceType: 'habit',
         sourceDate: null,

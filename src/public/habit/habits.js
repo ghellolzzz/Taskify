@@ -950,14 +950,14 @@ week.days.forEach((day) => {
 
   if (sortedHabits.length === 0) {
   const tr = document.createElement('tr');
-  tr.dataset.habitId = String(habit.id);
   tr.innerHTML = `
     <td colspan="10" class="text-center text-muted small py-4">
       No habits yet. Click <strong>New habit</strong> to create your first one.
     </td>
   `;
   tbody.appendChild(tr);
-} else {
+  return;
+}
   sortedHabits.forEach((habit) => {
     const tr = document.createElement('tr');
 
@@ -1101,7 +1101,7 @@ week.days.forEach((day) => {
 
     tbody.appendChild(tr);
   });
-}
+
 
 
   // Attach click handlers for toggles

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Friends</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Friends</h1>
+
+    <section>
+      <h2>Add friend</h2>
+      <div class="row">
+        <input id="friendEmail" type="email" placeholder="Friend’s email" />
+        <button id="btnSend">Send request</button>
+      </div>
+      <p id="statusMsg"></p>
+    </section>
+
+    <section>
+      <h2>Incoming requests</h2>
+      <ul id="incomingList"></ul>
+    </section>
+
+    <section>
+      <h2>Outgoing requests</h2>
+      <ul id="outgoingList"></ul>
+    </section>
+
+    <section>
+      <h2>Your friends</h2>
+      <ul id="friendsList"></ul>
+    </section>
+  </main>
+
+  <script src="/friends/friends.js"></script>
+</body>
+</html>

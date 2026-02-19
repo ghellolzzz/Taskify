@@ -121,9 +121,10 @@ function loadBreakdownChart(completed, inProgress, pending) {
 
   const total = completed + inProgress + pending;
 
-  const percentCompleted = ((completed / total) * 100).toFixed(0);
-  const percentInProgress = ((inProgress / total) * 100).toFixed(0);
-  const percentPending = ((pending / total) * 100).toFixed(0);
+// If total is 0, we set the percentages to "0" manually.
+  const percentCompleted = total > 0 ? ((completed / total) * 100).toFixed(0) : 0;
+  const percentInProgress = total > 0 ? ((inProgress / total) * 100).toFixed(0) : 0;
+  const percentPending = total > 0 ? ((pending / total) * 100).toFixed(0) : 0;
 
   const accent = getAccent();
 const colors = {

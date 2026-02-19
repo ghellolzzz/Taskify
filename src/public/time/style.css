@@ -226,33 +226,6 @@ body {
 
 .modal-content .form-control { margin-bottom: 12px; }
 
-html, body {
-  scrollbar-color: var(--border) transparent;
-}
-*::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--border) 70%, transparent);
-  border-radius: 999px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-}
-
-.sidebar {
-  scrollbar-color: color-mix(in srgb, var(--border) 70%, transparent) transparent;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
 body.profile-theme-dark .table {
   --bs-table-bg: transparent; 
   --bs-table-color: var(--text);

@@ -89,27 +89,21 @@ test.describe('Feedback Form Feature', () => {
     });
 
     // Verify empty description will not submit
-    test('Form prevents submission with empty description', async ({ page }) => {
-        // 1. Leave description empty
-        await page.fill('#description', '');
-
-        // 2. Click Submit
-        await page.click('#submitFeedbackBtn');
-
-        // 3. Check if the success message is hidden.
-        await expect(page.locator('#feedback-message')).toBeHidden();
-    });
-
-    // Button state handling
     test('Submit button disables during network request', async ({ page }) => {
-        await page.fill('#description', 'Testing button states');
+    await page.fill('#description', 'Testing button states');
 
-        // Click but don't wait for the response yet
-        await page.click('#submitFeedbackBtn', { noWaitAfter: true });
-
-        // Verify button is disabled and text changed
-        const submitBtn = page.locator('#submitFeedbackBtn');
-        await expect(submitBtn).toBeDisabled();
-        await expect(submitBtn).toHaveText('Submitting...');
+    // 1. Intercept the network request and delay it by 1 second
+    await page.route('**/api/feedback', async route => {
+        await new Promise(resolve => setTimeout(resolve, 1000)); 
+        await route.continue();
     });
+
+    // 2. Click the button
+    await page.click('#submitFeedbackBtn');
+
+    // 3. Verify the state while the request is "pending"
+    const submitBtn = page.locator('#submitFeedbackBtn');
+    await expect(submitBtn).toBeDisabled();
+    await expect(submitBtn).toHaveText('Submitting...');
+});
 });

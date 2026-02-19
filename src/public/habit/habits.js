@@ -260,6 +260,101 @@ function setupMultiTabSync() {
     } catch (_) {}
   });
 }
+// --- Share Progress (state + UI) ---
+const shareState = {
+  open: false,
+  generating: false,
+  link: null,
+  error: null,
+};
+
+function qs(id) { return document.getElementById(id); }
+
+function openShare() {
+  shareState.open = true;
+  shareState.link = null;
+  shareState.error = null;
+  qs('shareMsg').textContent = '';
+  qs('shareLinkWrap').style.display = 'none';
+  qs('shareBackdrop').style.display = 'flex';
+}
+
+function closeShare() {
+  shareState.open = false;
+  qs('shareBackdrop').style.display = 'none';
+}
+
+function setShareMsg(msg) {
+  qs('shareMsg').textContent = msg || '';
+}
+
+function setGenerating(on) {
+  shareState.generating = on;
+  qs('btnShareGenerate').disabled = on;
+  qs('btnShareCancel').disabled = on;
+}
+
+async function generateShareLink() {
+  setShareMsg('');
+  setGenerating(true);
+
+  const visibility = qs('shareVisibility').value;
+  const expiry = qs('shareExpiry').value;
+
+  try {
+    const res = await fetch('/api/share/habits', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ visibility, expiry }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to generate');
+
+    const url = window.location.origin + data.path;
+    shareState.link = url;
+
+    qs('shareLink').value = url;
+    qs('shareLinkWrap').style.display = '';
+    setShareMsg('Link generated.');
+  } catch (e) {
+    setShareMsg(e.message || 'Failed');
+  } finally {
+    setGenerating(false);
+  }
+}
+
+async function copyShareLink() {
+  const url = qs('shareLink').value;
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    setShareMsg('Copied.');
+  } catch {
+    // fallback
+    qs('shareLink').select();
+    document.execCommand('copy');
+    setShareMsg('Copied.');
+  }
+}
+
+function setupShareProgressModal() {
+  const $ = (id) => document.getElementById(id);
+
+  const btn = $('btnShareProgress');
+  if (btn) btn.addEventListener('click', openShare);
+
+  $('btnShareCancel')?.addEventListener('click', closeShare);
+  $('shareBackdrop')?.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'shareBackdrop') closeShare();
+  });
+
+  $('btnShareGenerate')?.addEventListener('click', generateShareLink);
+  $('btnShareCopy')?.addEventListener('click', copyShareLink);
+}
+
+
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -286,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reminderEnabledEl.addEventListener("change", syncReminderInputsEnabled);
   }
   syncReminderInputsEnabled();
+  setupShareProgressModal();
   setupMultiTabSync(); 
   setupDeleteModal();
   loadHabitsBoard();
@@ -405,6 +501,7 @@ function renderHabitsBoard(board) {
 
   const { week, habits, summary, archivedHabits = [] } = board;
   const sortedHabits = getSortedHabits(habits, habitsSortMode);
+  const todayKey = getTodayDateKey(board);
 
   // Week header labels (second header row)
   const headerRow = document.getElementById('habitsWeekHeaderRow');
@@ -418,17 +515,20 @@ function renderHabitsBoard(board) {
   headerRow.appendChild(spacerTarget);
 
   // day headers under "Week"
-  week.days.forEach((day) => {
-    const d = new Date(day.date);
-    const th = document.createElement('th');
-    th.classList.add('text-center', 'small');
-    if (day.isToday) th.classList.add('is-today-header');
-    th.innerHTML = `
-      <div>${day.label}</div>
-      <div class="fw-semibold">${d.getDate()}</div>
-    `;
-    headerRow.appendChild(th);
-  });
+ // day headers under "Week"
+week.days.forEach((day) => {
+  const d = new Date(day.date);
+  const th = document.createElement('th');
+  th.classList.add('text-center', 'small');
+  if (day.isToday) th.classList.add('is-today-header');
+  th.innerHTML = `
+    <div>${day.label}</div>
+    <div class="fw-semibold">${d.getDate()}</div>
+  `;
+  headerRow.appendChild(th);
+});
+
+
 
   // "Actions" header (first row) has no sub-header, so no extra <th> here
 
@@ -460,36 +560,39 @@ function renderHabitsBoard(board) {
       ? `${habit.targetPerWeek}× / week`
       : 'Flexible';
 
-    let daysHtml = '';
-    week.days.forEach((day) => {
-      const entry = habit.week.find((w) => w.date === day.date);
-      const isDone = entry?.completed;
-      const key = opKey(habit.id, day.date);
-const isPending = appState.pendingOps.has(key);
+   let daysHtml = '';
+week.days.forEach((day) => {
+  const entry = habit.week.find((w) => w.date === day.date);
+  const isDone = entry?.completed;
 
-const extraClasses = [
-  'habit-dot',
-  isDone ? 'is-complete' : '',
-  day.isToday ? 'is-today' : '',
-  isPending ? 'is-pending' : '',
-]
-  .filter(Boolean)
-  .join(' ');
+  const key = opKey(habit.id, day.date);
+  const isPending = appState.pendingOps.has(key);
 
-daysHtml += `
-  <td class="text-center">
-    <button
-      type="button"
-      class="${extraClasses}"
-      data-habit-id="${habit.id}"
-      data-date="${day.date}"
-      ${isPending ? 'disabled aria-busy="true"' : ''}
-      aria-label="Toggle ${habit.title} on ${day.label}"
-    ></button>
-  </td>
-`;
+  const isFuture = todayKey && day.date > todayKey;
 
-    });
+  const extraClasses = [
+    'habit-dot',
+    isDone ? 'is-complete' : '',
+    day.isToday ? 'is-today' : '',
+    isPending ? 'is-pending' : '',
+    isFuture ? 'is-future' : '',
+  ].filter(Boolean).join(' ');
+
+  daysHtml += `
+    <td class="text-center">
+      <button
+        type="button"
+        class="${extraClasses}"
+        data-habit-id="${habit.id}"
+        data-date="${day.date}"
+        ${isPending || isFuture ? 'disabled aria-busy="true"' : ''}
+        aria-label="Toggle ${habit.title} on ${day.label}"
+        ${isFuture ? 'title="You can’t tick future days."' : ''}
+      ></button>
+    </td>
+  `;
+});
+
 
     const tp = habit.targetProgress || {};
     const ot = habit.onTrack || {};
@@ -842,7 +945,11 @@ function renderArchivedHabits(archivedHabits) {
 
 function toggleHabitDay(habitId, date) {
   if (!currentBoard) return;
-
+const todayKey = getTodayDateKey(currentBoard);
+  if (todayKey && date > todayKey) {
+    showToast("Can't mark future days yet.", "secondary", 1800);
+    return;
+  }
   const key = opKey(habitId, date);
 
   if (appState.pendingOps.has(key)) return;

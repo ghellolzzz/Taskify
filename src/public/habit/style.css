@@ -506,3 +506,8 @@ body.profile-theme-dark .habit-expected {
 .undo-toast-btn {
   white-space: nowrap;
 }
+
+.habit-dot.is-future {
+  opacity: 0.25;
+  cursor: not-allowed;
+}

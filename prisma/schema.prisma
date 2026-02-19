@@ -46,6 +46,7 @@ model User {
   ownedThemes   UserOwnedTheme[]
   friendRequestsSent     Friendship[] @relation("FriendRequester")
   friendRequestsReceived Friendship[] @relation("FriendAddressee")
+  habitShareLinks HabitShareLink[]
 
 
   passwordResets PasswordReset[]
@@ -471,4 +472,23 @@ model Friendship {
   @@index([requesterId, status])
   @@index([addresseeId, status])
   @@map("friendships")
+}
+
+enum ShareVisibility {
+  PUBLIC
+  FRIENDS_ONLY
+}
+
+model HabitShareLink {
+  id         Int            @id @default(autoincrement())
+  token      String         @unique @db.VarChar(80)
+  ownerId    Int
+  owner      User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  visibility ShareVisibility @default(PUBLIC)
+  expiresAt  DateTime?
+  createdAt  DateTime        @default(now())
+
+  @@index([ownerId])
+  @@map("habit_share_links")
 }

@@ -17,10 +17,10 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
   />
 
-  <!-- Reuse profile layout styles for consistent UI -->
   <link rel="stylesheet" href="/profile/style.css" />
-  <!-- Habits specific styles -->
-  <link rel="stylesheet" href="/habit/style.css" />
+<link rel="stylesheet" href="/habit/style.css" />
+<link rel="stylesheet" href="/habit/share-modal.css" />
+
 </head>
 <script src="/js/theme.js" defer></script>
 <body class="profile-theme-light">
@@ -55,22 +55,33 @@
   <main class="main-content">
     <div class="container-fluid py-4 habits-page">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h2 class="page-title mb-1">Habits Lab</h2>
-          <p class="text-muted small mb-0">
-            Turn tiny actions into streaks. Track how consistent you are this week.
-          </p>
-        </div>
-        <button
-  id="habitNewBtn"
-  class="btn btn-success"
-  data-bs-toggle="modal"
-  data-bs-target="#habitModal"
->
-  <i class="bi bi-plus-circle me-1"></i> New habit
-</button>
+  <div>
+    <h2 class="page-title mb-1">Habits Lab</h2>
+    <p class="text-muted small mb-0">
+      Turn tiny actions into streaks. Track how consistent you are this week.
+    </p>
+  </div>
 
-      </div>
+  <div class="d-flex gap-2">
+    <button
+      id="btnShareProgress"
+      type="button"
+      class="btn btn-outline-primary"
+    >
+      <i class="bi bi-share me-1"></i> Share progress
+    </button>
+
+    <button
+      id="habitNewBtn"
+      class="btn btn-success"
+      data-bs-toggle="modal"
+      data-bs-target="#habitModal"
+    >
+      <i class="bi bi-plus-circle me-1"></i> New habit
+    </button>
+  </div>
+</div> 
+
 
       <div class="row g-3">
         <!-- LEFT: Weekly grid -->
@@ -394,6 +405,45 @@
     </div>
   </div>
 </div>
+
+<!-- Share Progress Modal (custom lightweight modal) -->
+<div id="shareBackdrop" class="share-modal-backdrop">
+  <div class="share-modal">
+    <h3 class="mb-2">Share progress</h3>
+
+    <div class="share-row">
+      <div>
+        <label>Visibility</label>
+        <select id="shareVisibility">
+          <option value="PUBLIC">Public</option>
+          <option value="FRIENDS_ONLY">Friends-only</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Expiry</label>
+        <select id="shareExpiry">
+          <option value="1d">1 day</option>
+          <option value="7d" selected>7 days</option>
+          <option value="never">Never</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="share-actions">
+      <button id="btnShareCancel" type="button" class="btn btn-outline-light btn-sm">Cancel</button>
+      <button id="btnShareGenerate" type="button" class="btn btn-primary btn-sm">Generate link</button>
+    </div>
+
+    <p id="shareMsg" class="muted small mb-2"></p>
+
+    <div id="shareLinkWrap" class="share-linkbox" style="display:none;">
+      <input id="shareLink" type="text" readonly />
+      <button id="btnShareCopy" type="button" class="btn btn-outline-light btn-sm">Copy</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- Toast host (for sync errors, undo later, etc.) -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastHost"></div>

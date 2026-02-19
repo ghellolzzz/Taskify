@@ -418,6 +418,13 @@ async function toggleHabitCheck(userId, habitId, dateStr) {
   } else {
     dateStart = startOfDay(new Date());
   }
+  const todayStart = startOfDay(new Date());
+if (dateStart > todayStart) {
+  const err = new Error('Cannot toggle future dates.');
+  err.status = 400;
+  throw err;
+}
+
 
   // Use composite unique key: @@unique([habitId, date])
   const whereUnique = {

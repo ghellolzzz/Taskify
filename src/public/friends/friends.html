@@ -1,40 +1,235 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Friends</title>
+  <title>Friends • Taskify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+
+  <!-- Global Taskify styles -->
+  <link rel="stylesheet" href="/profile/style.css" />
+  <!-- Friends page styles -->
   <link rel="stylesheet" href="/friends/style.css" />
 </head>
-<body>
-  <main class="container">
-    <h1>Friends</h1>
 
-    <section>
-      <h2>Add friend</h2>
-      <div class="row">
-        <input id="friendEmail" type="email" placeholder="Friend’s email" />
-        <button id="btnSend">Send request</button>
+<script src="/js/theme.js" defer></script>
+
+<body class="profile-theme-light">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="bi bi-list-task"></i>
+      <span>Taskify</span>
+    </div>
+
+    <ul class="nav flex-column mt-4">
+      <li><a href="../dashboard/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li><a href="../tasks/task.html"><i class="bi bi-check2-square"></i> Tasks</a></li>
+      <li><a href="../categories/categories.html"><i class="bi bi-tags"></i> Task Categories</a></li>
+      <li><a href="../reminder/reminder.html"><i class="bi bi-bell"></i> Reminder</a></li>
+      <li><a href="../goal/goal.html"><i class="bi bi-bullseye"></i> Goals</a></li>
+      <li><a href="../teams/teams.html"><i class="bi bi-people-fill"></i> Teams</a></li>
+      <li><a href="../community/community.html"><i class="bi bi-chat-heart"></i> Community</a></li>
+      <li><a href="../habit/habits.html"><i class="bi bi-repeat"></i> Habits</a></li>
+      <li><a href="../time/time.html"><i class="bi bi-clock-history"></i> Time tracking</a></li>
+      <li><a href="../calendar/calendar.html"><i class="bi bi-calendar-event"></i> Calendar</a></li>
+      <li><a class="active" href="../friends/friends.html"><i class="bi bi-people"></i> Friends</a></li>
+      <li><a href="../profile/profile.html"><i class="bi bi-person-circle"></i> Profile</a></li>
+      <li><a href="../feedback/feedback.html"><i class="bi bi-envelope-paper"></i> Feedback</a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <a href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <div class="container-fluid py-4 friends-page">
+
+      <!-- Header row -->
+      <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div>
+          <h2 class="page-title mb-1">Friends</h2>
+          <p class="text-muted small mb-0">
+            Add friends to unlock friends-only habit sharing and community features.
+          </p>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center">
+          <div class="friends-search">
+            <i class="bi bi-search"></i>
+            <input id="searchInput" type="text" class="form-control form-control-sm" placeholder="Search friends & requests..." />
+          </div>
+          <button id="btnRefresh" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+          </button>
+        </div>
       </div>
-      <p id="statusMsg"></p>
-    </section>
 
-    <section>
-      <h2>Incoming requests</h2>
-      <ul id="incomingList"></ul>
-    </section>
+      <!-- Stats chips -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <div class="card profile-card friends-stat-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-muted">Incoming</div>
+                  <div class="stat-value" id="countIncoming">0</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-inbox"></i></div>
+              </div>
+              <div class="small text-muted mt-2">Requests waiting for your response.</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card profile-card friends-stat-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-muted">Outgoing</div>
+                  <div class="stat-value" id="countOutgoing">0</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-send"></i></div>
+              </div>
+              <div class="small text-muted mt-2">Pending requests you’ve sent.</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card profile-card friends-stat-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-muted">Friends</div>
+                  <div class="stat-value" id="countFriends">0</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+              </div>
+              <div class="small text-muted mt-2">People you’re connected with.</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <section>
-      <h2>Outgoing requests</h2>
-      <ul id="outgoingList"></ul>
-    </section>
+      <div class="row g-3">
+        <!-- Left column -->
+        <div class="col-lg-5">
+          <!-- Add friend card -->
+          <div class="card profile-card friends-card mb-3">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Add a friend</h6>
+                <span class="badge rounded-pill text-bg-light small">By email</span>
+              </div>
 
-    <section>
-      <h2>Your friends</h2>
-      <ul id="friendsList"></ul>
-    </section>
+              <div class="friends-add-row">
+                <div class="friends-email">
+                  <i class="bi bi-envelope"></i>
+                  <input id="friendEmail" type="email" class="form-control" placeholder="friend@example.com" />
+                </div>
+
+                <button id="btnSend" class="btn btn-success">
+                  <i class="bi bi-person-plus me-1"></i> Send
+                </button>
+              </div>
+
+              <div class="small text-muted mt-2">
+                Tip: If they already requested you, Taskify will auto-accept.
+              </div>
+            </div>
+          </div>
+
+          <!-- Incoming -->
+          <div class="card profile-card friends-card mb-3">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Incoming requests</h6>
+                <span class="badge rounded-pill text-bg-light small" id="badgeIncoming">0</span>
+              </div>
+
+              <div id="incomingEmpty" class="friends-empty" style="display:none;">
+                <div class="friends-empty-icon">📥</div>
+                <div class="fw-semibold">No incoming requests</div>
+                <div class="small text-muted">When someone adds you, it’ll show up here.</div>
+              </div>
+
+              <ul class="list-group list-group-flush friends-list" id="incomingList"></ul>
+            </div>
+          </div>
+
+          <!-- Outgoing -->
+          <div class="card profile-card friends-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Outgoing requests</h6>
+                <span class="badge rounded-pill text-bg-light small" id="badgeOutgoing">0</span>
+              </div>
+
+              <div id="outgoingEmpty" class="friends-empty" style="display:none;">
+                <div class="friends-empty-icon">📨</div>
+                <div class="fw-semibold">No outgoing requests</div>
+                <div class="small text-muted">Invite friends by entering their email above.</div>
+              </div>
+
+              <ul class="list-group list-group-flush friends-list" id="outgoingList"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="col-lg-7">
+          <div class="card profile-card friends-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <h6 class="mb-0">Your friends</h6>
+                  <div class="small text-muted">Manage your connections (remove / undo).</div>
+                </div>
+                <span class="badge rounded-pill text-bg-light small" id="badgeFriends">0</span>
+              </div>
+
+              <div id="friendsEmpty" class="friends-empty" style="display:none;">
+                <div class="friends-empty-icon">🤝</div>
+                <div class="fw-semibold">No friends yet</div>
+                <div class="small text-muted">Add someone by email to get started.</div>
+              </div>
+
+              <ul class="list-group list-group-flush friends-list" id="friendsList"></ul>
+
+              <div class="friends-hint small text-muted mt-3">
+                Friends-only habit share links require both users to be accepted friends.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer mt-4">
+        <p>© 2025 Taskify. All rights reserved.</p>
+      </footer>
+    </div>
   </main>
 
+  <!-- Toast host -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastHost"></div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Friends JS -->
   <script src="/friends/friends.js"></script>
 </body>
 </html>

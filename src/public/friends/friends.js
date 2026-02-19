@@ -13,93 +13,180 @@ const state = {
 const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('friends-sync') : null;
 if (bc) bc.onmessage = () => load();
 
-function setMsg(msg) {
-  document.getElementById('statusMsg').textContent = msg || '';
-}
-
-function li(text) {
-  const el = document.createElement('li');
-  el.textContent = text;
-  return el;
-}
-
 function opKey(action, id) {
   return `${action}-${id}`;
 }
 
-function render() {
-  const incoming = document.getElementById('incomingList');
-  const outgoing = document.getElementById('outgoingList');
-  const friends = document.getElementById('friendsList');
+function initials(nameOrEmail = '') {
+  const s = String(nameOrEmail).trim();
+  if (!s) return 'U';
+  const parts = s.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return s.slice(0, 2).toUpperCase();
+}
 
-  incoming.innerHTML = '';
-  outgoing.innerHTML = '';
-  friends.innerHTML = '';
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
 
-  state.incoming.forEach(r => {
-    const el = document.createElement('li');
-    el.textContent = `${r.otherUser.name} (${r.otherUser.email})`;
+function toast(msg, kind = 'info') {
+  const host = document.getElementById('toastHost');
+  if (!host) return;
 
+  const id = 't' + Math.random().toString(16).slice(2);
+  const icon = kind === 'success' ? 'bi-check-circle' :
+               kind === 'danger' ? 'bi-exclamation-triangle' :
+               kind === 'warning' ? 'bi-exclamation-circle' :
+               'bi-info-circle';
+
+  const el = document.createElement('div');
+  el.className = 'toast align-items-center';
+  el.id = id;
+  el.setAttribute('role', 'alert');
+  el.setAttribute('aria-live', 'assertive');
+  el.setAttribute('aria-atomic', 'true');
+
+  el.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi ${icon} me-2"></i>${escapeHtml(msg)}
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  `;
+
+  host.appendChild(el);
+  const t = new bootstrap.Toast(el, { delay: 2600 });
+  t.show();
+  el.addEventListener('hidden.bs.toast', () => el.remove());
+}
+
+function applyCounts() {
+  const i = state.incoming.length;
+  const o = state.outgoing.length;
+  const f = state.friends.length;
+
+  document.getElementById('countIncoming').textContent = i;
+  document.getElementById('countOutgoing').textContent = o;
+  document.getElementById('countFriends').textContent = f;
+
+  document.getElementById('badgeIncoming').textContent = i;
+  document.getElementById('badgeOutgoing').textContent = o;
+  document.getElementById('badgeFriends').textContent = f;
+
+  document.getElementById('incomingEmpty').style.display = i ? 'none' : '';
+  document.getElementById('outgoingEmpty').style.display = o ? 'none' : '';
+  document.getElementById('friendsEmpty').style.display = f ? 'none' : '';
+}
+
+function matchesSearch(r, q) {
+  if (!q) return true;
+  const name = r?.otherUser?.name || '';
+  const email = r?.otherUser?.email || '';
+  return (name + ' ' + email).toLowerCase().includes(q);
+}
+
+function makeRow(r, type) {
+  const other = r.otherUser || {};
+  const name = other.name || 'Unknown';
+  const email = other.email || '';
+
+  const li = document.createElement('li');
+  li.className = 'list-group-item';
+
+  const left = document.createElement('div');
+  left.className = 'friend-left';
+  left.innerHTML = `
+    <div class="friend-avatar">${escapeHtml(initials(name || email))}</div>
+    <div class="friend-meta">
+      <div class="friend-name">${escapeHtml(name)}</div>
+      <div class="friend-email text-muted">${escapeHtml(email)}</div>
+    </div>
+  `;
+
+  const actions = document.createElement('div');
+  actions.className = 'friend-actions';
+
+  const row = document.createElement('div');
+  row.className = 'friend-row';
+  row.appendChild(left);
+  row.appendChild(actions);
+  li.appendChild(row);
+
+  if (type === 'incoming') {
     const accept = document.createElement('button');
-    accept.textContent = 'Accept';
+    accept.className = 'btn btn-success btn-sm';
+    accept.innerHTML = `<i class="bi bi-check2 me-1"></i>Accept`;
     accept.disabled = state.pendingOps.has(opKey('ACCEPT', r.id));
     accept.onclick = () => transition(r.id, 'ACCEPT');
 
     const reject = document.createElement('button');
-    reject.textContent = 'Reject';
+    reject.className = 'btn btn-outline-secondary btn-sm';
+    reject.innerHTML = `<i class="bi bi-x-lg me-1"></i>Reject`;
     reject.disabled = state.pendingOps.has(opKey('REJECT', r.id));
     reject.onclick = () => transition(r.id, 'REJECT');
 
-    el.appendChild(document.createTextNode(' '));
-    el.appendChild(accept);
-    el.appendChild(document.createTextNode(' '));
-    el.appendChild(reject);
-    incoming.appendChild(el);
-  });
+    actions.appendChild(accept);
+    actions.appendChild(reject);
+  }
 
-  state.outgoing.forEach(r => {
-    const el = document.createElement('li');
-    el.textContent = `${r.otherUser.name} (${r.otherUser.email})`;
-
+  if (type === 'outgoing') {
     const cancel = document.createElement('button');
-    cancel.textContent = 'Cancel';
+    cancel.className = 'btn btn-outline-secondary btn-sm';
+    cancel.innerHTML = `<i class="bi bi-slash-circle me-1"></i>Cancel`;
     cancel.disabled = state.pendingOps.has(opKey('CANCEL', r.id));
     cancel.onclick = () => transition(r.id, 'CANCEL');
+    actions.appendChild(cancel);
+  }
 
-    el.appendChild(document.createTextNode(' '));
-    el.appendChild(cancel);
-    outgoing.appendChild(el);
-  });
-
-  state.friends.forEach(r => {
-    const el = document.createElement('li');
-    el.textContent = `${r.otherUser.name} (${r.otherUser.email})`;
-
+  if (type === 'friends') {
     const remove = document.createElement('button');
-    remove.textContent = 'Remove';
+    remove.className = 'btn btn-outline-danger btn-sm';
+    remove.innerHTML = `<i class="bi bi-person-dash me-1"></i>Remove`;
     remove.disabled = state.pendingOps.has(opKey('REMOVE', r.id));
     remove.onclick = () => transition(r.id, 'REMOVE');
 
     const undo = document.createElement('button');
-    undo.textContent = 'Undo';
+    undo.className = 'btn btn-outline-success btn-sm';
+    undo.innerHTML = `<i class="bi bi-arrow-counterclockwise me-1"></i>Undo`;
     undo.disabled = state.pendingOps.has(opKey('UNDO', r.id));
     undo.onclick = () => transition(r.id, 'UNDO');
 
-    el.appendChild(document.createTextNode(' '));
-    el.appendChild(remove);
-    el.appendChild(document.createTextNode(' '));
-    el.appendChild(undo);
-    friends.appendChild(el);
-  });
+    actions.appendChild(remove);
+    actions.appendChild(undo);
+  }
+
+  return li;
 }
 
-async function load() {
-  setMsg('');
+function render() {
+  const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+
+  const incomingEl = document.getElementById('incomingList');
+  const outgoingEl = document.getElementById('outgoingList');
+  const friendsEl = document.getElementById('friendsList');
+
+  incomingEl.innerHTML = '';
+  outgoingEl.innerHTML = '';
+  friendsEl.innerHTML = '';
+
+  state.incoming.filter(r => matchesSearch(r, q)).forEach(r => incomingEl.appendChild(makeRow(r, 'incoming')));
+  state.outgoing.filter(r => matchesSearch(r, q)).forEach(r => outgoingEl.appendChild(makeRow(r, 'outgoing')));
+  state.friends.filter(r => matchesSearch(r, q)).forEach(r => friendsEl.appendChild(makeRow(r, 'friends')));
+
+  applyCounts();
+}
+
+async function load(silent = false) {
+  if (!silent) toast('Loading friends…', 'info');
+
   const res = await fetch('/api/friends', { headers: authHeaders() });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    setMsg(data.error || 'Failed to load');
+    toast(data.error || 'Failed to load friends.', 'danger');
     return;
   }
 
@@ -110,25 +197,32 @@ async function load() {
 }
 
 async function sendRequest() {
-  const email = document.getElementById('friendEmail').value.trim();
-  if (!email) return setMsg('Enter an email');
+  const input = document.getElementById('friendEmail');
+  const email = (input?.value || '').trim();
+  if (!email) return toast('Enter an email address.', 'warning');
 
-  setMsg('Sending...');
+  const btn = document.getElementById('btnSend');
+  btn.disabled = true;
+
   const res = await fetch('/api/friends/request', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ email }),
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+  btn.disabled = false;
+
   if (!res.ok) {
-    setMsg(data.error || 'Failed');
+    toast(data.error || 'Failed to send request.', 'danger');
     return;
   }
 
-  setMsg(data.action === 'AUTO_ACCEPTED' ? 'They requested you already — auto accepted.' : 'Request sent.');
-  document.getElementById('friendEmail').value = '';
-  await load();
+  if (data.action === 'AUTO_ACCEPTED') toast('They already requested you — auto accepted ✅', 'success');
+  else toast('Friend request sent ✅', 'success');
+
+  input.value = '';
+  await load(true);
   if (bc) bc.postMessage({ type: 'refresh' });
 }
 
@@ -137,26 +231,54 @@ async function transition(id, action) {
   state.pendingOps.add(key);
   render();
 
-  // optimistic-ish: refresh after success; rollback is handled by just reloading
   const res = await fetch(`/api/friends/${id}`, {
     method: 'PATCH',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ action }),
   });
-  const data = await res.json();
+
+  const data = await res.json().catch(() => ({}));
 
   state.pendingOps.delete(key);
 
   if (!res.ok) {
-    setMsg(data.error || 'Action failed');
-    await load();
+    toast(data.error || 'Action failed.', 'danger');
+    await load(true);
     return;
   }
 
-  setMsg('');
-  await load();
+  // Friendly toasts
+  const msg =
+    action === 'ACCEPT' ? 'Request accepted ✅' :
+    action === 'REJECT' ? 'Request rejected.' :
+    action === 'CANCEL' ? 'Request cancelled.' :
+    action === 'REMOVE' ? 'Friend removed.' :
+    action === 'UNDO'   ? 'Undo complete ✅' :
+    'Updated.';
+
+  toast(msg, action === 'ACCEPT' || action === 'UNDO' ? 'success' : 'info');
+
+  await load(true);
   if (bc) bc.postMessage({ type: 'refresh' });
 }
 
-document.getElementById('btnSend').onclick = sendRequest;
-load();
+/* Wire up */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btnSend')?.addEventListener('click', sendRequest);
+  document.getElementById('btnRefresh')?.addEventListener('click', () => load());
+  document.getElementById('searchInput')?.addEventListener('input', render);
+
+  // Logout (same behavior as your profile page)
+  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('accountNo');
+    localStorage.removeItem('role');
+    localStorage.removeItem('memberId');
+    window.location.href = '../login.html';
+  });
+
+  load(true);
+});

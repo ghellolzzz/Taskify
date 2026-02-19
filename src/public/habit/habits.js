@@ -948,7 +948,7 @@ week.days.forEach((day) => {
   const tbody = document.getElementById('habitsTableBody');
   tbody.innerHTML = '';
 
-  if (sortedHabits.length === 0) {
+if (sortedHabits.length === 0) {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td colspan="10" class="text-center text-muted small py-4">
@@ -956,6 +956,28 @@ week.days.forEach((day) => {
     </td>
   `;
   tbody.appendChild(tr);
+
+  // IMPORTANT: still render sidebar + week label + drag setup
+  renderArchivedHabits(archivedHabits);
+
+  const weekRangeLabel = document.getElementById('weekRangeLabel');
+  if (weekRangeLabel) {
+    const start = new Date(week.start);
+    const end = new Date(week.start);
+    end.setDate(end.getDate() + 6);
+    weekRangeLabel.textContent = `${start.toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+    })} – ${end.toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+    })}`;
+  }
+
+  updateSidebarStats(summary);
+  updatePatternsCard(board);
+  setupDragDropIfNeeded();
+
   return;
 }
   sortedHabits.forEach((habit) => {
@@ -1625,8 +1647,9 @@ function updateSidebarStats(summary) {
     todayLabel.textContent = `${todayCompleted} / ${todayTotal} habits completed`;
   }
   if (todayBar) {
-    todayBar.style.width = `${todayPct}%`;
-  }
+  todayBar.style.width = `${todayPct}%`;
+  todayBar.style.minWidth = todayPct === 0 ? '1px' : '';
+}
   if (todayMessage) {
     if (todayCompleted === 0) {
       todayMessage.textContent = 'Start by ticking just one habit today.';
@@ -1654,8 +1677,9 @@ if (weeklyDeltaLabel) {
 }
 
   if (weeklyBar) {
-    weeklyBar.style.width = `${weeklyPct}%`;
-  }
+  weeklyBar.style.width = `${weeklyPct}%`;
+  weeklyBar.style.minWidth = weeklyPct === 0 ? '1px' : '';
+}
   if (weeklyMessage) {
   if (weeklyPct === 0) {
     weeklyMessage.textContent = 'Your week is still blank. Tiny actions add up fast.';

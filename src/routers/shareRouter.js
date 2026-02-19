@@ -15,6 +15,8 @@ function optionalAuth(req, res, next) {
 // Create link (must be logged in)
 router.post('/habits', jwtMiddleware.verifyToken, shareController.createHabitLink);
 
+router.post('/habits/:token/send', jwtMiddleware.verifyToken, shareController.sendHabitLink);
+
 // View link card (public links can be viewed without login; friends-only requires login)
 router.get('/habits/:token', optionalAuth, shareController.viewHabitLink);
 

@@ -7,6 +7,7 @@ const state = {
   incoming: [],
   outgoing: [],
   friends: [],
+  inbox: [],
   pendingOps: new Set(), // e.g. "ACCEPT-12"
 };
 
@@ -182,10 +183,15 @@ function render() {
 async function load(silent = false) {
   if (!silent) toast('Loading friends…', 'info');
 
-  const res = await fetch('/api/friends', { headers: authHeaders() });
-  const data = await res.json().catch(() => ({}));
+  const [friendsRes, inboxRes] = await Promise.all([
+    fetch('/api/friends', { headers: authHeaders() }),
+    fetch('/api/activity/inbox?limit=20&type=HABIT_SHARE', { headers: authHeaders() }),
+  ]);
 
-  if (!res.ok) {
+  const data = await friendsRes.json().catch(() => ({}));
+  const inbox = await inboxRes.json().catch(() => ({}));
+
+  if (!friendsRes.ok) {
     toast(data.error || 'Failed to load friends.', 'danger');
     return;
   }
@@ -193,8 +199,14 @@ async function load(silent = false) {
   state.incoming = data.incoming || [];
   state.outgoing = data.outgoing || [];
   state.friends = data.friends || [];
+
+  state.inbox = inbox.items || [];
+  state.inboxUnread = inbox.counts?.unread || 0;
+
   render();
+  renderInbox();
 }
+
 
 async function sendRequest() {
   const input = document.getElementById('friendEmail');
@@ -261,6 +273,119 @@ async function transition(id, action) {
   await load(true);
   if (bc) bc.postMessage({ type: 'refresh' });
 }
+
+function timeAgo(iso) {
+  const t = new Date(iso).getTime();
+  const s = Math.max(1, Math.floor((Date.now() - t) / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  return `${d}d`;
+}
+
+async function inboxAction(id, action) {
+  const res = await fetch(`/api/activity/inbox/habit-share/${id}`, {
+    method: 'PATCH',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ action }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed');
+}
+
+function makeInboxRow(item) {
+  const sender = item.sender || {};
+  const name = sender.name || sender.email || 'Someone';
+
+  const li = document.createElement('li');
+  li.className = 'list-group-item';
+
+  const left = document.createElement('div');
+  left.className = 'friend-left';
+  left.innerHTML = `
+    <div class="friend-avatar">${escapeHtml(initials(name))}</div>
+    <div class="friend-meta">
+      <div class="friend-name">
+        ${escapeHtml(name)}
+        ${item.isRead ? '' : `<span class="badge text-bg-success ms-2">New</span>`}
+        ${item.isExpired ? `<span class="badge text-bg-secondary ms-2">Expired</span>` : ''}
+      </div>
+      <div class="friend-email text-muted">
+        shared habit progress • ${escapeHtml(timeAgo(item.createdAt))} ago
+      </div>
+      ${item.message ? `<div class="small mt-1">${escapeHtml(item.message)}</div>` : ''}
+    </div>
+  `;
+
+  const actions = document.createElement('div');
+  actions.className = 'friend-actions';
+
+  const viewBtn = document.createElement('button');
+  viewBtn.className = 'btn btn-outline-primary btn-sm';
+  viewBtn.innerHTML = `<i class="bi bi-box-arrow-up-right me-1"></i>View`;
+  viewBtn.onclick = async () => {
+    try {
+      await inboxAction(item.id, 'READ');
+    } catch (_) {}
+    if (item.link?.path) window.open(item.link.path, '_blank');
+    await loadInbox(true);
+  };
+
+  const dismissBtn = document.createElement('button');
+  dismissBtn.className = 'btn btn-outline-secondary btn-sm';
+  dismissBtn.innerHTML = `<i class="bi bi-x-lg me-1"></i>Dismiss`;
+  dismissBtn.onclick = async () => {
+    try {
+      await inboxAction(item.id, 'DISMISS');
+      await loadInbox(true);
+    } catch (e) {
+      toast(e.message || 'Failed', 'danger');
+    }
+  };
+
+  actions.appendChild(viewBtn);
+  actions.appendChild(dismissBtn);
+
+  const row = document.createElement('div');
+  row.className = 'friend-row';
+  row.appendChild(left);
+  row.appendChild(actions);
+
+  li.appendChild(row);
+  return li;
+}
+
+function renderInbox() {
+  const list = document.getElementById('inboxList');
+  const empty = document.getElementById('inboxEmpty');
+  const badge = document.getElementById('badgeInbox');
+
+  if (!list || !empty || !badge) return;
+
+  list.innerHTML = '';
+  badge.textContent = String(state.inboxUnread || 0);
+
+  empty.style.display = state.inbox.length ? 'none' : '';
+  state.inbox.forEach(item => list.appendChild(makeInboxRow(item)));
+}
+
+async function loadInbox(silent = false) {
+  const res = await fetch('/api/activity/inbox?limit=20&type=HABIT_SHARE', { headers: authHeaders() });
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    if (!silent) toast(data.error || 'Failed to load inbox.', 'danger');
+    return;
+  }
+
+  state.inbox = data.items || [];
+  state.inboxUnread = data.counts?.unread || 0;
+  renderInbox();
+}
+
 
 /* Wire up */
 document.addEventListener('DOMContentLoaded', () => {

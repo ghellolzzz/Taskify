@@ -193,6 +193,27 @@
           <div class="card profile-card friends-card">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center mb-2">
+                <!-- Inbox -->
+<div class="card profile-card friends-card mb-3" id="inboxCard">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div>
+        <h6 class="mb-0">Inbox</h6>
+        <div class="small text-muted">Shared habits & activity.</div>
+      </div>
+      <span class="badge rounded-pill text-bg-light small" id="badgeInbox">0</span>
+    </div>
+
+    <div id="inboxEmpty" class="friends-empty" style="display:none;">
+      <div class="friends-empty-icon">🔔</div>
+      <div class="fw-semibold">All caught up</div>
+      <div class="small text-muted">Shares will appear here.</div>
+    </div>
+
+    <ul class="list-group list-group-flush friends-list" id="inboxList"></ul>
+  </div>
+</div>
+
                 <div>
                   <h6 class="mb-0">Your friends</h6>
                   <div class="small text-muted">Manage your connections (remove / undo).</div>

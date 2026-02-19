@@ -47,6 +47,8 @@ model User {
   friendRequestsSent     Friendship[] @relation("FriendRequester")
   friendRequestsReceived Friendship[] @relation("FriendAddressee")
   habitShareLinks HabitShareLink[]
+  habitShareDeliveriesSent     HabitShareDelivery[] @relation("ShareDeliverySender")
+  habitShareDeliveriesReceived HabitShareDelivery[] @relation("ShareDeliveryRecipient")
 
 
   passwordResets PasswordReset[]
@@ -488,7 +490,26 @@ model HabitShareLink {
   visibility ShareVisibility @default(PUBLIC)
   expiresAt  DateTime?
   createdAt  DateTime        @default(now())
+  
+  deliveries HabitShareDelivery[]
 
   @@index([ownerId])
   @@map("habit_share_links")
+}
+
+model HabitShareDelivery {
+  id          Int      @id @default(autoincrement())
+  linkId      Int
+  link        HabitShareLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  senderId    Int
+  sender      User     @relation("ShareDeliverySender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId Int
+  recipient   User     @relation("ShareDeliveryRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  message     String?  @db.VarChar(500)
+  status      String   @default("SENT")
+  createdAt   DateTime @default(now())
+
+  @@unique([linkId, recipientId])
+  @@index([recipientId, createdAt])
+  @@map("habit_share_deliveries")
 }

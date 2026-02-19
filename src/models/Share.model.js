@@ -308,10 +308,55 @@ async function buildHabitsShareCard(ownerId, windows = [7, 30]) {
   };
 }
 
+async function sendHabitShareLink(ownerId, token, recipientIds, messageRaw) {
+  const link = await prisma.habitShareLink.findUnique({
+    where: { token },
+    select: { id: true, ownerId: true },
+  });
+
+  if (!link) return { error: 'NOT_FOUND' };
+  if (link.ownerId !== ownerId) return { error: 'FORBIDDEN' };
+
+  // --- Data transformation: sanitize + dedupe + remove self ---
+  const unique = [...new Set((recipientIds || []).map(Number))]
+    .filter((x) => Number.isFinite(x) && x > 0 && x !== ownerId);
+
+  if (!unique.length) return { error: 'NO_RECIPIENTS' };
+
+  const message = (messageRaw ? String(messageRaw).trim() : '').slice(0, 500) || null;
+
+  // Verify friendships (server-side trust boundary)
+  const checks = await Promise.all(
+    unique.map(async (rid) => ({ rid, ok: await isFriends(ownerId, rid) }))
+  );
+
+  const allowed = checks.filter(x => x.ok).map(x => x.rid);
+  const rejected = checks.filter(x => !x.ok).map(x => x.rid);
+
+  let createdCount = 0;
+
+  if (allowed.length) {
+    const r = await prisma.habitShareDelivery.createMany({
+      data: allowed.map((rid) => ({
+        linkId: link.id,
+        senderId: ownerId,
+        recipientId: rid,
+        message,
+        status: 'SENT',
+      })),
+      skipDuplicates: true,
+    });
+    createdCount = r.count || 0;
+  }
+
+  return { sent: allowed, rejected, createdCount };
+}
+
 
 module.exports = {
   createHabitShareLink,
   getLinkByToken,
   isFriends,
   buildHabitsShareCard,
+  sendHabitShareLink, 
 };

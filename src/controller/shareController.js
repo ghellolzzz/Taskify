@@ -55,3 +55,25 @@ const card = await Share.buildHabitsShareCard(link.ownerId, [7, 30]);
     card,
   });
 };
+
+module.exports.sendHabitLink = async (req, res) => {
+  const ownerId = res.locals.userId;
+  const token = String(req.params.token || '').trim();
+  if (!token) return bad(res, 400, 'Missing token');
+
+  const recipientIds = Array.isArray(req.body.recipientIds) ? req.body.recipientIds : [];
+  const message = req.body.message;
+
+  const result = await Share.sendHabitShareLink(ownerId, token, recipientIds, message);
+
+  if (result.error === 'NOT_FOUND') return bad(res, 404, 'NOT_FOUND');
+  if (result.error === 'FORBIDDEN') return bad(res, 403, 'FORBIDDEN');
+  if (result.error === 'NO_RECIPIENTS') return bad(res, 400, 'Select at least one friend');
+
+  res.json({
+    ok: true,
+    sent: result.sent,
+    rejected: result.rejected,
+    createdCount: result.createdCount,
+  });
+};

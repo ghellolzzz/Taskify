@@ -24,7 +24,7 @@ const communityRouter = require('./routers/communityRouter.js');
 const shopRouter = require('./routers/shopRoutes.js');
 const friendsRouter = require('./routers/friendsRouter.js');
 const shareRouter = require('./routers/shareRouter.js');
-
+const activityRouter = require('./routers/activityRouter');
 
 
 const app = express();
@@ -54,7 +54,7 @@ app.use('/api/time-entries', timeEntryRouter);
 app.use('/api/community', communityRouter);
 app.use('/api/friends', friendsRouter);
 app.use('/api/share', shareRouter);
-
+app.use('/api/activity', activityRouter);
 
 app.use('/api/shop', shopRouter);
 

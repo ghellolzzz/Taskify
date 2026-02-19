@@ -69,6 +69,8 @@
       class="btn btn-outline-primary"
     >
       <i class="bi bi-share me-1"></i> Share progress
+<span id="sharedInboxBadge" class="badge rounded-pill text-bg-danger ms-2" style="display:none;">0</span>
+
     </button>
 
     <button
@@ -138,6 +140,22 @@
 
         <!-- RIGHT: Insights -->
         <div class="col-lg-4">
+         <div class="card profile-card habits-card mb-3" id="sharedWithYouCard">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">Shared with you</h6>
+      <span class="badge rounded-pill text-bg-light small" id="sharedWithYouCount">0</span>
+    </div>
+
+    <div id="sharedWithYouEmpty" class="text-muted small">
+      No shared habit links yet.
+    </div>
+
+    <ul class="list-group list-group-flush" id="sharedWithYouList"></ul>
+  </div>
+</div>
+
+
           <div class="card profile-card habits-card mb-3">
             <div class="card-body">
               <h6 class="mb-2">Today</h6>
@@ -434,6 +452,25 @@
       <button id="btnShareCancel" type="button" class="btn btn-outline-light btn-sm">Cancel</button>
       <button id="btnShareGenerate" type="button" class="btn btn-primary btn-sm">Generate link</button>
     </div>
+    <div id="shareSendWrap" style="display:none; margin-top: 12px;">
+  <div class="mb-2">
+    <label class="small muted">Send to…</label>
+    <select id="shareFriends" class="form-select" multiple></select>
+    <div id="shareFriendsHint" class="small muted" style="margin-top:6px;"></div>
+  </div>
+
+  <div class="mb-2">
+    <label class="small muted">Message (optional)</label>
+    <textarea id="shareNote" class="form-control" rows="2" maxlength="280"
+      placeholder="e.g. Here’s my habits progress 👇"></textarea>
+  </div>
+
+  <div class="d-flex align-items-center gap-2">
+    <button id="btnShareSend" type="button" class="btn btn-primary" disabled>Send</button>
+    <span id="shareSendMsg" class="small muted"></span>
+  </div>
+</div>
+
 
     <p id="shareMsg" class="muted small mb-2"></p>
 

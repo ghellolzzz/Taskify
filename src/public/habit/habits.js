@@ -56,6 +56,182 @@ function showToast(message, variant = 'danger', delayMs = 3000) {
 
   el.addEventListener('hidden.bs.toast', () => el.remove());
 }
+const sharedInboxState = {
+  items: [],
+  unread: 0,
+};
+
+// Habits-page only: hide shared items locally (does NOT affect Friends inbox)
+const SHARED_HIDE_KEY = '__taskify_habits_hidden_share_ids__';
+
+function getHiddenShareIds() {
+  try {
+    const raw = localStorage.getItem(SHARED_HIDE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set((Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveHiddenShareIds(set) {
+  try { localStorage.setItem(SHARED_HIDE_KEY, JSON.stringify([...set])); } catch {}
+}
+
+function hideShareIdLocally(id) {
+  const hidden = getHiddenShareIds();
+  hidden.add(Number(id));
+  saveHiddenShareIds(hidden);
+}
+
+function isHiddenLocally(id) {
+  return getHiddenShareIds().has(Number(id));
+}
+
+
+function timeAgoShort(iso) {
+  const t = new Date(iso).getTime();
+  const s = Math.max(1, Math.floor((Date.now() - t) / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+
+async function sharedInboxAction(id, action) {
+  const res = await fetch(`/api/activity/inbox/habit-share/${id}`, {
+    method: 'PATCH',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ action }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed');
+}
+
+function renderSharedWithYou() {
+  const badge = document.getElementById('sharedInboxBadge');
+  const card = document.getElementById('sharedWithYouCard');
+  const count = document.getElementById('sharedWithYouCount');
+  const list = document.getElementById('sharedWithYouList');
+  const empty = document.getElementById('sharedWithYouEmpty');
+
+  if (!badge || !card || !count || !list) return;
+  const visibleItems = (sharedInboxState.items || []).filter(it => !isHiddenLocally(it.id));
+
+
+  // badge on Share button
+  if (sharedInboxState.unread > 0) {
+    badge.style.display = '';
+    badge.textContent = String(sharedInboxState.unread);
+  } else {
+    badge.style.display = 'none';
+  }
+
+  // always show card
+  card.style.display = '';
+
+  // empty vs list
+  if (!visibleItems.length) {
+    count.textContent = '0';
+    list.innerHTML = '';
+    if (empty) empty.style.display = '';
+    return;
+  }
+
+  if (empty) empty.style.display = 'none';
+
+  count.textContent = String(visibleItems.length);
+  list.innerHTML = '';
+
+
+  visibleItems.forEach((item) => {
+    const sender = item.sender || {};
+    const name = sender.name || sender.email || 'Someone';
+
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-start gap-2';
+
+    const left = document.createElement('div');
+    left.className = 'flex-grow-1';
+    left.innerHTML = `
+      <div class="fw-semibold">
+        ${escapeHtml(name)}
+        ${item.isRead ? '' : `<span class="badge text-bg-success ms-2">New</span>`}
+        ${item.isExpired ? `<span class="badge text-bg-secondary ms-2">Expired</span>` : ''}
+      </div>
+      <div class="small text-muted">habit progress • ${escapeHtml(timeAgoShort(item.createdAt))} ago</div>
+      ${item.message ? `<div class="small mt-1">${escapeHtml(item.message)}</div>` : ''}
+    `;
+
+    const right = document.createElement('div');
+    right.className = 'd-flex gap-2';
+
+    const view = document.createElement('button');
+    view.className = 'btn btn-outline-primary btn-sm';
+    view.innerHTML = `<i class="bi bi-box-arrow-up-right me-1"></i>View`;
+    view.onclick = async () => {
+  if (!item.isRead) {
+    item.isRead = true;
+    sharedInboxState.unread = Math.max(0, (sharedInboxState.unread || 0) - 1);
+    renderSharedWithYou();
+  }
+
+  try { await sharedInboxAction(item.id, 'READ'); } catch (_) {}
+  if (item.link?.path) window.location.href = item.link.path;
+};
+
+
+    const dismiss = document.createElement('button');
+    dismiss.className = 'btn btn-outline-secondary btn-sm';
+    dismiss.innerHTML = `<i class="bi bi-x-lg me-1"></i>`;
+    dismiss.title = 'Dismiss';
+    dismiss.onclick = async () => {
+  hideShareIdLocally(item.id);
+  renderSharedWithYou();
+  try {
+    await sharedInboxAction(item.id, 'DISMISS');
+    await loadSharedWithYou(true);
+  } catch (e) {
+    showToast(e.message || 'Failed', 'danger', 2000);
+  }
+};
+
+
+    right.appendChild(view);
+    right.appendChild(dismiss);
+
+    li.appendChild(left);
+    li.appendChild(right);
+    list.appendChild(li);
+  });
+}
+
+async function loadSharedWithYou(silent = true) {
+  // Habits page should keep showing shares even if dismissed in Friends inbox
+  const urlA = '/api/activity/inbox?limit=5&type=HABIT_SHARE&includeDismissed=1';
+  const urlB = '/api/activity/inbox?limit=5&type=HABIT_SHARE';
+
+  let res = await fetch(urlA, { headers: authHeaders() });
+
+  // fallback if backend doesn't support includeDismissed yet
+  if (!res.ok && (res.status === 400 || res.status === 404)) {
+    res = await fetch(urlB, { headers: authHeaders() });
+  }
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    if (!silent) showToast(data.error || 'Failed to load shared items', 'danger', 2000);
+    return;
+  }
+
+  sharedInboxState.items = data.items || [];
+  sharedInboxState.unread = data.counts?.unread || 0;
+  renderSharedWithYou();
+}
+
 
 function getTodayDateKey(board) {
   const days = Array.isArray(board?.week?.days) ? board.week.days : [];
@@ -263,20 +439,65 @@ function setupMultiTabSync() {
 // --- Share Progress (state + UI) ---
 const shareState = {
   open: false,
+  step: 'config', // 'config' | 'generated'
   generating: false,
-  link: null,
-  error: null,
+  sending: false,
+
+  token: null,
+  url: null,
+
+  friends: {
+    loaded: false,
+    loading: false,
+    list: [],
+    error: null,
+  },
+
+  selectedIds: new Set(),
 };
 
 function qs(id) { return document.getElementById(id); }
 
-function openShare() {
-  shareState.open = true;
-  shareState.link = null;
-  shareState.error = null;
+function resetShareUI() {
+  shareState.step = 'config';
+  shareState.generating = false;
+  shareState.sending = false;
+
+  shareState.token = null;
+  shareState.url = null;
+
+  shareState.selectedIds = new Set();
+
   qs('shareMsg').textContent = '';
   qs('shareLinkWrap').style.display = 'none';
+
+  // send section
+  const sendWrap = qs('shareSendWrap');
+  if (sendWrap) sendWrap.style.display = 'none';
+
+  const sel = qs('shareFriends');
+  if (sel) sel.innerHTML = '';
+
+  const hint = qs('shareFriendsHint');
+  if (hint) hint.textContent = '';
+
+  const note = qs('shareNote');
+  if (note) note.value = '';
+
+  const sendMsg = qs('shareSendMsg');
+  if (sendMsg) sendMsg.textContent = '';
+
+  const btnSend = qs('btnShareSend');
+  if (btnSend) btnSend.disabled = true;
+}
+
+function openShare() {
+  shareState.open = true;
+  resetShareUI();
   qs('shareBackdrop').style.display = 'flex';
+
+  // preload friends so they’re ready after Generate
+  ensureFriendsLoaded();
 }
 
 function closeShare() {
@@ -292,6 +513,97 @@ function setGenerating(on) {
   shareState.generating = on;
   qs('btnShareGenerate').disabled = on;
   qs('btnShareCancel').disabled = on;
+}
+
+function setSending(on) {
+  shareState.sending = on;
+  const btnSend = qs('btnShareSend');
+  if (btnSend) btnSend.disabled = on || shareState.selectedIds.size === 0 || !shareState.token;
+}
+
+function normalizeFriendsPayload(data) {
+  // Handles: array, {friends:[...]}, {data:[...]}
+  const arr = Array.isArray(data) ? data
+    : Array.isArray(data?.friends) ? data.friends
+    : Array.isArray(data?.data) ? data.data
+    : [];
+
+  // IMPORTANT: your /api/friends returns friendship view rows with `otherUser`
+  const picked = arr
+    .map((row) =>
+      row?.otherUser ||           // ✅ your Friends.model uses this
+      row?.friend ||
+      row?.user ||
+      row?.addressee ||
+      row?.requester ||
+      row
+    )
+    .filter(Boolean);
+
+  // Normalize shape: {id, name, email} (NOW uses USER id)
+  const norm = picked
+    .map(u => ({
+      id: Number(u.id),
+      name: (u.name || u.username || '').trim() || 'Unknown',
+      email: (u.email || '').trim(),
+    }))
+    .filter(u => Number.isFinite(u.id) && u.id > 0);
+
+  // Dedupe + sort
+  const map = new Map();
+  for (const f of norm) map.set(f.id, f);
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+
+function renderFriendsSelect(list) {
+  const sel = qs('shareFriends');
+  const hint = qs('shareFriendsHint');
+  if (!sel) return;
+
+  sel.innerHTML = '';
+
+  if (!list.length) {
+    if (hint) hint.textContent = 'No friends found. Add friends to use Send.';
+    sel.disabled = true;
+    return;
+  }
+
+  sel.disabled = false;
+  if (hint) hint.textContent = 'Tip: select multiple friends (Ctrl/Cmd + click).';
+
+  for (const f of list) {
+    const opt = document.createElement('option');
+    opt.value = String(f.id);
+    opt.textContent = f.email ? `${f.name} (${f.email})` : f.name;
+    sel.appendChild(opt);
+  }
+}
+
+async function ensureFriendsLoaded() {
+  if (shareState.friends.loaded || shareState.friends.loading) return;
+
+  shareState.friends.loading = true;
+  shareState.friends.error = null;
+
+  try {
+    const res = await fetch('/api/friends', { headers: authHeaders() });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to load friends');
+
+    const list = normalizeFriendsPayload(data);
+    shareState.friends.list = list;
+    shareState.friends.loaded = true;
+
+    // if modal is open and we’re already on generated step, render now
+    renderFriendsSelect(list);
+  } catch (e) {
+    shareState.friends.error = e.message || 'Failed to load friends';
+    const hint = qs('shareFriendsHint');
+    if (hint) hint.textContent = shareState.friends.error;
+  } finally {
+    shareState.friends.loading = false;
+  }
 }
 
 async function generateShareLink() {
@@ -312,11 +624,25 @@ async function generateShareLink() {
     if (!res.ok) throw new Error(data.error || 'Failed to generate');
 
     const url = window.location.origin + data.path;
-    shareState.link = url;
+
+    shareState.token = data.token;
+    shareState.url = url;
+    shareState.step = 'generated';
 
     qs('shareLink').value = url;
     qs('shareLinkWrap').style.display = '';
     setShareMsg('Link generated.');
+
+    // show send section
+    const sendWrap = qs('shareSendWrap');
+    if (sendWrap) sendWrap.style.display = '';
+
+    // render friends (preloaded or load now)
+    await ensureFriendsLoaded();
+    renderFriendsSelect(shareState.friends.list);
+
+    // enable send button if any selection exists
+    setSending(false);
   } catch (e) {
     setShareMsg(e.message || 'Failed');
   } finally {
@@ -331,18 +657,82 @@ async function copyShareLink() {
     await navigator.clipboard.writeText(url);
     setShareMsg('Copied.');
   } catch {
-    // fallback
     qs('shareLink').select();
     document.execCommand('copy');
     setShareMsg('Copied.');
   }
 }
 
+function updateSelectedFriendsFromSelect() {
+  const sel = qs('shareFriends');
+  shareState.selectedIds = new Set();
+
+  if (sel) {
+    for (const opt of sel.selectedOptions) {
+      const id = Number(opt.value);
+      if (Number.isFinite(id)) shareState.selectedIds.add(id);
+    }
+  }
+
+  const btnSend = qs('btnShareSend');
+  if (btnSend) btnSend.disabled = shareState.sending || shareState.selectedIds.size === 0 || !shareState.token;
+}
+
+async function sendShareToFriends() {
+  if (!shareState.token) return;
+
+  const sendMsg = qs('shareSendMsg');
+  if (sendMsg) sendMsg.textContent = '';
+
+  const recipientIds = [...shareState.selectedIds];
+  if (!recipientIds.length) {
+    if (sendMsg) sendMsg.textContent = 'Select at least one friend.';
+    return;
+  }
+
+  const message = (qs('shareNote')?.value || '').trim();
+
+  setSending(true);
+  if (sendMsg) sendMsg.textContent = 'Sending...';
+
+  try {
+    const res = await fetch(`/api/share/habits/${shareState.token}/send`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ recipientIds, message }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to send');
+
+    const sentCount = Array.isArray(data.sent) ? data.sent.length : (data.createdCount || 0);
+    const rejectedCount = Array.isArray(data.rejected) ? data.rejected.length : 0;
+
+    if (sendMsg) {
+      sendMsg.textContent =
+        rejectedCount
+          ? `Sent to ${sentCount}. Skipped ${rejectedCount} (not friends).`
+          : `Sent to ${sentCount} friend${sentCount === 1 ? '' : 's'} ✓`;
+    }
+
+    showToast?.(`Share sent to ${sentCount} friend${sentCount === 1 ? '' : 's'}.`, 'success', 1800);
+
+    // optional UX: clear selection after send
+    const sel = qs('shareFriends');
+    if (sel) sel.selectedIndex = -1;
+    shareState.selectedIds = new Set();
+    updateSelectedFriendsFromSelect();
+  } catch (e) {
+    if (sendMsg) sendMsg.textContent = e.message || 'Failed to send';
+  } finally {
+    setSending(false);
+  }
+}
+
 function setupShareProgressModal() {
   const $ = (id) => document.getElementById(id);
 
-  const btn = $('btnShareProgress');
-  if (btn) btn.addEventListener('click', openShare);
+  $('btnShareProgress')?.addEventListener('click', openShare);
 
   $('btnShareCancel')?.addEventListener('click', closeShare);
   $('shareBackdrop')?.addEventListener('click', (e) => {
@@ -351,6 +741,9 @@ function setupShareProgressModal() {
 
   $('btnShareGenerate')?.addEventListener('click', generateShareLink);
   $('btnShareCopy')?.addEventListener('click', copyShareLink);
+
+  $('shareFriends')?.addEventListener('change', updateSelectedFriendsFromSelect);
+  $('btnShareSend')?.addEventListener('click', sendShareToFriends);
 }
 
 
@@ -385,6 +778,9 @@ document.addEventListener('DOMContentLoaded', () => {
   setupMultiTabSync(); 
   setupDeleteModal();
   loadHabitsBoard();
+  loadSharedWithYou(false);
+  window.addEventListener('pageshow', () => loadSharedWithYou(true));
+
 });
 
 function loadHabitsBoard() {

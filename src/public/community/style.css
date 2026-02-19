@@ -46,9 +46,10 @@
 
 .sidebar a.active,
 .sidebar a:hover {
-    background: #e9f7ef;
-    color: #198754;
+  background: rgba(255,255,255,0.06); 
+  color: var(--accent-color);
 }
+
 
 /* Sidebar footer */
 .sidebar-footer {
@@ -204,12 +205,12 @@ body {
 
 /* Match Button to Sidebar Brand Color */
 .btn-primary {
-    background-color: #198754 !important;
-    border-color: #198754 !important;
+  background-color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
 }
 
 .btn-primary:hover {
-    background-color: #146c43 !important;
+  filter: brightness(0.9);
 }
 
 /* Sticky Footer */
@@ -219,4 +220,117 @@ body {
     padding: 20px 0;
     width: 100%;
     color: #6c757d;
+}
+
+
+/* =========================================
+   DARK MODE OVERRIDES (NO HTML CHANGES)
+   Works with body.profile-theme-dark (theme.js)
+   ========================================= */
+
+body.profile-theme-dark {
+  background-color: #0b1220 !important;
+  color: #e5e7eb !important;
+}
+
+/* Text helpers (Bootstrap uses text-dark / text-muted a lot) */
+body.profile-theme-dark .text-dark { color: #e5e7eb !important; }
+body.profile-theme-dark .text-muted { color: #9ca3af !important; }
+
+/* Main content area */
+body.profile-theme-dark .main-content {
+  background: transparent !important;
+}
+
+/* Sidebar */
+body.profile-theme-dark .sidebar {
+  background: linear-gradient(#0f172a, #0b1220) !important;
+  border-right: 1px solid #243244 !important;
+}
+body.profile-theme-dark .sidebar a {
+  color: rgba(229,231,235,0.75) !important;
+}
+body.profile-theme-dark .sidebar a.active,
+body.profile-theme-dark .sidebar a:hover {
+  background: rgba(255,255,255,0.06) !important;
+  color: var(--accent-color) !important;
+}
+body.profile-theme-dark .sidebar-footer {
+  border-top: 1px solid #243244 !important;
+}
+
+/* Community board (paper background -> dark) */
+body.profile-theme-dark .community-board {
+  background-color: #111827 !important;
+  border: 2px solid #243244 !important;
+  background-image: radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px) !important;
+}
+
+/* Sticky note base text */
+body.profile-theme-dark .sticky-note p {
+  color: #111827 !important; /* keep note text dark (notes are bright colors) */
+}
+
+/* Modal (Bootstrap) */
+body.profile-theme-dark .modal-content {
+  background: #111827 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #243244 !important;
+}
+body.profile-theme-dark .modal-header,
+body.profile-theme-dark .modal-footer {
+  border-color: #243244 !important;
+}
+body.profile-theme-dark .btn-close {
+  filter: invert(1) grayscale(100%) !important;
+}
+
+/* Textarea has bg-light in HTML -> force dark */
+body.profile-theme-dark .form-control,
+body.profile-theme-dark .bg-light {
+  background: #0f172a !important;
+  color: #e5e7eb !important;
+  border: 1px solid #243244 !important;
+}
+body.profile-theme-dark .form-control::placeholder {
+  color: rgba(156,163,175,0.9) !important;
+}
+
+/* Cancel button is btn-light -> dark */
+body.profile-theme-dark .btn-light {
+  background: #0f172a !important;
+  color: #e5e7eb !important;
+  border: 1px solid #243244 !important;
+}
+
+/* Footer */
+body.profile-theme-dark .footer {
+  color: #9ca3af !important;
+}
+
+/* Optional: scrollbar */
+body.profile-theme-dark ::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15) !important;
+}
+body.profile-theme-dark ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+body.profile-theme-dark .sidebar {
+  scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+
+body.profile-theme-dark .sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+
+body.profile-theme-dark .sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.profile-theme-dark .sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }

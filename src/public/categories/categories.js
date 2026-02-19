@@ -108,11 +108,10 @@ function loadCategoriesGrid() {
           </div>
         `;
 
-        if (cat.color) {
-    card.style.border = `3px solid ${cat.color}`; // colored edge
-    card.style.backgroundColor = "#fff";         // background
-    card.style.color = "#000000ff";                   // text color
-  }
+       if (cat.color) {
+  card.style.border = `3px solid ${cat.color}`; // keep colored edge
+  card.style.setProperty("--category-color", cat.color); // for icon accent
+}
 
   // clicking the card should load tasks table
   card.addEventListener("click", () => {

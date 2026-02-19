@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-
 const ownerUser = { email: 'MGF_21@ICLOUD.COM', password: 'password123', name: 'Mee Ghel' };
 
 test.describe('Activity Log - Core Task Actions (E2E)', () => {
@@ -14,7 +13,7 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
         await page.waitForURL('http://localhost:3001/dashboard/dashboard.html');
     });
 
-    test('should log CREATE, UPDATE_STATUS, and POST_COMMENT actions', async ({ page, request }) => {
+    test('should log actions correctly and filter them', async ({ page, request }) => {
         
       //creating a team and the task
         await page.goto('http://localhost:3001/teams/teams.html');
@@ -40,6 +39,8 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
         
         
         await expect(activityContainer).toContainText(`E2E Test User created task: "${taskTitle}"`);
+
+        await expect(activityContainer.locator('small.text-muted').first()).toHaveText(/just now|1m ago/);
         
        //updating the status
         await page.locator('.status-select').first().selectOption('In Progress');
@@ -47,6 +48,8 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
 
       
         await expect(activityContainer).toContainText('E2E Test User updated status of "Core Log Test Task" to In Progress');
+
+         await expect(activityContainer.locator('small.text-muted').first()).toHaveText(/just now|1m ago/);
 
         //posting a commment
         const commentText = 'Test log comment';
@@ -58,8 +61,49 @@ test.describe('Activity Log - Core Task Actions (E2E)', () => {
        
         await expect(activityContainer).toContainText(`E2E Test User commented on task "${taskTitle}"`);
 
+        await expect(activityContainer.locator('small.text-muted').first()).toHaveText(/just now|1m ago/);
+
        
         const logEntries = activityContainer.locator('.d-flex.mb-3');
         await expect(logEntries).toHaveCount(3);
+
+        await page.selectOption('#activity-filter', 'CREATE_TASK');
+        await page.waitForTimeout(500); 
+
+      
+        await expect(activityContainer).toContainText('created task');
+        await expect(activityContainer).not.toContainText('updated status');
+        await expect(activityContainer).not.toContainText('commented');
+        await expect(activityContainer.locator('.d-flex.mb-3')).toHaveCount(1);
+
+        // filter by status updates
+        await page.selectOption('#activity-filter', 'UPDATE_STATUS');
+        await page.waitForTimeout(500);
+
+        
+        await expect(activityContainer).not.toContainText('created task');
+        await expect(activityContainer).toContainText('updated status');
+        await expect(activityContainer).not.toContainText('commented');
+        await expect(activityContainer.locator('.d-flex.mb-3')).toHaveCount(1);
+
+        //filter by comments
+        await page.selectOption('#activity-filter', 'POST_COMMENT');
+        await page.waitForTimeout(500);
+
+       
+        await expect(activityContainer).not.toContainText('created task');
+        await expect(activityContainer).not.toContainText('updated status');
+        await expect(activityContainer).toContainText('commented');
+        await expect(activityContainer.locator('.d-flex.mb-3')).toHaveCount(1);
+
+        //reset to all activity
+        await page.selectOption('#activity-filter', ''); 
+        await page.waitForTimeout(500);
+
+        
+        await expect(activityContainer).toContainText('created task');
+        await expect(activityContainer).toContainText('updated status');
+        await expect(activityContainer).toContainText('commented');
+        await expect(activityContainer.locator('.d-flex.mb-3')).toHaveCount(3);
     });
 });

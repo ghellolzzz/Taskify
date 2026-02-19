@@ -25,6 +25,7 @@ model User {
   theme       String?
   accentColor String?
   points   Int    @default(0)
+  preferredTheme String  @default("theme-classic")
 
   // Relations
   tasks         Task[]
@@ -243,8 +244,15 @@ model Habit {
   isArchived    Boolean  @default(false)
   createdAt     DateTime @default(now())
 
-  logs HabitLog[]
+  // NEW
+  reminderEnabled Boolean @default(false)
+  reminderTime    String?
+  reminderRepeat  String  @default("daily")
+
+  logs      HabitLog[]
+  reminders Reminder[]
 }
+
 
 model HabitLog {
   id        Int      @id @default(autoincrement())
@@ -277,8 +285,17 @@ model Reminder {
   user User  @relation(fields: [userId], references: [id])
   task Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
+  // NEW (Habit reminders)
+  habitId    Int?
+  habit      Habit?    @relation(fields: [habitId], references: [id], onDelete: SetNull)
+  sourceType String?
+  sourceDate DateTime? @db.Date
+
+  @@unique([userId, habitId, sourceType, sourceDate])
   @@map("reminders")
 }
+
+
 
 //////////////////////////////////////////////////////
 // FEEDBACK TABLE

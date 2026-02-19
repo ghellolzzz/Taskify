@@ -25,16 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Main Function: Load Shop Items + User Inventory
+    // 2. Load Shop Items + User Inventory
     async function loadShop() {
         const token = localStorage.getItem('token');
         
         try {
-            // A. Fetch All Themes (Catalog)
+            // A. Fetch All Themes
             const themesRes = await fetch('/api/shop/themes');
             const themes = await themesRes.json();
 
-            // B. Fetch User Data (Wallet + Inventory)
+            // B. Fetch User Data
             const userRes = await fetch('/api/shop/inventory', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -44,22 +44,20 @@ document.addEventListener('DOMContentLoaded', () => {
             pointsDisplay.innerText = userData.points;
             
             // D. Helper to check ownership
-            // Create a Set of owned IDs for fast lookup
             const ownedIds = new Set(userData.ownedThemes.map(ot => ot.themeId));
-            const currentTheme = userData.focusSettings?.preferredTheme || 'theme-coffee';
+            const currentTheme = userData.preferredTheme || userData.focusSettings?.preferredTheme || 'theme-coffee';
 
             // E. Render Cards
-            container.innerHTML = ''; // Clear old content
+            container.innerHTML = '';
             
             themes.forEach(theme => {
-                const isOwned = ownedIds.has(theme.id);
+                const isOwned = ownedIds.has(theme.id) || theme.name.includes('Classic') || theme.cost === 0;
                 const isEquipped = currentTheme === theme.cssClass;
                 const canAfford = userData.points >= theme.cost;
 
                 const card = document.createElement('div');
                 card.className = 'theme-card';
                 
-                // Determine Button State
                 let btnHtml = '';
                 if (isEquipped) {
                     btnHtml = `<button class="btn" disabled style="background:grey; cursor:not-allowed">Equipped</button>`;
@@ -87,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. Make functions global so HTML buttons can call them
+    // 3. Make functions global
     window.buyTheme = async (themeId, cost) => {
         if(!confirm(`Buy this theme for ${cost} beans?`)) return;
 
@@ -104,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await res.json();
         if (res.ok) {
             alert("Purchase successful!");
-            loadShop(); // Refresh UI
+            loadShop();
         } else {
             alert(result.error);
         }
@@ -122,9 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (res.ok) {
-            // Apply immediately to Body
             document.body.className = cssClass; 
-            loadShop(); // Refresh UI buttons
+            loadShop();
         }
     };
 });

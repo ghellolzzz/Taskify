@@ -11,6 +11,255 @@ function authHeaders(extra = {}) {
 let currentBoard = null;
 let pendingDeleteHabit = null; // { id, title, rowEl }
 let editingHabitId = null;
+let habitsSortMode = localStorage.getItem('habitsSortMode') || 'created';
+
+
+// --- Optimistic UI state ---
+const appState = {
+  // key: "habitId-YYYY-MM-DD" -> { habitId, date, prevCompleted, desiredCompleted, startedAt }
+  pendingOps: new Map(),
+};
+
+function opKey(habitId, date) {
+  return `${habitId}-${date}`;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function showToast(message, variant = 'danger', delayMs = 3000) {
+  const host = document.getElementById('toastHost');
+  if (!host || !window.bootstrap?.Toast) return;
+
+  const el = document.createElement('div');
+  el.className = `toast align-items-center text-bg-${variant} border-0`;
+  el.role = 'alert';
+  el.ariaLive = 'assertive';
+  el.ariaAtomic = 'true';
+
+  el.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${escapeHtml(message)}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+
+  host.appendChild(el);
+  const t = bootstrap.Toast.getOrCreateInstance(el, { delay: delayMs });
+  t.show();
+
+  el.addEventListener('hidden.bs.toast', () => el.remove());
+}
+
+function getTodayDateKey(board) {
+  const days = Array.isArray(board?.week?.days) ? board.week.days : [];
+  return days.find(d => d.isToday)?.date || null;
+}
+
+function getCellCompleted(board, habitId, date) {
+  const habits = Array.isArray(board?.habits) ? board.habits : [];
+  const hId = Number(habitId);
+  const habit = habits.find(h => h.id === hId);
+  if (!habit || !Array.isArray(habit.week)) return false;
+
+  const entry = habit.week.find(w => w.date === date);
+  return !!entry?.completed;
+}
+
+// idempotent set (NOT toggle) so reapplying pending ops is safe
+function setCellCompleted(board, habitId, date, completed) {
+  const habits = Array.isArray(board?.habits) ? board.habits : [];
+  const hId = Number(habitId);
+  const habit = habits.find(h => h.id === hId);
+  if (!habit) return;
+
+  if (!Array.isArray(habit.week)) habit.week = [];
+  const entry = habit.week.find(w => w.date === date);
+
+  if (entry) entry.completed = !!completed;
+  else habit.week.push({ date, completed: !!completed });
+
+  // keep weekly count consistent for sorting/labels
+  habit.completionThisWeek = habit.week.filter(d => d.completed).length;
+}
+
+function recomputeDerivedSummary(board) {
+  if (!board) return;
+
+  const habits = Array.isArray(board.habits) ? board.habits : [];
+  const archivedCount = Array.isArray(board.archivedHabits)
+    ? board.archivedHabits.length
+    : (board.summary?.archivedCount ?? 0);
+
+  const todayKey = getTodayDateKey(board);
+
+  let todayCompleted = 0;
+  let totalCompletedChecksThisWeek = 0;
+
+  habits.forEach(h => {
+    const weekArr = Array.isArray(h.week) ? h.week : [];
+    if (todayKey) {
+      const e = weekArr.find(w => w.date === todayKey);
+      if (e?.completed) todayCompleted++;
+    }
+    totalCompletedChecksThisWeek += weekArr.filter(w => w.completed).length;
+  });
+
+  const totalPossible = habits.length * 7;
+  const avgWeeklyCompletion = totalPossible > 0
+    ? Math.round((totalCompletedChecksThisWeek / totalPossible) * 100)
+    : 0;
+
+  board.summary = board.summary || {};
+  board.summary.activeHabits = habits.length;
+  board.summary.archivedCount = archivedCount;
+  board.summary.totalHabits = habits.length + archivedCount;
+
+  board.summary.todayTotal = habits.length;
+  board.summary.todayCompleted = todayCompleted;
+  board.summary.avgWeeklyCompletion = avgWeeklyCompletion;
+
+}
+
+function reapplyPendingOps(board) {
+  if (!board) return;
+
+  for (const op of appState.pendingOps.values()) {
+    setCellCompleted(board, op.habitId, op.date, op.desiredCompleted);
+  }
+
+  recomputeDerivedSummary(board);
+}
+
+// --- Undo state (Part B) ---
+const undoState = {
+  // habitId -> { type: 'archive'|'hardDelete', snapshot, timerId, toastEl }
+  pending: new Map(),
+};
+
+// shallow-safe clone for board snapshots
+function cloneBoard(board) {
+  return board ? JSON.parse(JSON.stringify(board)) : null;
+}
+
+function showUndoToast(message, actionLabel, onUndo, delayMs) {
+  const host = document.getElementById('toastHost');
+  if (!host || !window.bootstrap?.Toast) return null;
+
+  const el = document.createElement('div');
+  el.className = `toast align-items-center text-bg-dark border-0`;
+  el.role = 'alert';
+  el.ariaLive = 'assertive';
+  el.ariaAtomic = 'true';
+
+  el.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${escapeHtml(message)}</div>
+      <button type="button" class="btn btn-sm btn-outline-light me-2 my-2 undo-toast-btn">
+        ${escapeHtml(actionLabel)}
+      </button>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+
+  host.appendChild(el);
+
+  const undoBtn = el.querySelector('.undo-toast-btn');
+  if (undoBtn) {
+    undoBtn.addEventListener('click', () => {
+      try { onUndo?.(); } finally {
+        const inst = bootstrap.Toast.getInstance(el);
+        if (inst) inst.hide();
+      }
+    });
+  }
+
+  const t = bootstrap.Toast.getOrCreateInstance(el, { delay: delayMs, autohide: true });
+  t.show();
+
+  el.addEventListener('hidden.bs.toast', () => el.remove());
+  return el;
+}
+
+// --- Multi-tab sync (Part C) ---
+// Unique per-tab id (session scoped)
+const TASKIFY_TAB_ID =
+  sessionStorage.getItem('TASKIFY_TAB_ID') ||
+  (crypto?.randomUUID?.() || String(Math.random()).slice(2));
+
+sessionStorage.setItem('TASKIFY_TAB_ID', TASKIFY_TAB_ID);
+
+// Broadcast + fallback key
+const HABITS_SYNC_CHANNEL = 'taskify-habits-sync';
+const HABITS_SYNC_STORAGE_KEY = '__taskify_habits_sync__';
+
+let habitsBC = null;
+let lastRemoteSyncAt = 0;
+let refreshTimerId = null;
+
+function broadcastHabitsChanged(reason = 'changed') {
+  const msg = {
+    type: 'habits:changed',
+    reason,
+    at: Date.now(),
+    tabId: TASKIFY_TAB_ID,
+  };
+
+  // 1) Best: BroadcastChannel
+  if (habitsBC) {
+    try { habitsBC.postMessage(msg); } catch (_) {}
+  }
+
+  // 2) Fallback: storage event (fires in other tabs)
+  try {
+    localStorage.setItem(HABITS_SYNC_STORAGE_KEY, JSON.stringify(msg));
+  } catch (_) {}
+}
+
+function scheduleHabitsRefreshFromRemote(msg) {
+  if (!msg || msg.tabId === TASKIFY_TAB_ID) return;
+  if (!msg.at || msg.at <= lastRemoteSyncAt) return;
+
+  lastRemoteSyncAt = msg.at;
+
+  // Debounce multiple quick events
+  if (refreshTimerId) return;
+  refreshTimerId = setTimeout(() => {
+    refreshTimerId = null;
+
+    // refresh board, but preserve optimistic ops (we'll reapply after fetch)
+    loadHabitsBoard();
+
+    // optional tiny feedback (nice for demo)
+    if (!document.hidden) showToast('Synced changes from another tab.', 'secondary', 1200);
+  }, 250);
+}
+
+function setupMultiTabSync() {
+  // BroadcastChannel listener
+  if ('BroadcastChannel' in window) {
+    habitsBC = new BroadcastChannel(HABITS_SYNC_CHANNEL);
+    habitsBC.onmessage = (ev) => {
+      const msg = ev?.data;
+      if (msg?.type === 'habits:changed') scheduleHabitsRefreshFromRemote(msg);
+    };
+  }
+
+  // storage-event fallback listener
+  window.addEventListener('storage', (e) => {
+    if (e.key !== HABITS_SYNC_STORAGE_KEY || !e.newValue) return;
+    try {
+      const msg = JSON.parse(e.newValue);
+      if (msg?.type === 'habits:changed') scheduleHabitsRefreshFromRemote(msg);
+    } catch (_) {}
+  });
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,6 +281,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupColourSwatches();
   setupHabitCreateButton();
   setupHabitForm();
+    const reminderEnabledEl = document.getElementById("habitReminderEnabled");
+  if (reminderEnabledEl) {
+    reminderEnabledEl.addEventListener("change", syncReminderInputsEnabled);
+  }
+  syncReminderInputsEnabled();
+  setupMultiTabSync(); 
   setupDeleteModal();
   loadHabitsBoard();
 });
@@ -55,13 +310,90 @@ function loadHabitsBoard() {
       return res.json();
     })
     .then((board) => {
-      if (!board) return; // already handled (e.g. redirected)
-      currentBoard = board;
-      renderHabitsBoard(board);
-    })
+  if (!board) return;
+
+  currentBoard = board;
+
+  reapplyPendingOps(currentBoard);
+
+  renderHabitsBoard(currentBoard);
+})
+
     .catch((err) => {
       console.error('Failed to load habits board:', err);
     });
+}
+
+function syncReminderInputsEnabled() {
+  const enabledEl = document.getElementById("habitReminderEnabled");
+  const timeEl = document.getElementById("habitReminderTime");
+  const repeatEl = document.getElementById("habitReminderRepeat");
+  if (!enabledEl || !timeEl || !repeatEl) return;
+
+  const enabled = !!enabledEl.checked;
+  timeEl.disabled = !enabled;
+  repeatEl.disabled = !enabled;
+}
+
+function getSortedHabits(habits, sortMode) {
+  const list = Array.isArray(habits) ? [...habits] : [];
+
+  const safeNum = (v, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
+
+  // Stable fallback ordering: createdAt then id
+  const baseCompare = (a, b) => {
+    const aT = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bT = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aT !== bT) return aT - bT;
+    return safeNum(a?.id) - safeNum(b?.id);
+  };
+
+  if (sortMode === 'streak') {
+    return list.sort((a, b) => {
+      const diff = safeNum(b?.streak) - safeNum(a?.streak);
+      if (diff !== 0) return diff;
+      return baseCompare(a, b);
+    });
+  }
+
+  if (sortMode === 'consistency') {
+    return list.sort((a, b) => {
+      const diff = safeNum(b?.completionThisWeek) - safeNum(a?.completionThisWeek);
+      if (diff !== 0) return diff;
+      // tie-breaker: higher streak wins
+      const sdiff = safeNum(b?.streak) - safeNum(a?.streak);
+      if (sdiff !== 0) return sdiff;
+      return baseCompare(a, b);
+    });
+  }
+
+  if (sortMode === 'atrisk') {
+    return list.sort((a, b) => {
+      const ar = safeNum(a?.onTrack?.riskScore);
+      const br = safeNum(b?.onTrack?.riskScore);
+
+      // Higher riskScore first (needs attention)
+      const diff = br - ar;
+      if (diff !== 0) return diff;
+
+      // Put non-flex habits before flex if same score
+      const aFlex = a?.onTrack?.status === 'flex';
+      const bFlex = b?.onTrack?.status === 'flex';
+      if (aFlex !== bFlex) return aFlex ? 1 : -1;
+
+      // tie-breaker: lower completion then lower streak
+      const cdiff = safeNum(a?.completionThisWeek) - safeNum(b?.completionThisWeek);
+      if (cdiff !== 0) return cdiff;
+
+      const sdiff = safeNum(a?.streak) - safeNum(b?.streak);
+      if (sdiff !== 0) return sdiff;
+
+      return baseCompare(a, b);
+    });
+  }
+
+  // default: created
+  return list.sort(baseCompare);
 }
 
 
@@ -72,6 +404,7 @@ function renderHabitsBoard(board) {
   }
 
   const { week, habits, summary, archivedHabits = [] } = board;
+  const sortedHabits = getSortedHabits(habits, habitsSortMode);
 
   // Week header labels (second header row)
   const headerRow = document.getElementById('habitsWeekHeaderRow');
@@ -110,108 +443,152 @@ function renderHabitsBoard(board) {
   const tbody = document.getElementById('habitsTableBody');
   tbody.innerHTML = '';
 
-  if (habits.length === 0) {
+  if (sortedHabits.length === 0) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td colspan="10" class="text-center text-muted small py-4">
+      No habits yet. Click <strong>New habit</strong> to create your first one.
+    </td>
+  `;
+  tbody.appendChild(tr);
+} else {
+  sortedHabits.forEach((habit) => {
     const tr = document.createElement('tr');
+
+    const color = habit.color || 'var(--accent-color)';
+    const targetLabel = habit.targetPerWeek
+      ? `${habit.targetPerWeek}× / week`
+      : 'Flexible';
+
+    let daysHtml = '';
+    week.days.forEach((day) => {
+      const entry = habit.week.find((w) => w.date === day.date);
+      const isDone = entry?.completed;
+      const key = opKey(habit.id, day.date);
+const isPending = appState.pendingOps.has(key);
+
+const extraClasses = [
+  'habit-dot',
+  isDone ? 'is-complete' : '',
+  day.isToday ? 'is-today' : '',
+  isPending ? 'is-pending' : '',
+]
+  .filter(Boolean)
+  .join(' ');
+
+daysHtml += `
+  <td class="text-center">
+    <button
+      type="button"
+      class="${extraClasses}"
+      data-habit-id="${habit.id}"
+      data-date="${day.date}"
+      ${isPending ? 'disabled aria-busy="true"' : ''}
+      aria-label="Toggle ${habit.title} on ${day.label}"
+    ></button>
+  </td>
+`;
+
+    });
+
+    const tp = habit.targetProgress || {};
+    const ot = habit.onTrack || {};
+
+    const done = Number(tp.done ?? habit.completionThisWeek ?? 0);
+    const target = tp.target; // null = flexible
+    const progressText = target ? `${done}/${target} this week` : `${done} done this week`;
+
+    const badgeClass =
+      ot.status === 'completed' ? 'ontrack-badge completed' :
+      ot.status === 'ontrack'   ? 'ontrack-badge ontrack'   :
+      ot.status === 'behind'    ? 'ontrack-badge behind'    :
+      ot.status === 'atrisk'    ? 'ontrack-badge atrisk'    :
+                                 'ontrack-badge flex';
+
+    const badgeLabel = ot.label || (target ? 'On track' : 'Flexible');
+    const hint = ot.hint ? String(ot.hint).replace(/"/g, '&quot;') : '';
+
     tr.innerHTML = `
-      <td colspan="10" class="text-center text-muted small py-4">
-        No habits yet. Click <strong>New habit</strong> to create your first one.
+      <td>
+        <div class="d-flex align-items-start gap-2">
+          <span class="habit-color-dot" style="background:${color};"></span>
+
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="habit-title">${habit.title}</span>
+              <span class="${badgeClass}" title="${hint}">
+                ${badgeLabel}
+              </span>
+            </div>
+
+            <div class="habit-submeta">
+              <span class="habit-progress-text">${progressText}</span>
+              ${
+                target
+                  ? `<span class="habit-expected">· expected by today: ${tp.expectedByToday ?? 0}</span>`
+                  : ''
+              }
+            </div>
+          </div>
+        </div>
+      </td>
+
+      <td class="text-center">
+        <span class="badge bg-light text-dark small">${targetLabel}</span>
+      </td>
+
+      ${daysHtml}
+
+      <td class="text-end">
+        <div class="dropdown habit-actions-dropdown">
+          <button
+            class="btn btn-sm btn-light habit-actions-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <button
+                class="dropdown-item habit-edit-btn"
+                type="button"
+                data-habit-id="${habit.id}"
+              >
+                <i class="bi bi-pencil-square me-2"></i> Edit habit
+              </button>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <button
+                class="dropdown-item habit-archive-btn"
+                type="button"
+                data-habit-id="${habit.id}"
+              >
+                <i class="bi bi-archive me-2"></i> Archive habit
+              </button>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <button
+                class="dropdown-item text-danger habit-delete-btn"
+                type="button"
+                data-habit-id="${habit.id}"
+                data-habit-title="${habit.title.replace(/"/g, '&quot;')}"
+              >
+                <i class="bi bi-trash3 me-2"></i> Delete permanently
+              </button>
+            </li>
+          </ul>
+        </div>
       </td>
     `;
+
     tbody.appendChild(tr);
-  } else {
-    habits.forEach((habit) => {
-      const tr = document.createElement('tr');
+  });
+}
 
-      const color = habit.color || 'var(--accent-color)';
-      const targetLabel = habit.targetPerWeek
-        ? `${habit.targetPerWeek}× / week`
-        : 'Flexible';
-
-      let daysHtml = '';
-      week.days.forEach((day) => {
-        const entry = habit.week.find((w) => w.date === day.date);
-        const isDone = entry?.completed;
-        const extraClasses = [
-          'habit-dot',
-          isDone ? 'is-complete' : '',
-          day.isToday ? 'is-today' : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
-
-        daysHtml += `
-          <td class="text-center">
-            <button
-              type="button"
-              class="${extraClasses}"
-              data-habit-id="${habit.id}"
-              data-date="${day.date}"
-              aria-label="Toggle ${habit.title} on ${day.label}"
-            ></button>
-          </td>
-        `;
-      });
-
-      tr.innerHTML = `
-        <td>
-          <div class="d-flex align-items-center gap-2">
-            <span class="habit-color-dot" style="background:${color};"></span>
-            <span class="habit-title">${habit.title}</span>
-          </div>
-        </td>
-        <td class="text-center">
-          <span class="badge bg-light text-dark small">${targetLabel}</span>
-        </td>
-        ${daysHtml}
-                <td class="text-end">
-          <div class="dropdown habit-actions-dropdown">
-            <button
-              class="btn btn-sm btn-light habit-actions-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="bi bi-three-dots-vertical"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <button
-                  class="dropdown-item habit-edit-btn"
-                  type="button"
-                  data-habit-id="${habit.id}"
-                >
-                  <i class="bi bi-pencil-square me-2"></i> Edit habit
-                </button>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li>
-                <button
-                  class="dropdown-item habit-archive-btn"
-                  type="button"
-                  data-habit-id="${habit.id}"
-                >
-                  <i class="bi bi-archive me-2"></i> Archive habit
-                </button>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li>
-                <button
-                  class="dropdown-item text-danger habit-delete-btn"
-                  type="button"
-                  data-habit-id="${habit.id}"
-                  data-habit-title="${habit.title.replace(/"/g, '&quot;')}"
-                >
-                  <i class="bi bi-trash3 me-2"></i> Delete permanently
-                </button>
-              </li>
-            </ul>
-          </div>
-        </td>
-      `;
-
-      tbody.appendChild(tr);
-    });
-  }
 
   // Attach click handlers for toggles
   tbody.querySelectorAll('.habit-dot').forEach((btn) => {
@@ -269,8 +646,24 @@ function renderHabitsBoard(board) {
     })}`;
   }
 
+
+  const sortEl = document.getElementById('habitsSortSelect');
+if (sortEl) {
+  sortEl.value = habitsSortMode;
+
+  // prevent stacking listeners on rerender
+  sortEl.onchange = null;
+
+  sortEl.onchange = () => {
+    habitsSortMode = sortEl.value || 'created';
+    localStorage.setItem('habitsSortMode', habitsSortMode);
+    renderHabitsBoard(currentBoard); // re-render using same board, different sort
+  };
+}
+
   // Sidebar stats
   updateSidebarStats(summary);
+  updatePatternsCard(board);
 }
 
 function findHabitById(habitId) {
@@ -312,6 +705,10 @@ function resetHabitFormFields(habit) {
   const targetInput = document.getElementById('habitTargetPerWeek');
   const colorInput = document.getElementById('habitColor');
   const swatches = document.querySelectorAll('.habit-color-swatch');
+    const reminderEnabledEl = document.getElementById("habitReminderEnabled");
+  const reminderTimeEl = document.getElementById("habitReminderTime");
+  const reminderRepeatEl = document.getElementById("habitReminderRepeat");
+
 
   if (habit) {
     if (titleInput) titleInput.value = habit.title || '';
@@ -326,6 +723,11 @@ function resetHabitFormFields(habit) {
     swatches.forEach((sw) => {
       sw.classList.toggle('active', sw.dataset.color === colorInput.value);
     });
+
+        if (reminderEnabledEl) reminderEnabledEl.checked = !!habit.reminderEnabled;
+    if (reminderTimeEl) reminderTimeEl.value = habit.reminderTime || "09:00";
+    if (reminderRepeatEl) reminderRepeatEl.value = habit.reminderRepeat || "daily";
+
   } else {
     if (titleInput) titleInput.value = '';
     if (targetInput) targetInput.value = '';
@@ -334,7 +736,13 @@ function resetHabitFormFields(habit) {
     swatches.forEach((sw, idx) => {
       sw.classList.toggle('active', idx === 0);
     });
+
+        if (reminderEnabledEl) reminderEnabledEl.checked = false;
+    if (reminderTimeEl) reminderTimeEl.value = "09:00";
+    if (reminderRepeatEl) reminderRepeatEl.value = "daily";
+
   }
+    syncReminderInputsEnabled();
 }
 
 
@@ -433,53 +841,159 @@ function renderArchivedHabits(archivedHabits) {
 
 
 function toggleHabitDay(habitId, date) {
+  if (!currentBoard) return;
+
+  const key = opKey(habitId, date);
+
+  if (appState.pendingOps.has(key)) return;
+
+  const prevCompleted = getCellCompleted(currentBoard, habitId, date);
+  const desiredCompleted = !prevCompleted;
+
+  // 1) optimistic update immediately
+  appState.pendingOps.set(key, {
+    habitId: Number(habitId),
+    date,
+    prevCompleted,
+    desiredCompleted,
+    startedAt: Date.now(),
+  });
+
+  setCellCompleted(currentBoard, habitId, date, desiredCompleted);
+  recomputeDerivedSummary(currentBoard);
+  renderHabitsBoard(currentBoard);
+
+  // 2) sync to server
   fetch(`/api/habits/${habitId}/toggle`, {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ date }),
   })
-    .then((res) => res.json())
+    .then((res) => {
+      if (res.status === 401) {
+        window.location.href = '../login.html';
+        return null;
+      }
+      if (!res.ok) {
+        throw new Error('Toggle failed. HTTP ' + res.status);
+      }
+      return res.json();
+    })
     .then((board) => {
+      if (!board) return;
+
       currentBoard = board;
-      renderHabitsBoard(board);
+
+      appState.pendingOps.delete(key);
+
+      reapplyPendingOps(currentBoard);
+      renderHabitsBoard(currentBoard);
+      broadcastHabitsChanged('toggle');
     })
     .catch((err) => {
       console.error('Failed to toggle habit day:', err);
+
+      appState.pendingOps.delete(key);
+
+      setCellCompleted(currentBoard, habitId, date, prevCompleted);
+      recomputeDerivedSummary(currentBoard);
+      renderHabitsBoard(currentBoard);
+
+      showToast('Sync failed. Change reverted.', 'danger');
     });
 }
 
-function archiveHabit(habitId, rowEl) {
-  if (rowEl) {
-    rowEl.classList.add('habit-row-removing');
-  }
 
-  fetch(`/api/habits/${habitId}`, {
+function archiveHabit(habitId, rowEl) {
+  if (!currentBoard) return;
+
+  const idNum = Number(habitId);
+
+  // prevent stacking multiple pending actions on same habit
+  if (undoState.pending.has(idNum)) return;
+
+  const snapshot = cloneBoard(currentBoard);
+
+  // 1) optimistic UI: remove from active list immediately
+  currentBoard.habits = (currentBoard.habits || []).filter(h => h.id !== idNum);
+  recomputeDerivedSummary(currentBoard);
+  renderHabitsBoard(currentBoard);
+
+  // 2) call server immediately (archive), but allow undo within 5s
+  fetch(`/api/habits/${idNum}`, {
     method: 'DELETE',
     headers: authHeaders(),
   })
     .then((res) => {
       if (res.status === 401) {
-        console.warn('Not authenticated. Redirecting to login.');
         window.location.href = '../login.html';
         return null;
       }
-
-      if (!res.ok) {
-        throw new Error('Failed to archive habit. HTTP ' + res.status);
-      }
-
+      if (!res.ok) throw new Error('Failed to archive habit. HTTP ' + res.status);
       return res.json();
     })
     .then((board) => {
       if (!board) return;
       currentBoard = board;
-      renderHabitsBoard(board);
+      broadcastHabitsChanged('archive');
+      reapplyPendingOps(currentBoard);
+      renderHabitsBoard(currentBoard);
     })
     .catch((err) => {
       console.error('Failed to archive habit:', err);
-      if (rowEl) rowEl.classList.remove('habit-row-removing');
+      // rollback immediately if archive request fails
+      currentBoard = snapshot;
+      renderHabitsBoard(currentBoard);
+      showToast('Archive failed. Change reverted.', 'danger');
     });
+
+  // 3) show undo toast (5s)
+  const toastEl = showUndoToast(`Archived.`, 'Undo', () => {
+    const pending = undoState.pending.get(idNum);
+    if (!pending) return;
+
+    // cancel timer + remove pending marker
+    clearTimeout(pending.timerId);
+    undoState.pending.delete(idNum);
+
+    // restore UI immediately (snapshot)
+    currentBoard = pending.snapshot;
+    renderHabitsBoard(currentBoard);
+
+    // sync undo to server: unarchive (PATCH isArchived:false)
+    fetch(`/api/habits/${idNum}`, {
+      method: 'PATCH',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ isArchived: false }),
+    })
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '../login.html';
+          return null;
+        }
+        if (!res.ok) throw new Error('Failed to undo archive. HTTP ' + res.status);
+        return res.json();
+      })
+      .then((board) => {
+        if (!board) return;
+        currentBoard = board;
+        broadcastHabitsChanged('undo-archive');
+        reapplyPendingOps(currentBoard);
+        renderHabitsBoard(currentBoard);
+      })
+      .catch((err) => {
+        console.error('Undo archive failed:', err);
+        showToast('Undo failed. Please refresh.', 'danger');
+      });
+  }, 5000);
+
+  const timerId = setTimeout(() => {
+    undoState.pending.delete(idNum);
+  }, 5000);
+
+  undoState.pending.set(idNum, { type: 'archive', snapshot, timerId, toastEl });
 }
+
 
 
 function unarchiveHabit(habitId, itemEl) {
@@ -508,7 +1022,9 @@ function unarchiveHabit(habitId, itemEl) {
     .then((board) => {
       if (!board) return;
       currentBoard = board;
-      renderHabitsBoard(board);
+       reapplyPendingOps(currentBoard);
+  renderHabitsBoard(currentBoard);
+  broadcastHabitsChanged('restore');
     })
     .catch((err) => {
       console.error('Failed to unarchive habit:', err);
@@ -524,6 +1040,7 @@ function updateSidebarStats(summary) {
 
   const weeklyBar = document.getElementById('weeklyProgressBar');
   const weeklyMessage = document.getElementById('weeklyMessage');
+  const weeklyDeltaLabel = document.getElementById('weeklyDeltaLabel');
   const streakHighlight = document.getElementById('streakHighlight');
 
   const todayTotal = summary.todayTotal || 0;
@@ -548,18 +1065,36 @@ function updateSidebarStats(summary) {
   }
 
   const weeklyPct = summary.avgWeeklyCompletion || 0;
+  const prevWeeklyPct = summary.prevWeekCompletionPct ?? 0;
+const delta = weeklyPct - prevWeeklyPct;
+
+if (weeklyDeltaLabel) {
+  if (summary.activeHabits === 0) {
+    weeklyDeltaLabel.textContent = '';
+  } else if (delta === 0) {
+    weeklyDeltaLabel.textContent = `Same as last week (${prevWeeklyPct}%).`;
+  } else if (delta > 0) {
+    weeklyDeltaLabel.textContent = `▲ Up ${delta}% vs last week (${prevWeeklyPct}%).`;
+  } else {
+    weeklyDeltaLabel.textContent = `▼ Down ${Math.abs(delta)}% vs last week (${prevWeeklyPct}%).`;
+  }
+}
+
   if (weeklyBar) {
     weeklyBar.style.width = `${weeklyPct}%`;
   }
   if (weeklyMessage) {
-    if (weeklyPct === 0) {
-      weeklyMessage.textContent = 'Your week is still blank. Tiny actions add up fast.';
-    } else if (weeklyPct < 60) {
-      weeklyMessage.textContent = 'You are building momentum. Keep going!';
-    } else {
-      weeklyMessage.textContent = 'Strong consistency this week. Great job 🔥';
-    }
+  if (weeklyPct === 0) {
+    weeklyMessage.textContent = 'Your week is still blank. Tiny actions add up fast.';
+  } else if (delta > 0) {
+    weeklyMessage.textContent = 'Nice — you’re improving from last week. Keep it going!';
+  } else if (delta < 0) {
+    weeklyMessage.textContent = 'Slight dip from last week — you can still catch up.';
+  } else {
+    weeklyMessage.textContent = 'Steady consistency. Try to push a little higher!';
   }
+}
+
 
   if (streakHighlight) {
     const streakInfo = summary.longestStreakHabit;
@@ -573,6 +1108,63 @@ function updateSidebarStats(summary) {
     }
   }
 }
+
+function updatePatternsCard(board) {
+  const bestDayEl = document.getElementById('patternsBestDay');
+  const perfectEl = document.getElementById('patternsPerfectDays');
+  const hintEl = document.getElementById('patternsHint');
+
+  if (!bestDayEl || !perfectEl || !hintEl) return;
+
+  const habits = Array.isArray(board?.habits) ? board.habits : [];
+  const days = Array.isArray(board?.week?.days) ? board.week.days : [];
+
+  const activeHabitsCount = habits.length;
+
+  if (activeHabitsCount === 0 || days.length !== 7) {
+    bestDayEl.textContent = '—';
+    perfectEl.textContent = '0';
+    hintEl.textContent = 'Create a habit to start seeing your patterns.';
+    return;
+  }
+
+  // Count completions per day across all habits
+  const counts = days.map((day) => {
+    let completed = 0;
+
+    habits.forEach((h) => {
+      const entry = Array.isArray(h.week) ? h.week.find((w) => w.date === day.date) : null;
+      if (entry && entry.completed) completed++;
+    });
+
+    return { ...day, completed };
+  });
+
+  // Best day = max completed
+  const maxCompleted = Math.max(...counts.map((c) => c.completed));
+  const bestDays = counts.filter((c) => c.completed === maxCompleted);
+
+  // Prefer today if tie, else earliest best day
+  const best =
+    bestDays.find((d) => d.isToday) ||
+    bestDays[0];
+
+  bestDayEl.textContent = `${best.label} (${best.completed}/${activeHabitsCount})`;
+
+  // Perfect days = days where all habits done
+  const perfectDays = counts.filter((c) => c.completed === activeHabitsCount);
+
+  perfectEl.textContent = String(perfectDays.length);
+
+  if (maxCompleted === 0) {
+    hintEl.textContent = 'No check-ins yet this week — start with one small win today.';
+  } else if (perfectDays.length > 0) {
+    hintEl.textContent = `You had ${perfectDays.length} perfect day${perfectDays.length === 1 ? '' : 's'} this week. Nice consistency.`;
+  } else {
+    hintEl.textContent = `Your strongest day so far is ${best.label}. Aim for a full “perfect day”!`;
+  }
+}
+
 
 // --- New habit modal & colour swatches ---
 
@@ -612,16 +1204,20 @@ function setupHabitForm() {
     const targetInput = document.getElementById('habitTargetPerWeek');
     const colorInput = document.getElementById('habitColor');
 
+        const reminderEnabledEl = document.getElementById("habitReminderEnabled");
+    const reminderTimeEl = document.getElementById("habitReminderTime");
+    const reminderRepeatEl = document.getElementById("habitReminderRepeat");
+
     const payload = {
       title: titleInput.value.trim(),
       targetPerWeek: targetInput.value,
       color: colorInput.value,
+
+      reminderEnabled: reminderEnabledEl ? reminderEnabledEl.checked : false,
+      reminderTime: reminderTimeEl ? reminderTimeEl.value : "09:00",
+      reminderRepeat: reminderRepeatEl ? reminderRepeatEl.value : "daily",
     };
 
-    if (!payload.title) {
-      alert('Please enter a habit name.');
-      return;
-    }
 
     const isEdit = !!editingHabitId;
     const url = isEdit ? `/api/habits/${editingHabitId}` : '/api/habits';
@@ -658,6 +1254,7 @@ function setupHabitForm() {
         form.reset();
         setHabitModalMode('create');
         resetHabitFormFields(null);
+        broadcastHabitsChanged(isEdit ? 'edit-habit' : 'create-habit');
 
         // Close modal
         const modalEl = document.getElementById('habitModal');
@@ -679,32 +1276,79 @@ function setupDeleteModal() {
   if (!confirmBtn) return;
 
   confirmBtn.addEventListener('click', () => {
-    if (!pendingDeleteHabit) return;
+  if (!pendingDeleteHabit || !currentBoard) return;
 
-    const { id, rowEl } = pendingDeleteHabit;
-    const modalEl = document.getElementById('habitDeleteModal');
-    const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+  const idNum = Number(pendingDeleteHabit.id);
 
-    if (rowEl) {
-      rowEl.classList.add('habit-row-removing');
-    }
+  // prevent stacking
+  if (undoState.pending.has(idNum)) return;
 
-    fetch(`/api/habits/${id}/hard`, {
+  const snapshot = cloneBoard(currentBoard);
+
+  // close modal first
+  const modalEl = document.getElementById('habitDeleteModal');
+  const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+  if (modal) modal.hide();
+
+  // 1) optimistic UI remove immediately
+  currentBoard.habits = (currentBoard.habits || []).filter(h => h.id !== idNum);
+  currentBoard.archivedHabits = (currentBoard.archivedHabits || []).filter(h => h.id !== idNum);
+  recomputeDerivedSummary(currentBoard);
+  renderHabitsBoard(currentBoard);
+
+  pendingDeleteHabit = null;
+
+  // 2) show undo toast for 10s
+  const toastEl = showUndoToast(`Deleting in 10s…`, 'Undo', () => {
+    const pending = undoState.pending.get(idNum);
+    if (!pending) return;
+
+    clearTimeout(pending.timerId);
+    undoState.pending.delete(idNum);
+
+    // restore snapshot locally (no server call was made yet)
+    currentBoard = pending.snapshot;
+    renderHabitsBoard(currentBoard);
+  }, 10000);
+
+  // 3) after 10s, actually call server hard delete
+  const timerId = setTimeout(() => {
+    // if already undone, do nothing
+    if (!undoState.pending.has(idNum)) return;
+
+    fetch(`/api/habits/${idNum}/hard`, {
       method: 'DELETE',
       headers: authHeaders(),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '../login.html';
+          return null;
+        }
+        if (!res.ok) throw new Error('Failed to delete habit. HTTP ' + res.status);
+        return res.json();
+      })
       .then((board) => {
-        pendingDeleteHabit = null;
-        if (modal) modal.hide();
+        if (!board) return;
+        undoState.pending.delete(idNum);
         currentBoard = board;
-        renderHabitsBoard(board);
+        broadcastHabitsChanged('hard-delete');
+        reapplyPendingOps(currentBoard);
+        renderHabitsBoard(currentBoard);
       })
       .catch((err) => {
-        console.error('Failed to delete habit:', err);
-        if (rowEl) rowEl.classList.remove('habit-row-removing');
+        console.error('Failed to hard delete habit:', err);
+        // rollback to snapshot if delete fails
+        const pending = undoState.pending.get(idNum);
+        undoState.pending.delete(idNum);
+        currentBoard = pending?.snapshot || currentBoard;
+        renderHabitsBoard(currentBoard);
+        showToast('Delete failed. Change reverted.', 'danger');
       });
-  });
+  }, 10000);
+
+  undoState.pending.set(idNum, { type: 'hardDelete', snapshot, timerId, toastEl });
+});
 }
 
 function openHabitDeleteModal(habitId, title, rowEl) {

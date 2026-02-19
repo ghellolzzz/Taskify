@@ -27,6 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
             loadTeamDetails(teamId);
             loadTeamStats(teamId);
             loadActivityFeed(teamId);
+
+            document.getElementById('activity-filter').addEventListener('change', (e) => {
+                loadActivityFeed(teamId, e.target.value);
+            });
+
             setupAddMember(teamId);
             setupAddTeamTask(teamId);
             setupEditTaskForm();
@@ -268,6 +273,53 @@ function setupCreateTeam() {
     })
 }
 
+//displaying the workload for each member
+function loadWorkloadAnalytics(teamId) {
+    fetch(`/api/teams/${teamId}/workload`, {
+        headers: { 
+            "Authorization": "Bearer " + localStorage.getItem("token") 
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const memberList = document.getElementById("member-list");
+       //looping through the calculated workload data
+        data.forEach(member => {
+           
+            const listItems = memberList.querySelectorAll('li');
+            
+            listItems.forEach(li => {
+              //match by the nmame
+                if (li.querySelector('.fw-bold').textContent === member.name) {
+                    
+                  //displaying the badge color based ono member workload
+                    let badgeColor = "";
+                    if (member.loadStatus === 'Overloaded') badgeColor = 'text-danger';
+                    else if (member.loadStatus === 'Optimal') badgeColor = 'text-success';
+                    else badgeColor = 'text-muted';
+
+                 
+                    const infoDiv = li.querySelector('.flex-grow-1')
+                    
+                   
+                    const oldInfo = infoDiv.querySelector('.workload-tag')
+                    if (oldInfo) {
+                        oldInfo.remove()
+                    }
+
+                    infoDiv.innerHTML += `
+                        <div class="workload-tag mt-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                            <span class="${badgeColor} fw-bold text-uppercase">${member.loadStatus}</span> 
+                            <span class="text-muted">• ${member.workloadScore} pts</span>
+                        </div>
+                    `;
+                }
+            });
+        });
+    })
+    .catch(err => console.error("Workload Analytics failed:", err));
+}
+
 //loading the team details
 function loadTeamDetails(teamId) {
     fetch(`/api/teams/${teamId}`, {
@@ -447,6 +499,7 @@ function loadTeamDetails(teamId) {
             else activeTasks.forEach(task => activeContainer.innerHTML += createCardHTML(task))
 
             completedTasks.forEach(task => completedContainer.innerHTML += createCardHTML(task))
+            loadWorkloadAnalytics(teamId);
         })
         .catch(err => {
             if (err.message.includes("Access Denied")) window.location.href = "teams.html"
@@ -925,7 +978,7 @@ function deleteTeam() {
         })
         .then(() => {
             alert("Team deleted successfully.");
-            window.location.href = 'teams.html'; 
+            window.location.href = 'teams.html';
         })
         .catch(err => showToast(err.message, "error"));
 }
@@ -971,7 +1024,7 @@ function leaveTeam() {
 
 
 //gets the activity logs
-function loadActivityFeed(teamId) {
+function loadActivityFeed(teamId,filterType="") {
     const container = document.getElementById('activity-feed-container')
     if (!container) return;
 
@@ -979,17 +1032,21 @@ function loadActivityFeed(teamId) {
     container.innerHTML = `<div class="text-center mt-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`
 
 
-    fetch(`/api/teams/${teamId}/activity`, {
+    let url = `/api/teams/${teamId}/activity`;
+    //getting the filter type
+    if (filterType) {
+        url += `?type=${filterType}`;
+    }
+
+    fetch(url, {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
-        .then(res => {
-            if (!res.ok) throw new Error("Failed to fetch activity feed.")
-            return res.json()
-        })
+        .then(res => res.json())
         .then(logs => {
+        
             if (!logs || logs.length === 0) {
-                container.innerHTML = `<p class="text-muted small fst-italic text-center mt-2">No activity to show.</p>`
-                return
+                container.innerHTML = `<p class="text-muted small fst-italic text-center mt-2">No activity found for this filter.</p>`;
+                return;
             }
 
 
@@ -1011,14 +1068,8 @@ function loadActivityFeed(teamId) {
                         actionText = `updated ${log.details}`
                         break;
                     case 'ADD_MEMBER':
-                        iconClass = 'bi-person-plus-fill text-info';
-                        if (log.details && log.details.startsWith('invited')) {
-                            
-                            actionText = `${log.details} to the team (Pending)`
-                        } else {
-                           
-                            actionText = `added <strong>${log.details}</strong> to the team`
-                        }
+                        iconClass = 'bi-person-plus-fill text-info'
+                        actionText = ` <strong>${log.details}</strong> to the team`
                         break;
                     case 'REMOVE_MEMBER':
                         iconClass = 'bi-person-dash-fill text-danger'
@@ -1037,7 +1088,8 @@ function loadActivityFeed(teamId) {
                 }
 
 
-                const timeDisplay = new Date(log.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
+                const timeDisplay = getRelativeTime(log.createdAt);
 
                 return `
             <div class="d-flex mb-3">
@@ -1055,4 +1107,35 @@ function loadActivityFeed(teamId) {
             container.innerHTML = `<p class="text-danger small mt-3">Could not load activity.</p>`
             console.error(err)
         });
+}
+
+//calculating the relative timestamp
+function getRelativeTime(timestamp) {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffInMs = now - past;
+
+    const seconds = Math.floor(diffInMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) {
+        return 'just now'
+    }
+    if (minutes < 60) {
+        return `${minutes}m ago`
+    }
+    if (hours < 24) {
+        return `${hours}h ago`
+    }
+    if (days === 1) {
+        return 'yesterday'
+    }
+    if (days < 7) {
+        return `${days}d ago`
+    }
+
+    //return past date if its older than a week
+    return past.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }

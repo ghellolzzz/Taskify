@@ -323,3 +323,21 @@ body.profile-theme-dark #reminderTable tbody tr:hover{
   filter: brightness(0.92);
 }
 
+.content-layout {
+  align-items: flex-start;
+}
+
+.table-section {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.table-section .card {
+  overflow-x: auto; 
+}
+
+.form-section {
+  flex: 0 0 380px;
+  position: relative;
+  z-index: 1; 
+}

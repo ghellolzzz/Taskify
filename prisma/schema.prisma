@@ -244,15 +244,15 @@ model Habit {
   isArchived    Boolean  @default(false)
   createdAt     DateTime @default(now())
 
-  logs HabitLog[]
-
   // NEW
   reminderEnabled Boolean @default(false)
   reminderTime    String?
   reminderRepeat  String  @default("daily")
 
+  logs      HabitLog[]
   reminders Reminder[]
 }
+
 
 model HabitLog {
   id        Int      @id @default(autoincrement())
@@ -285,7 +285,7 @@ model Reminder {
   user User  @relation(fields: [userId], references: [id])
   task Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
-  // NEW
+  // NEW (Habit reminders)
   habitId    Int?
   habit      Habit?    @relation(fields: [habitId], references: [id], onDelete: SetNull)
   sourceType String?
@@ -294,6 +294,7 @@ model Reminder {
   @@unique([userId, habitId, sourceType, sourceDate])
   @@map("reminders")
 }
+
 
 
 //////////////////////////////////////////////////////

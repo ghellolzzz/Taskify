@@ -22,6 +22,10 @@ const passwordResetRouter = require('./routers/passwordResetRouter');
 const timeEntryRouter = require('./routers/timeEntryRouter');
 const communityRouter = require('./routers/communityRouter.js');
 const shopRouter = require('./routers/shopRoutes.js');
+const friendsRouter = require('./routers/friendsRouter.js');
+const shareRouter = require('./routers/shareRouter.js');
+const activityRouter = require('./routers/activityRouter');
+
 
 const app = express();
 app.use(express.json());
@@ -48,6 +52,9 @@ app.use("/api/teams", teamRouter);
 app.use('/api/password-reset', passwordResetRouter);
 app.use('/api/time-entries', timeEntryRouter);
 app.use('/api/community', communityRouter);
+app.use('/api/friends', friendsRouter);
+app.use('/api/share', shareRouter);
+app.use('/api/activity', activityRouter);
 
 app.use('/api/shop', shopRouter);
 
@@ -68,6 +75,12 @@ app.post('/api/test/reset', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Share page route (serves the HTML, JS reads token from URL)
+app.get('/share/habits/:token', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'share', 'share.html'));
+});
+
 
 app.get('/.well-known/appspecific/*', (req, res) => {
   res.status(204).end();

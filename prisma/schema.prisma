@@ -44,6 +44,12 @@ model User {
   timeEntries TimeEntry[]
   activityLogs ActivityLog[]
   ownedThemes   UserOwnedTheme[]
+  friendRequestsSent     Friendship[] @relation("FriendRequester")
+  friendRequestsReceived Friendship[] @relation("FriendAddressee")
+  habitShareLinks HabitShareLink[]
+  habitShareDeliveriesSent     HabitShareDelivery[] @relation("ShareDeliverySender")
+  habitShareDeliveriesReceived HabitShareDelivery[] @relation("ShareDeliveryRecipient")
+
 
   passwordResets PasswordReset[]
   communityNotes CommunityNote[]
@@ -243,6 +249,7 @@ model Habit {
   targetPerWeek Int?
   isArchived    Boolean  @default(false)
   createdAt     DateTime @default(now())
+  sortOrder Int @default(0)
 
   // NEW
   reminderEnabled Boolean @default(false)
@@ -442,4 +449,68 @@ model NoteReaction {
 
   @@unique([userId, noteId, type])
   @@map("note_reactions")
+}
+
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  REMOVED
+}
+
+model Friendship {
+  id          Int              @id @default(autoincrement())
+  requesterId Int
+  addresseeId Int
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  requester   User @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId, status])
+  @@index([addresseeId, status])
+  @@map("friendships")
+}
+
+enum ShareVisibility {
+  PUBLIC
+  FRIENDS_ONLY
+}
+
+model HabitShareLink {
+  id         Int            @id @default(autoincrement())
+  token      String         @unique @db.VarChar(80)
+  ownerId    Int
+  owner      User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  visibility ShareVisibility @default(PUBLIC)
+  expiresAt  DateTime?
+  createdAt  DateTime        @default(now())
+  
+  deliveries HabitShareDelivery[]
+
+  @@index([ownerId])
+  @@map("habit_share_links")
+}
+
+model HabitShareDelivery {
+  id          Int      @id @default(autoincrement())
+  linkId      Int
+  link        HabitShareLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  senderId    Int
+  sender      User     @relation("ShareDeliverySender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId Int
+  recipient   User     @relation("ShareDeliveryRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  message     String?  @db.VarChar(500)
+  status      String   @default("SENT")
+  createdAt   DateTime @default(now())
+
+  @@unique([linkId, recipientId])
+  @@index([recipientId, createdAt])
+  @@map("habit_share_deliveries")
 }

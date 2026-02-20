@@ -506,3 +506,40 @@ body.profile-theme-dark .habit-expected {
 .undo-toast-btn {
   white-space: nowrap;
 }
+
+.habit-dot.is-future {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.habit-drag-handle {
+  opacity: 0.6;
+  padding-right: 6px;
+}
+.habit-drag-handle:hover {
+  opacity: 1;
+}
+
+.habit-actions-dropdown .dropdown-menu {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.habits-table td,
+.habits-table th,
+.table-responsive {
+  overflow: visible !important;
+}
+
+.habits-table td,
+.habits-table th {
+  overflow: visible !important;
+}
+
+#weekRangeLabel {
+  display: inline-block;
+  min-height: 1em;
+}
+#weeklyDeltaLabel {
+  display: inline-block;
+  min-height: 1em; /* prevents collapsing when empty */
+}

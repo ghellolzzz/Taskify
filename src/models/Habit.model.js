@@ -67,49 +67,47 @@ async function getHabitsBoard(userId) {
   const streakStart = addDays(todayStart, -streakWindowDays);
   const tomorrowStart = addDays(todayStart, 1); // exclusive upper bound
 
-  const [
-    activeHabits,
-    archivedHabits,
-    weekLogs,
-    prevWeekLogs,
-    streakLogs,
-  ] = await Promise.all([
-    prisma.habit.findMany({
-      where: { userId: numericId, isArchived: false },
-      orderBy: { createdAt: 'asc' },
-    }),
-    prisma.habit.findMany({
-      where: { userId: numericId, isArchived: true },
-      orderBy: { createdAt: 'asc' },
-    }),
+const [
+  activeHabits,
+  archivedHabits,
+  weekLogs,
+  prevWeekLogs,
+  streakLogs,
+] = await Promise.all([
+  prisma.habit.findMany({
+    where: { userId: numericId, isArchived: false },
+    orderBy: [
+      { sortOrder: 'asc' },
+      { createdAt: 'asc' },
+      { id: 'asc' },
+    ],
+  }),
 
-    // Logs for THIS WEEK grid + weekly stats
-    prisma.habitLog.findMany({
-      where: {
-        habit: { userId: numericId },
-        date: { gte: weekStart, lt: weekEnd },
-      },
-      orderBy: { date: 'asc' },
-    }),
+  prisma.habit.findMany({
+    where: { userId: numericId, isArchived: true },
+    orderBy: [
+      { sortOrder: 'asc' },
+      { createdAt: 'asc' },
+      { id: 'asc' },
+    ],
+  }),
 
-    // Logs for PREVIOUS WEEK (not shown in UI yet, but used for stats later)
-    prisma.habitLog.findMany({
-      where: {
-        habit: { userId: numericId },
-        date: { gte: prevWeekStart, lt: prevWeekEnd },
-      },
-      orderBy: { date: 'asc' },
-    }),
+  prisma.habitLog.findMany({
+    where: { habit: { userId: numericId }, date: { gte: weekStart, lt: weekEnd } },
+    orderBy: { date: 'asc' },
+  }),
 
-    // Logs for streak calculation (history window)
-    prisma.habitLog.findMany({
-      where: {
-        habit: { userId: numericId },
-        date: { gte: streakStart, lt: tomorrowStart },
-      },
-      orderBy: { date: 'asc' },
-    }),
-  ]);
+  prisma.habitLog.findMany({
+    where: { habit: { userId: numericId }, date: { gte: prevWeekStart, lt: prevWeekEnd } },
+    orderBy: { date: 'asc' },
+  }),
+
+  prisma.habitLog.findMany({
+    where: { habit: { userId: numericId }, date: { gte: streakStart, lt: tomorrowStart } },
+    orderBy: { date: 'asc' },
+  }),
+]);
+
 
   // Build 7 day labels
   const weekDays = [];
@@ -282,29 +280,32 @@ async function getHabitsBoard(userId) {
     }
 
     return {
-      id: h.id,
-      title: h.title,
-      color: h.color,
-      targetPerWeek: h.targetPerWeek,
-      createdAt: h.createdAt,
+  id: h.id,
+  userId: h.userId,  
+  sortOrder: h.sortOrder, 
 
-      week,
-      streak,
-      completionThisWeek,
+  title: h.title,
+  color: h.color,
+  targetPerWeek: h.targetPerWeek,
+  createdAt: h.createdAt,
 
-      // ✅ NEW fields used by Habits UI
-      targetProgress: {
-        done,
-        target,        // null = flexible
-        pct: target ? progressPct : null,
-        expectedByToday, // null if flexible
-      },
-      onTrack, // {status,label,hint,riskScore}
+  week,
+  streak,
+  completionThisWeek,
 
-      reminderEnabled: h.reminderEnabled,
-      reminderTime: h.reminderTime,
-      reminderRepeat: h.reminderRepeat,
-    };
+  targetProgress: {
+    done,
+    target,
+    pct: target ? progressPct : null,
+    expectedByToday,
+  },
+  onTrack,
+
+  reminderEnabled: h.reminderEnabled,
+  reminderTime: h.reminderTime,
+  reminderRepeat: h.reminderRepeat,
+};
+
   });
 
   const avgWeeklyCompletion =
@@ -337,6 +338,7 @@ async function getHabitsBoard(userId) {
       color: h.color,
       targetPerWeek: h.targetPerWeek,
       archivedAt: h.createdAt,
+      sortOrder: h.sortOrder, 
     })),
     summary,
   };
@@ -352,16 +354,26 @@ async function createHabit(userId, data) {
     ? String(data.reminderTime || '09:00').trim()
     : null;
 
-  // Habit.reminderRepeat is NOT NULL in schema, so never write null
   const reminderRepeat = reminderEnabled
-    ? String(data.reminderRepeat || 'daily')
-    : 'daily';
+  ? String(data.reminderRepeat || 'daily').trim()
+  : 'daily';
+
+const reminderRepeatNormalized =
+  reminderRepeat === 'none' ? 'none' : reminderRepeat;
+
+
+    const max = await prisma.habit.aggregate({
+  where: { userId: numericId, isArchived: false },
+  _max: { sortOrder: true },
+});
+const nextSortOrder = (max._max.sortOrder || 0) + 1;
 
   const created = await prisma.habit.create({
     data: {
       userId: numericId,
       title: (data.title || 'Untitled habit').trim(),
       color: data.color || null,
+      sortOrder: nextSortOrder,
       targetPerWeek:
         data.targetPerWeek !== undefined && data.targetPerWeek !== ''
           ? Number(data.targetPerWeek)
@@ -369,7 +381,7 @@ async function createHabit(userId, data) {
 
       reminderEnabled,
       reminderTime,
-      reminderRepeat,
+      reminderRepeat: reminderRepeatNormalized,
     },
   });
 
@@ -384,7 +396,7 @@ async function createHabit(userId, data) {
         title: `Habit: ${created.title}`,
         notes: 'Auto reminder from habit',
         remindAt,
-        repeatType: created.reminderRepeat || 'daily',
+        repeatType: created.reminderRepeat === 'none' ? null : (created.reminderRepeat || 'daily'),
         isDone: false,
 
         // optional consistency fields (won't break if unused)
@@ -418,6 +430,13 @@ async function toggleHabitCheck(userId, habitId, dateStr) {
   } else {
     dateStart = startOfDay(new Date());
   }
+  const todayStart = startOfDay(new Date());
+if (dateStart > todayStart) {
+  const err = new Error('Cannot toggle future dates.');
+  err.status = 400;
+  throw err;
+}
+
 
   // Use composite unique key: @@unique([habitId, date])
   const whereUnique = {
@@ -480,12 +499,11 @@ async function updateHabitMeta(userId, habitId, data) {
   if (data.reminderTime !== undefined) {
     payload.reminderTime = data.reminderTime ? String(data.reminderTime).trim() : null;
   }
-  if (data.reminderRepeat !== undefined) {
-    // Habit.reminderRepeat is NOT NULL -> never set null
-    payload.reminderRepeat = data.reminderRepeat
-      ? String(data.reminderRepeat)
-      : 'daily';
-  }
+ if (data.reminderRepeat !== undefined) {
+  // Habit.reminderRepeat is NOT NULL -> never set null
+  const rr = data.reminderRepeat ? String(data.reminderRepeat).trim() : 'daily';
+  payload.reminderRepeat = rr;
+}
 
   const hasAnyUpdate = Object.keys(payload).length > 0;
 
@@ -516,7 +534,7 @@ async function updateHabitMeta(userId, habitId, data) {
         title: `Habit: ${latest.title}`,
         notes: 'Auto reminder from habit',
         remindAt,
-        repeatType: latest.reminderRepeat || 'daily',
+        repeatType: latest.reminderRepeat === 'none' ? null : (latest.reminderRepeat || 'daily'),
         isDone: false,
         sourceType: 'habit',
         sourceDate: null,
@@ -550,10 +568,46 @@ async function deleteHabit(userId, habitId) {
   });
 }
 
+async function reorderHabits(userId, ids) {
+  const numericUserId = Number(userId);
+  if (!Array.isArray(ids) || !ids.length) return;
+
+  const clean = ids
+    .map(Number)
+    .filter((x) => Number.isFinite(x) && x > 0);
+
+  // ensure they belong to user + not archived
+  const rows = await prisma.habit.findMany({
+    where: { userId: numericUserId, isArchived: false, id: { in: clean } },
+    select: { id: true },
+  });
+
+  const allowed = new Set(rows.map((r) => r.id));
+
+  // Update using a transaction (position = array index)
+  const tx = [];
+  let pos = 1;
+
+  for (const id of clean) {
+    if (!allowed.has(id)) continue;
+    tx.push(
+      prisma.habit.update({
+        where: { id },
+        data: { sortOrder: pos++ },
+      })
+    );
+  }
+
+  if (tx.length) await prisma.$transaction(tx);
+}
+
+
+
 module.exports = {
   getHabitsBoard,
   createHabit,
   toggleHabitCheck,
   updateHabitMeta,
   deleteHabit,
+  reorderHabits,
 };

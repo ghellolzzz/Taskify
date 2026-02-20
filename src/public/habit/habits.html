@@ -17,10 +17,10 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
   />
 
-  <!-- Reuse profile layout styles for consistent UI -->
   <link rel="stylesheet" href="/profile/style.css" />
-  <!-- Habits specific styles -->
-  <link rel="stylesheet" href="/habit/style.css" />
+<link rel="stylesheet" href="/habit/style.css" />
+<link rel="stylesheet" href="/habit/share-modal.css" />
+
 </head>
 <script src="/js/theme.js" defer></script>
 <body class="profile-theme-light">
@@ -32,20 +32,20 @@
     </div>
 
     <ul class="nav flex-column mt-4">
-        <li><a href="../dashboard/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-        <li><a href="../tasks/task.html"><i class="bi bi-check2-square"></i> Tasks</a></li>
-        <li><a href="../categories/categories.html"><i class="bi bi-tags"></i> Task Categories</a></li>
-        <li><a href="../reminder/reminder.html"><i class="bi bi-bell"></i> Reminder</a></li>
-        <li><a href="../goal/goal.html"><i class="bi bi-bullseye"></i> Goals</a></li>
-        <li><a href="../teams/teams.html"><i class="bi bi-people-fill"></i> Teams</a></li>
-        <li><a href="../community/community.html"><i class="bi bi-chat-heart"></i> Community</a></li>
-        <li><a class="active" href="../habit/habits.html"><i class="bi bi-repeat"></i> Habits</a></li>
-        <li><a href="../time/time.html"><i class="bi bi-clock-history"></i> Time tracking</a></li>
-        <li><a href="../calendar/calendar.html"><i class="bi bi-calendar-event"></i> Calendar</a></li>
-        <li><a href="../profile/profile.html"><i class="bi bi-person-circle"></i> Profile</a></li>
-        <li><a href="../feedback/feedback.html"><i class="bi bi-envelope-paper"></i> Feedback</a></li>
+      <li><a href="../dashboard/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li><a href="../tasks/task.html"><i class="bi bi-check2-square"></i> Tasks</a></li>
+      <li><a href="../categories/categories.html"><i class="bi bi-tags"></i> Task Categories</a></li>
+      <li><a href="../reminder/reminder.html"><i class="bi bi-bell"></i> Reminder</a></li>
+      <li><a href="../goal/goal.html"><i class="bi bi-bullseye"></i> Goals</a></li>
+      <li><a href="../teams/teams.html"><i class="bi bi-people-fill"></i> Teams</a></li>
+      <li><a href="../community/community.html"><i class="bi bi-chat-heart"></i> Community</a></li>
+      <li><a class="active" href="../habit/habits.html"><i class="bi bi-repeat"></i> Habits</a></li>
+      <li><a href="../time/time.html"><i class="bi bi-clock-history"></i> Time tracking</a></li>
+      <li><a href="../calendar/calendar.html"><i class="bi bi-calendar-event"></i> Calendar</a></li>
+      <li><a href="../friends/friends.html"><i class="bi bi-people"></i> Friends</a></li>
+      <li><a href="../profile/profile.html"><i class="bi bi-person-circle"></i> Profile</a></li>
+      <li><a href="../feedback/feedback.html"><i class="bi bi-envelope-paper"></i> Feedback</a></li>
     </ul>
-
     <div class="sidebar-footer">
       <a href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
     </div>
@@ -55,22 +55,35 @@
   <main class="main-content">
     <div class="container-fluid py-4 habits-page">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h2 class="page-title mb-1">Habits Lab</h2>
-          <p class="text-muted small mb-0">
-            Turn tiny actions into streaks. Track how consistent you are this week.
-          </p>
-        </div>
-        <button
-  id="habitNewBtn"
-  class="btn btn-success"
-  data-bs-toggle="modal"
-  data-bs-target="#habitModal"
->
-  <i class="bi bi-plus-circle me-1"></i> New habit
-</button>
+  <div>
+    <h2 class="page-title mb-1">Habits Lab</h2>
+    <p class="text-muted small mb-0">
+      Turn tiny actions into streaks. Track how consistent you are this week.
+    </p>
+  </div>
 
-      </div>
+  <div class="d-flex gap-2">
+    <button
+      id="btnShareProgress"
+      type="button"
+      class="btn btn-outline-primary"
+    >
+      <i class="bi bi-share me-1"></i> Share progress
+<span id="sharedInboxBadge" class="badge rounded-pill text-bg-danger ms-2" style="display:none;">0</span>
+
+    </button>
+
+    <button
+      id="habitNewBtn"
+      class="btn btn-success"
+      data-bs-toggle="modal"
+      data-bs-target="#habitModal"
+    >
+      <i class="bi bi-plus-circle me-1"></i> New habit
+    </button>
+  </div>
+</div> 
+
 
       <div class="row g-3">
         <!-- LEFT: Weekly grid -->
@@ -80,7 +93,7 @@
               <div class="d-flex justify-content-between align-items-center mb-3">
   <div>
     <h6 class="mb-0">This week</h6>
-    <small class="text-muted" id="weekRangeLabel"></small>
+    <small class="text-muted" id="weekRangeLabel">Loading week…</small>
   </div>
 
   <div class="d-flex align-items-center gap-2">
@@ -89,6 +102,7 @@
       <option value="streak">Sort: Highest streak</option>
       <option value="consistency">Sort: Most consistent</option>
       <option value="atrisk">Sort: Needs attention</option>
+      <option value="manual">Sort: Manual</option>
     </select>
 
     <span class="badge rounded-pill text-bg-light small" id="habitsCountBadge">
@@ -127,6 +141,22 @@
 
         <!-- RIGHT: Insights -->
         <div class="col-lg-4">
+         <div class="card profile-card habits-card mb-3" id="sharedWithYouCard">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">Shared with you</h6>
+      <span class="badge rounded-pill text-bg-light small" id="sharedWithYouCount">0</span>
+    </div>
+
+    <div id="sharedWithYouEmpty" class="text-muted small">
+      No shared habit links yet.
+    </div>
+
+    <ul class="list-group list-group-flush" id="sharedWithYouList"></ul>
+  </div>
+</div>
+
+
           <div class="card profile-card habits-card mb-3">
             <div class="card-body">
               <h6 class="mb-2">Today</h6>
@@ -395,6 +425,64 @@
   </div>
 </div>
 
+<!-- Share Progress Modal (custom lightweight modal) -->
+<div id="shareBackdrop" class="share-modal-backdrop">
+  <div class="share-modal">
+    <h3 class="mb-2">Share progress</h3>
+
+    <div class="share-row">
+      <div>
+        <label>Visibility</label>
+        <select id="shareVisibility">
+          <option value="PUBLIC">Public</option>
+          <option value="FRIENDS_ONLY">Friends-only</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Expiry</label>
+        <select id="shareExpiry">
+          <option value="1d">1 day</option>
+          <option value="7d" selected>7 days</option>
+          <option value="never">Never</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="share-actions">
+      <button id="btnShareCancel" type="button" class="btn btn-outline-light btn-sm">Cancel</button>
+      <button id="btnShareGenerate" type="button" class="btn btn-primary btn-sm">Generate link</button>
+    </div>
+    <div id="shareSendWrap" style="display:none; margin-top: 12px;">
+  <div class="mb-2">
+    <label class="small muted">Send to…</label>
+    <select id="shareFriends" class="form-select" multiple></select>
+    <div id="shareFriendsHint" class="small muted" style="margin-top:6px;"></div>
+  </div>
+
+  <div class="mb-2">
+    <label class="small muted">Message (optional)</label>
+    <textarea id="shareNote" class="form-control" rows="2" maxlength="280"
+      placeholder="e.g. Here’s my habits progress 👇"></textarea>
+  </div>
+
+  <div class="d-flex align-items-center gap-2">
+    <button id="btnShareSend" type="button" class="btn btn-primary" disabled>Send</button>
+    <span id="shareSendMsg" class="small muted"></span>
+  </div>
+</div>
+
+
+    <p id="shareMsg" class="muted small mb-2"></p>
+
+    <div id="shareLinkWrap" class="share-linkbox" style="display:none;">
+      <input id="shareLink" type="text" readonly />
+      <button id="btnShareCopy" type="button" class="btn btn-outline-light btn-sm">Copy</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Toast host (for sync errors, undo later, etc.) -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastHost"></div>
 
@@ -404,6 +492,7 @@
   ></script>
 
   <!-- Scripts JS -->
-  <script src="/habit/habits.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="/habit/habits.js"></script>
 </body>
 </html>

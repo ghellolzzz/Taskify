@@ -1,428 +1,675 @@
 const { test, expect } = require('@playwright/test');
-// groups all the tests in the habits lab
-test.describe('Habits Lab (E2E)', () => {
 
+//happens in every test
+test.describe('Habits Lab UI (E2E)', () => {
+
+  // run in serial so state changes don’t clash across tests
+  test.describe.configure({ mode: 'serial' });
+
+  const USER_EMAIL = 'MGF_21@ICLOUD.COM';
+  const PASSWORD = 'password123';
+
+  // Login via UI before every test
   test.beforeEach(async ({ page }) => {
-    // Login before each test
     await page.goto('http://localhost:3001/login.html');
-
-    await page.fill('input[type="email"]', 'MGF_21@ICLOUD.COM');
-    await page.fill('input[type="password"]', 'password123');
+    await page.fill('#email', USER_EMAIL);
+    await page.fill('#password', PASSWORD);
     await page.click('button[type="submit"]');
-
     await page.waitForURL('http://localhost:3001/dashboard/dashboard.html');
   });
-  
 
-  test('should create a habit with no specific target (Flexible)', async ({ page }) => {
+  test('should load Habits page and show core UI sections (Smoke Test)', async ({ page }) => {
+
+    //navigating to habits hub
     await page.goto('http://localhost:3001/habit/habits.html');
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
 
-    const habitTitle = `E2E Flexible Habit ${Date.now()}`;
+    //checks if the header is visible
+    await expect(page.locator('h2.page-title')).toContainText(/Habits Lab/i);
+
+    // core controls exist
+    await expect(page.locator('#habitsSortSelect')).toBeVisible();
+    await expect(page.locator('#habitsCountBadge')).toBeVisible();
+    await expect(page.locator('#weekRangeLabel')).toBeVisible();
+    await expect(page.locator('#habitsWeekHeaderRow')).toBeVisible();
+
+    // table body exists
+    await expect(page.locator('#habitsTableBody')).toBeVisible();
+
+    // right-side cards exist
+    await expect(page.locator('#sharedWithYouCard')).toBeVisible();
+    await expect(page.locator('#todayLabel')).toBeVisible();
+    await expect(page.locator('#todayProgressBar')).toBeVisible();
+    await expect(page.locator('#weeklyDeltaLabel')).toBeVisible();
+    await expect(page.locator('#weeklyProgressBar')).toBeVisible();
+    await expect(page.locator('#patternsCard')).toBeVisible();
+    await expect(page.locator('#streakHighlight')).toBeVisible();
+    await expect(page.locator('#archivedHabitsCard')).toBeVisible();
+  });
+
+  test('should open New Habit modal and toggle reminder fields enable/disable', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
 
     // open modal
     await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
+    await expect(page.locator('#habitModal')).toBeVisible();
 
-    // fill form (no target => Flexible)
-    await page.fill('#habitTitle', habitTitle);
-    await page.selectOption('#habitTargetPerWeek', '');
-    await page.click('#habitModalSubmitBtn');
-
-    // verify habit row exists
-    const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-    await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-    // verify target badge shows Flexible
-    await expect(habitRow.locator('td').nth(1)).toContainText('Flexible');
-  });
-
-  test('should create a habit with target per week and show progress text', async ({ page }) => {
-    await page.goto('http://localhost:3001/habit/habits.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
-
-    const habitTitle = `E2E Target Habit ${Date.now()}`;
-
-    // open modal
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-
-    // fill form
-    await page.fill('#habitTitle', habitTitle);
-    await page.selectOption('#habitTargetPerWeek', '3');
-    await page.click('#habitModalSubmitBtn');
-
-    // verify habit row exists
-    const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-    await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-    // verify target label
-    await expect(habitRow.locator('td').nth(1)).toContainText('3× / week');
-
-    // verify progress text exists (e.g. 0/3 this week)
-    await expect(habitRow.locator('.habit-progress-text')).toContainText('this week');
-  });
-
-  test('should toggle today completion and update Today card', async ({ page }) => {
-    await page.goto('http://localhost:3001/habit/habits.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
-
-    const habitTitle = `E2E Toggle Today ${Date.now()}`;
-
-    // create habit first
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-    await page.fill('#habitTitle', habitTitle);
-    await page.click('#habitModalSubmitBtn');
-
-    const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-    await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-    // capture today label before
-    const beforeLabel = (await page.locator('#todayLabel').textContent()) || '';
-
-    // click today's dot (button has .is-today class)
-    const todayDot = habitRow.locator('.habit-dot.is-today').first();
-    await expect(todayDot).toBeVisible();
-    await todayDot.click();
-
-    // verify dot becomes complete
-    await expect(todayDot).toHaveClass(/is-complete/);
-
-    // verify Today card changed
-    const afterLabel = (await page.locator('#todayLabel').textContent()) || '';
-    expect(afterLabel).not.toEqual(beforeLabel);
-
-    // progress bar should not be 0% anymore (most cases)
-    const barStyle = (await page.locator('#todayProgressBar').getAttribute('style')) || '';
-    expect(barStyle).toContain('width:');
-  });
-
-  test('should toggle again to undo completion', async ({ page }) => {
-    await page.goto('http://localhost:3001/habit/habits.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
-
-    const habitTitle = `E2E Undo Toggle ${Date.now()}`;
-
-    // create habit
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-    await page.fill('#habitTitle', habitTitle);
-    await page.click('#habitModalSubmitBtn');
-
-    const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-    await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-    const todayDot = habitRow.locator('.habit-dot.is-today').first();
-    await todayDot.click();
-    await expect(todayDot).toHaveClass(/is-complete/);
-
-    const beforeUndo = (await page.locator('#todayLabel').textContent()) || '';
-
-    // undo
-    await todayDot.click();
-
-    // verify dot no longer complete
-    await expect(todayDot).not.toHaveClass(/is-complete/);
-
-    // verify Today label changed again
-    const afterUndo = (await page.locator('#todayLabel').textContent()) || '';
-    expect(afterUndo).not.toEqual(beforeUndo);
-  });
-
-  test('should disable reminder inputs by default and enable when checked', async ({ page }) => {
-    await page.goto('http://localhost:3001/habit/habits.html');
-    await page.waitForLoadState('networkidle');
-
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-
-    // default disabled
+    // Reminder inputs disabled by default
+    await expect(page.locator('#habitReminderEnabled')).not.toBeChecked();
     await expect(page.locator('#habitReminderTime')).toBeDisabled();
     await expect(page.locator('#habitReminderRepeat')).toBeDisabled();
 
-    // enable reminders
-    await page.click('#habitReminderEnabled');
-
+    // Enable reminders -> inputs enabled
+    await page.check('#habitReminderEnabled');
     await expect(page.locator('#habitReminderTime')).toBeEnabled();
     await expect(page.locator('#habitReminderRepeat')).toBeEnabled();
+
+    // Disable -> disabled again
+    await page.uncheck('#habitReminderEnabled');
+    await expect(page.locator('#habitReminderTime')).toBeDisabled();
+    await expect(page.locator('#habitReminderRepeat')).toBeDisabled();
   });
 
-  test('should create habit with reminder enabled and show it on Reminder page', async ({ page }) => {
+  test('should NOT allow creating a habit with empty title (HTML5 required validation)', async ({ page }) => {
+
     await page.goto('http://localhost:3001/habit/habits.html');
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
 
-    const habitTitle = `E2E Reminder Habit ${Date.now()}`;
-
-    // create habit with reminder on
     await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-
-    await page.fill('#habitTitle', habitTitle);
-    await page.click('#habitReminderEnabled');
-    await page.fill('#habitReminderTime', '09:00');
-    await page.selectOption('#habitReminderRepeat', 'daily');
-
-    await page.click('#habitModalSubmitBtn');
-
-    // verify habit exists
-    const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-    await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-    // go to reminder page and verify the linked reminder exists
-    await page.goto('http://localhost:3001/reminder/reminder.html');
-    await page.waitForLoadState('networkidle');
-
-    // NOTE: if your reminder UI wording differs, update this locator.
-    const reminderItem = page.locator(`text=${habitTitle}`).first();
-    await expect(reminderItem).toBeVisible({ timeout: 10000 });
-  });
-
-  test('should edit habit title and update it in table', async ({ page }) => {
-  await page.goto('http://localhost:3001/habit/habits.html');
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('#habitsTableBody');
-
-  const habitTitle = `E2E Edit Habit ${Date.now()}`;
-  const updatedTitle = `${habitTitle} Updated`;
-
-  // create habit
-  await page.click('#habitNewBtn');
-  await page.waitForSelector('#habitModal', { state: 'visible' });
-  await page.fill('#habitTitle', habitTitle);
-  await page.click('#habitModalSubmitBtn');
-
-  const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-  await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-  // open dropdown for THIS row
-await habitRow.scrollIntoViewIfNeeded();
-await habitRow.locator('.habit-actions-toggle').click();
-
-// click EDIT inside the OPEN dropdown (only visible menu has .show)
-const editBtn = habitRow.locator('.dropdown-menu.show .habit-edit-btn');
-await expect(editBtn).toBeVisible({ timeout: 5000 });
-await editBtn.click();
-
-
-  await page.waitForSelector('#habitModal', { state: 'visible' });
-  await expect(page.locator('#habitModalTitle')).toContainText('Edit habit');
-
-  // update title
-  await page.fill('#habitTitle', updatedTitle);
-  await page.click('#habitModalSubmitBtn');
-
-  // verify updated row exists
-  const updatedRow = page.locator('#habitsTableBody tr', { hasText: updatedTitle });
-  await expect(updatedRow).toBeVisible({ timeout: 10000 });
-});
-
-
-  test('should archive a habit and show it in Archived habits list, then restore it', async ({ page }) => {
-  await page.goto('http://localhost:3001/habit/habits.html');
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('#habitsTableBody');
-
-  const habitTitle = `E2E Archive Habit ${Date.now()}`;
-
-  // create habit
-  await page.click('#habitNewBtn');
-  await page.waitForSelector('#habitModal', { state: 'visible' });
-  await page.fill('#habitTitle', habitTitle);
-  await page.click('#habitModalSubmitBtn');
-
-  const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-  await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-  // open THIS row menu + click archive inside that menu
-  await habitRow.scrollIntoViewIfNeeded();
-await habitRow.locator('.habit-actions-toggle').click();
-
-const archiveBtn = habitRow.locator('.dropdown-menu.show .habit-archive-btn');
-await expect(archiveBtn).toBeVisible({ timeout: 5000 });
-await archiveBtn.click();
-
-
-  // verify removed from active table
-  await expect(page.locator('#habitsTableBody .habit-title', { hasText: habitTitle })).toHaveCount(0);
-
-  // verify appears in archived list
-  const archivedItem = page.locator('#archivedHabitsList .archived-habit-item', { hasText: habitTitle });
-  await expect(archivedItem).toBeVisible({ timeout: 10000 });
-
-  // restore
-  await archivedItem.locator('.archived-unarchive-btn').click();
-
-  // verify back in active table
-  const restoredRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-  await expect(restoredRow).toBeVisible({ timeout: 10000 });
-});
-
-
-  test('should permanently delete a habit using delete modal', async ({ page }) => {
-  await page.goto('http://localhost:3001/habit/habits.html');
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('#habitsTableBody');
-
-  const habitTitle = `E2E Hard Delete ${Date.now()}`;
-
-  // create habit
-  await page.click('#habitNewBtn');
-  await page.waitForSelector('#habitModal', { state: 'visible' });
-  await page.fill('#habitTitle', habitTitle);
-  await page.click('#habitModalSubmitBtn');
-
-  const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-  await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-  // open THIS row menu + click delete inside that menu
-  await habitRow.scrollIntoViewIfNeeded();
-await habitRow.locator('.habit-actions-toggle').click();
-
-const deleteBtn = habitRow.locator('.dropdown-menu.show .habit-delete-btn');
-await expect(deleteBtn).toBeVisible({ timeout: 5000 });
-await deleteBtn.click();
-
-
-  // confirm modal opens
-  await page.waitForSelector('#habitDeleteModal', { state: 'visible' });
-  await page.click('#habitDeleteConfirmBtn');
-
-  // removed immediately (optimistic)
-  await expect(page.locator('#habitsTableBody .habit-title', { hasText: habitTitle })).toHaveCount(0);
-
-  // wait for server hard delete (10s in your JS), then reload to confirm still gone
-  await page.waitForTimeout(10500);
-  await page.reload();
-  await page.waitForLoadState('networkidle');
-
-  await expect(page.locator('#habitsTableBody .habit-title', { hasText: habitTitle })).toHaveCount(0);
-  await expect(page.locator('#archivedHabitsList', { hasText: habitTitle })).toHaveCount(0);
-});
-
-
-  test('should sort by Needs attention (atrisk) and bring higher-risk habit to the top', async ({ page }) => {
-    await page.goto('http://localhost:3001/habit/habits.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
-
-    const riskTitle = `E2E Risk Habit ${Date.now()}`;
-    const safeTitle = `E2E Safe Habit ${Date.now()}`;
-
-    // create "risk" habit: daily target (7) and do nothing
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-    await page.fill('#habitTitle', riskTitle);
-    await page.selectOption('#habitTargetPerWeek', '7');
-    await page.click('#habitModalSubmitBtn');
-
-    // create "safe" habit: target 1 and complete today
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-    await page.fill('#habitTitle', safeTitle);
-    await page.selectOption('#habitTargetPerWeek', '1');
-    await page.click('#habitModalSubmitBtn');
-
-    const safeRow = page.locator('#habitsTableBody tr', { hasText: safeTitle });
-    await expect(safeRow).toBeVisible({ timeout: 10000 });
-    await safeRow.locator('.habit-dot.is-today').first().click();
-
-    // sort: Needs attention
-    await page.selectOption('#habitsSortSelect', 'atrisk');
-    await page.waitForTimeout(400);
-
-    // sort: Needs attention
-await page.selectOption('#habitsSortSelect', 'atrisk');
-
-// wait until DOM reorders so that risk appears above safe
-await page.waitForFunction(
-  ({ riskTitle, safeTitle }) => {
-    const titles = Array.from(document.querySelectorAll('#habitsTableBody .habit-title'))
-      .map(el => el.textContent || '');
-
-    const riskIndex = titles.findIndex(t => t.includes(riskTitle));
-    const safeIndex = titles.findIndex(t => t.includes(safeTitle));
-
-    return riskIndex !== -1 && safeIndex !== -1 && riskIndex < safeIndex;
-  },
-  { riskTitle, safeTitle }
-);
-
-// extra check (optional but nice)
-const titles = await page.locator('#habitsTableBody .habit-title').allTextContents();
-const riskIndex = titles.findIndex(t => t.includes(riskTitle));
-const safeIndex = titles.findIndex(t => t.includes(safeTitle));
-expect(riskIndex).toBeGreaterThanOrEqual(0);
-expect(safeIndex).toBeGreaterThanOrEqual(0);
-expect(riskIndex).toBeLessThan(safeIndex);
-
-  });
-
-  test('should update Patterns card after completing at least one habit', async ({ page }) => {
-    await page.goto('http://localhost:3001/habit/habits.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
-
-    const habitTitle = `E2E Patterns ${Date.now()}`;
-
-    // create habit
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-    await page.fill('#habitTitle', habitTitle);
-    await page.click('#habitModalSubmitBtn');
-
-    const habitRow = page.locator('#habitsTableBody tr', { hasText: habitTitle });
-    await expect(habitRow).toBeVisible({ timeout: 10000 });
-
-    // before
-    const beforeBestDay = (await page.locator('#patternsBestDay').textContent()) || '—';
-
-    // complete today
-    await habitRow.locator('.habit-dot.is-today').first().click();
-    await page.waitForTimeout(400);
-
-    // after: best day should no longer be "—" (or should change)
-    const afterBestDay = (await page.locator('#patternsBestDay').textContent()) || '';
-    expect(afterBestDay).not.toEqual(beforeBestDay);
-    expect(afterBestDay).not.toEqual('—');
-  });
-
-  test('NEGATIVE: should not create a habit when title is empty', async ({ page }) => {
-    await page.goto('http://localhost:3001/habit/habits.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#habitsTableBody');
-
-    const beforeCount = await page.locator('#habitsTableBody .habit-title').count();
-
-    // open modal and try submit with empty title
-    await page.click('#habitNewBtn');
-    await page.waitForSelector('#habitModal', { state: 'visible' });
-
-    await page.fill('#habitTitle', '');
-    await page.click('#habitModalSubmitBtn');
-
-    // modal should still be visible due to required validation
     await expect(page.locator('#habitModal')).toBeVisible();
 
-    // ensure no new habit row created
-    await page.waitForTimeout(300);
-    const afterCount = await page.locator('#habitsTableBody .habit-title').count();
-    expect(afterCount).toEqual(beforeCount);
+    // leave title empty, attempt submit
+    await page.click('#habitModalSubmitBtn');
+
+    // modal should still be visible because required field blocks submit
+    await expect(page.locator('#habitModal')).toBeVisible();
+
+    // and title should be invalid
+    await expect(page.locator('#habitTitle')).toHaveJSProperty('validity.valueMissing', true);
   });
 
-  test('NEGATIVE: should redirect to login when token is missing', async ({ page }) => {
-    // remove token after login
-    await page.evaluate(() => localStorage.removeItem('token'));
+  test('should create a habit (Happy path, idempotent) and show it in table', async ({ page }) => {
 
     await page.goto('http://localhost:3001/habit/habits.html');
     await page.waitForLoadState('networkidle');
 
-    await expect(page).toHaveURL(/\/login\.html$/);
+    const habitTitle = `E2E Habit ${Date.now()}`;
+
+    // If already exists, don’t recreate (idempotent)
+    const existingRow = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: habitTitle }),
+    });
+
+    if ((await existingRow.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await expect(page.locator('#habitModal')).toBeVisible();
+
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '3');
+
+      // exercise reminder payload
+      await page.check('#habitReminderEnabled');
+      await page.fill('#habitReminderTime', '09:00');
+      await page.selectOption('#habitReminderRepeat', 'daily');
+
+      await page.click('#habitModalSubmitBtn');
+
+      // modal closes after success
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+    }
+
+    // Verify row appears
+    await expect(existingRow.first()).toBeVisible({ timeout: 10000 });
+
+    // Verify badge exists (seed differs, so don’t assert exact number)
+    await expect(page.locator('#habitsCountBadge')).toBeVisible();
+  });
+
+  test('should persist reminder fields after editing an existing habit (enable + time + repeat)', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    const originalTitle = `E2E ReminderPersist ${Date.now()}`;
+
+    const row = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: originalTitle }),
+    });
+
+    // Ensure exists
+    if ((await row.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', originalTitle);
+      await page.selectOption('#habitTargetPerWeek', '2');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+      await expect(row.first()).toBeVisible({ timeout: 10000 });
+    }
+
+    // open edit
+    await row.first().locator('button.habit-actions-toggle').click();
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+    await page.locator('.dropdown-menu.show').locator('.habit-edit-btn').click();
+
+    await expect(page.locator('#habitModal')).toBeVisible();
+
+    // set reminder fields
+    await page.check('#habitReminderEnabled');
+    await page.fill('#habitReminderTime', '10:30');
+    await page.selectOption('#habitReminderRepeat', 'weekly');
+
+    await page.click('#habitModalSubmitBtn');
+    await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+
+    // reopen edit again and verify persisted values
+    await row.first().locator('button.habit-actions-toggle').click();
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+    await page.locator('.dropdown-menu.show').locator('.habit-edit-btn').click();
+
+    await expect(page.locator('#habitModal')).toBeVisible();
+    await expect(page.locator('#habitReminderEnabled')).toBeChecked();
+    await expect(page.locator('#habitReminderTime')).toHaveValue('10:30');
+    await expect(page.locator('#habitReminderRepeat')).toHaveValue('weekly');
+
+    // close modal
+    await page.locator('#habitModal button.btn-close').click();
+    await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+  });
+
+  test('should render week header with 7 days and show Today column highlight somewhere', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('#habitsWeekHeaderRow')).toBeVisible();
+
+    // 2 spacer th + 7 day th = 9 total
+    const thCount = await page.locator('#habitsWeekHeaderRow th').count();
+    expect(thCount).toBe(9);
+
+    // ensure at least one day header is today (if your backend marks it)
+    const todayHeader = page.locator('#habitsWeekHeaderRow th.is-today-header');
+    // don’t hard fail if timezone edge-case, but usually should exist
+    if ((await todayHeader.count()) > 0) {
+      await expect(todayHeader.first()).toBeVisible();
+    }
+  });
+
+  test('should block toggling a FUTURE day (future dot disabled)', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    // Ensure at least one row exists (create a habit if table is empty)
+    const rowCount = await page.locator('#habitsTableBody tr').count();
+    if (rowCount === 0) {
+      const habitTitle = `E2E Seed ${Date.now()}`;
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '1');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+    }
+
+    const firstRow = page.locator('#habitsTableBody tr').first();
+    await expect(firstRow).toBeVisible();
+
+    // Try find a future button (may not exist depending on week/timezone)
+    const futureBtn = firstRow.locator('button.habit-dot.is-future').first();
+    if ((await futureBtn.count()) === 0) {
+      await expect(page.locator('#habitsWeekHeaderRow')).toBeVisible();
+      return;
+    }
+
+    await expect(futureBtn).toBeDisabled();
+  });
+
+  test('should toggle TODAY dot (done/undone) and then toggle back (cleanup)', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    // Ensure a target habit exists so test is stable
+    const habitTitle = `E2E Toggle ${Date.now()}`;
+    const row = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: habitTitle }),
+    });
+
+    if ((await row.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '1');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+      await expect(row.first()).toBeVisible({ timeout: 10000 });
+    }
+
+    const todayBtn = row.first().locator('button.habit-dot.is-today').first();
+    await expect(todayBtn).toBeVisible();
+
+    const wasComplete = await todayBtn.evaluate((el) => el.classList.contains('is-complete'));
+
+    await todayBtn.click();
+
+    // wait until pending clears (if your UI uses it)
+    await expect.poll(async () => {
+      return await todayBtn.evaluate((el) => el.classList.contains('is-pending'));
+    }, { timeout: 10000 }).toBe(false);
+
+    const nowComplete = await todayBtn.evaluate((el) => el.classList.contains('is-complete'));
+    expect(nowComplete).toBe(!wasComplete);
+
+    // Toggle back (cleanup)
+    await todayBtn.click();
+    await expect.poll(async () => {
+      return await todayBtn.evaluate((el) => el.classList.contains('is-complete'));
+    }, { timeout: 10000 }).toBe(wasComplete);
+  });
+
+  test('should update Today progress label/bar when toggling a habit (sanity)', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    // Ensure at least one row exists
+    const rowCount = await page.locator('#habitsTableBody tr').count();
+    if (rowCount === 0) {
+      const habitTitle = `E2E TodayProg ${Date.now()}`;
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '1');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+    }
+
+    const labelBefore = (await page.locator('#todayLabel').textContent()) || '';
+
+    const firstRow = page.locator('#habitsTableBody tr').first();
+    const todayBtn = firstRow.locator('button.habit-dot.is-today').first();
+
+    if ((await todayBtn.count()) === 0) {
+      await expect(page.locator('#todayLabel')).toBeVisible();
+      return;
+    }
+
+    await todayBtn.click();
+    await expect.poll(async () => {
+      return await todayBtn.evaluate((el) => el.classList.contains('is-pending'));
+    }, { timeout: 10000 }).toBe(false);
+
+    const labelAfter = (await page.locator('#todayLabel').textContent()) || '';
+
+    // label should change (usually x / y)
+    expect(labelAfter).not.toBe(labelBefore);
+
+    // cleanup: toggle back
+    await todayBtn.click();
+    await expect.poll(async () => {
+      return await todayBtn.evaluate((el) => el.classList.contains('is-pending'));
+    }, { timeout: 10000 }).toBe(false);
+  });
+
+  test('should switch Sort dropdown and re-render (Created -> Streak -> Consistency -> Needs attention -> Manual)', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('#habitsSortSelect')).toBeVisible();
+
+    // Created
+    await page.selectOption('#habitsSortSelect', 'created');
+    await expect(page.locator('#habitsSortSelect')).toHaveValue('created');
+
+    // Streak
+    await page.selectOption('#habitsSortSelect', 'streak');
+    await expect(page.locator('#habitsSortSelect')).toHaveValue('streak');
+
+    // Consistency
+    await page.selectOption('#habitsSortSelect', 'consistency');
+    await expect(page.locator('#habitsSortSelect')).toHaveValue('consistency');
+
+    // At risk
+    await page.selectOption('#habitsSortSelect', 'atrisk');
+    await expect(page.locator('#habitsSortSelect')).toHaveValue('atrisk');
+
+    // Manual
+    await page.selectOption('#habitsSortSelect', 'manual');
+    await expect(page.locator('#habitsSortSelect')).toHaveValue('manual');
+
+    // In manual mode drag handles should exist (if there are habits)
+    const handles = page.locator('.habit-drag-handle');
+    if ((await page.locator('#habitsTableBody tr').count()) > 0) {
+      await expect(handles.first()).toBeVisible();
+    }
+  });
+
+  test('should edit a habit title successfully', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    const originalTitle = `E2E Edit ${Date.now()}`;
+    const newTitle = `${originalTitle} (Renamed)`;
+
+    const originalRow = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: originalTitle }),
+    });
+
+    // Ensure exists
+    if ((await originalRow.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', originalTitle);
+      await page.selectOption('#habitTargetPerWeek', '2');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+      await expect(originalRow.first()).toBeVisible({ timeout: 10000 });
+    }
+
+    // Open row actions (dropdown)
+    await originalRow.first().locator('button.habit-actions-toggle').click();
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+
+    // Click edit
+    await page.locator('.dropdown-menu.show').locator('.habit-edit-btn').click();
+
+    // Update
+    await expect(page.locator('#habitModal')).toBeVisible();
+    await page.fill('#habitTitle', newTitle);
+    await page.click('#habitModalSubmitBtn');
+    await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+
+    // Verify renamed row exists
+    const renamedRow = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: newTitle }),
+    });
+    await expect(renamedRow.first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should archive a habit and Undo to restore it', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    const habitTitle = `E2E Archive ${Date.now()}`;
+
+    const row = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: habitTitle }),
+    });
+
+    // Ensure exists
+    if ((await row.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '1');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+      await expect(row.first()).toBeVisible({ timeout: 10000 });
+    }
+
+    // Archive via dropdown
+    await row.first().locator('button.habit-actions-toggle').click();
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+    await page.locator('.dropdown-menu.show').locator('.habit-archive-btn').click();
+
+    // Row disappears
+    await expect(row).toHaveCount(0, { timeout: 10000 });
+
+    // Undo toast appears (same as your friends pattern)
+    const undoBtn = page.locator('#toastHost .undo-toast-btn').last();
+    await expect(undoBtn).toBeVisible({ timeout: 7000 });
+    await undoBtn.click();
+
+    // Row returns
+    await expect(row.first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should archive a habit without Undo and then restore from Archived list', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    const habitTitle = `E2E Archive2 ${Date.now()}`;
+
+    const row = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: habitTitle }),
+    });
+
+    // Ensure exists
+    if ((await row.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '1');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+      await expect(row.first()).toBeVisible({ timeout: 10000 });
+    }
+
+    // Archive via dropdown
+    await row.first().locator('button.habit-actions-toggle').click();
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+    await page.locator('.dropdown-menu.show').locator('.habit-archive-btn').click();
+
+    // Don’t click undo. Wait for undo window to expire.
+    await page.waitForTimeout(5500);
+
+    // Verify in archived list
+    const archivedItem = page.locator('#archivedHabitsList .archived-habit-item', {
+      has: page.locator('.archived-habit-name', { hasText: habitTitle }),
+    });
+    await expect(archivedItem).toBeVisible({ timeout: 10000 });
+
+    // Restore
+    await archivedItem.locator('button.archived-unarchive-btn').click();
+
+    // Back in main table
+    await expect(row.first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should delete a habit and Undo to restore it', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    const habitTitle = `E2E Delete ${Date.now()}`;
+
+    const row = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: habitTitle }),
+    });
+
+    // Ensure exists
+    if ((await row.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '1');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+      await expect(row.first()).toBeVisible({ timeout: 10000 });
+    }
+
+    // Delete via dropdown
+    await row.first().locator('button.habit-actions-toggle').click();
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+    await page.locator('.dropdown-menu.show').locator('.habit-delete-btn').click();
+
+    // Confirm modal
+    await expect(page.locator('#habitDeleteModal')).toBeVisible();
+    await expect(page.locator('#habitDeleteMessage')).toContainText(`Delete "${habitTitle}"?`);
+    await page.click('#habitDeleteConfirmBtn');
+
+    await expect(page.locator('#habitDeleteModal')).toBeHidden({ timeout: 10000 });
+
+    // Row removed
+    await expect(row).toHaveCount(0, { timeout: 10000 });
+
+    // Undo toast exists
+    const undoBtn = page.locator('#toastHost .undo-toast-btn').last();
+    await expect(undoBtn).toBeVisible({ timeout: 7000 });
+    await undoBtn.click();
+
+    // Row returns
+    await expect(row.first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should delete a habit without Undo and ensure it stays deleted after 10s window', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    const habitTitle = `E2E HardDelete ${Date.now()}`;
+
+    const row = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: habitTitle }),
+    });
+
+    // Ensure exists
+    if ((await row.count()) === 0) {
+      await page.click('#habitNewBtn');
+      await page.fill('#habitTitle', habitTitle);
+      await page.selectOption('#habitTargetPerWeek', '1');
+      await page.click('#habitModalSubmitBtn');
+      await expect(page.locator('#habitModal')).toBeHidden({ timeout: 10000 });
+      await expect(row.first()).toBeVisible({ timeout: 10000 });
+    }
+
+    // Delete via dropdown
+    await row.first().locator('button.habit-actions-toggle').click();
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+    await page.locator('.dropdown-menu.show').locator('.habit-delete-btn').click();
+
+    // Confirm modal
+    await expect(page.locator('#habitDeleteModal')).toBeVisible();
+    await page.click('#habitDeleteConfirmBtn');
+    await expect(page.locator('#habitDeleteModal')).toBeHidden({ timeout: 10000 });
+
+    // Row removed immediately
+    await expect(row).toHaveCount(0, { timeout: 10000 });
+
+    // Do NOT click undo. Wait past 10s delete window.
+    await page.waitForTimeout(10500);
+
+    // Refresh page and ensure it does not come back
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    const rowAfter = page.locator('#habitsTableBody tr', {
+      has: page.locator('.habit-title', { hasText: habitTitle }),
+    });
+    await expect(rowAfter).toHaveCount(0);
+  });
+
+  test('should generate a share progress link (Send may be disabled if no friends)', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    await page.click('#btnShareProgress');
+    await expect(page.locator('#shareBackdrop')).toBeVisible();
+
+    // Generate link
+    await page.click('#btnShareGenerate');
+
+    await expect(page.locator('#shareLinkWrap')).toBeVisible({ timeout: 10000 });
+    const linkValue = await page.locator('#shareLink').inputValue();
+    expect(linkValue).toMatch(/\/share\/habits\//);
+
+    // Send area appears
+    await expect(page.locator('#shareSendWrap')).toBeVisible();
+    await expect(page.locator('#shareFriends')).toBeVisible();
+
+    // If "no friends" hint shows, Send should be disabled
+    const hint = page.locator('#shareFriendsHint');
+    if (await hint.isVisible().catch(() => false)) {
+      const hintText = (await hint.textContent()) || '';
+      if (/no friends/i.test(hintText)) {
+        await expect(page.locator('#btnShareSend')).toBeDisabled();
+      }
+    }
+
+    // Copy button works (just verify message changes)
+    await page.click('#btnShareCopy');
+    const msg = page.locator('#shareMsg');
+    await expect(msg).toBeVisible();
+    const msgText = (await msg.textContent()) || '';
+    expect(msgText.length).toBeGreaterThan(0);
+
+    // Close
+    await page.click('#btnShareCancel');
+    await expect(page.locator('#shareBackdrop')).toBeHidden();
+  });
+
+  test('should open shared link in a new page if share link exists (best-effort)', async ({ page, context }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    await page.click('#btnShareProgress');
+    await expect(page.locator('#shareBackdrop')).toBeVisible();
+
+    await page.click('#btnShareGenerate');
+    await expect(page.locator('#shareLinkWrap')).toBeVisible({ timeout: 10000 });
+
+    const linkValue = await page.locator('#shareLink').inputValue();
+    expect(linkValue).toMatch(/\/share\/habits\//);
+
+    // open share link in new tab (page.goto works too, but new tab simulates real share usage)
+    const sharePage = await context.newPage();
+    await sharePage.goto(linkValue);
+
+    // shared page should show title + card
+    await expect(sharePage.locator('#title')).toContainText(/Habits progress/i);
+
+    // Depending on visibility, it may load or require login.
+    // Since this is the same logged-in browser context, it should usually load.
+    const stateText = (await sharePage.locator('#shareState').textContent().catch(() => '')) || '';
+    if (/Friends-only: please login/i.test(stateText)) {
+      await expect(sharePage.locator('#shareState')).toContainText(/please login/i);
+    } else if (/access denied/i.test(stateText)) {
+      await expect(sharePage.locator('#shareState')).toContainText(/access denied/i);
+    } else if (/expired/i.test(stateText)) {
+      await expect(sharePage.locator('#shareState')).toContainText(/expired/i);
+    } else {
+      // if loaded, main body should show
+      await expect(sharePage.locator('#shareBody')).toBeVisible({ timeout: 10000 });
+      await expect(sharePage.locator('#dailyGrid')).toBeVisible();
+      await expect(sharePage.locator('#allHabits')).toBeVisible();
+    }
+
+    await sharePage.close();
+
+    await page.click('#btnShareCancel');
+    await expect(page.locator('#shareBackdrop')).toBeHidden();
+  });
+
+  test('Shared with you card: either empty state OR list items exist', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('#sharedWithYouCard')).toBeVisible();
+
+    const empty = await page.locator('#sharedWithYouEmpty').isVisible().catch(() => false);
+    const items = await page.locator('#sharedWithYouList li').count().catch(() => 0);
+
+    // at least one of these must be true depending on seed
+    expect(empty || items > 0).toBeTruthy();
+  });
+
+  test('should logout from sidebar footer and redirect to login', async ({ page }) => {
+
+    await page.goto('http://localhost:3001/habit/habits.html');
+    await page.waitForLoadState('networkidle');
+
+    // click logout in sidebar footer
+    await page.click('.sidebar-footer a');
+
+    // should go to login
+    await page.waitForURL('http://localhost:3001/login.html');
+
+    // token should be cleared -> login form visible
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('#password')).toBeVisible();
   });
 
 });

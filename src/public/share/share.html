@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Shared Habits Progress</title>
+
+  <link rel="stylesheet" href="/share/share.css" />
+</head>
+
+
+
+<body>
+  <main class="share-wrap">
+    <div id="shareCard" class="share-card">
+      <div class="share-header">
+        <div>
+          <h1 id="title">Habits progress</h1>
+          <p id="subtitle" class="muted"></p>
+        </div>
+
+        <div class="window-toggle">
+          <button id="btn7" type="button" class="toggle-btn active">Last 7 days</button>
+          <button id="btn30" type="button" class="toggle-btn">Last 30 days</button>
+        </div>
+      </div>
+      <div id="liveBadge" class="live-badge" style="display:none;">
+  🔄 Updating…
+</div>
+
+      <div id="shareState" class="share-state muted">Loading...</div>
+
+      <div id="shareBody" style="display:none;">
+        <section class="share-metrics">
+          <div class="metric">
+            <div class="metric-label">Habits</div>
+            <div id="mHabits" class="metric-value">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Total completions</div>
+            <div id="mCompletions" class="metric-value">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Avg daily rate</div>
+            <div id="mAvg" class="metric-value">0%</div>
+          </div>
+        </section>
+
+        <section class="trend-row" id="trendRow" style="display:none;">
+          <div class="trend-box">
+            <div class="muted small">Trend</div>
+            <div id="trendText" class="trend-text"></div>
+          </div>
+          <div class="trend-box">
+            <div class="muted small">Weekly totals</div>
+            <div id="weeklyText" class="trend-text"></div>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="section-title">Daily completion</h2>
+          <div id="dailyGrid" class="daily-grid"></div>
+        </section>
+
+        <section>
+          <h2 class="section-title">Top habits</h2>
+          <div id="topHabits" class="habit-list"></div>
+        </section>
+
+        <section>
+          <h2 class="section-title">All habits</h2>
+          <div id="allHabits" class="habit-list"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="/share/share.js"></script>
+</body>
+</html>

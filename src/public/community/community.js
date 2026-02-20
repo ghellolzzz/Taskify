@@ -104,8 +104,8 @@ function renderNotes(notes) {
 function prepareCreateMode() {
     currentEditId = null;
     document.getElementById("noteForm").reset();
-    document.getElementById("addNoteModalLabel").innerText = "New Encouragement 💖";
-    document.querySelector("#noteForm button[type='submit']").innerText = "Post to Board";
+    document.getElementById("modalTitle").innerText = "New Encouragement";
+    document.getElementById("submitBtn").innerText = "Post to Board";
     document.getElementById("noteContent").style.backgroundColor = "#fff9c4"; // Reset to default yellow
 }
 
@@ -143,8 +143,8 @@ function openEditNote(id, content, color) {
     const previewColors = { yellow: '#fff9c4', pink: '#fce4ec', blue: '#e3f2fd', green: '#e8f5e9' };
     document.getElementById("noteContent").style.backgroundColor = previewColors[color];
     
-    document.getElementById("addNoteModalLabel").innerText = "Edit Encouragement ✏️";
-    document.querySelector("#noteForm button[type='submit']").innerText = "Save Changes";
+    document.getElementById("modalTitle").innerText = "Edit Encouragement";
+    document.getElementById("submitBtn").innerText = "Save Changes";
 }
 
 // SAVE EDITED NOTE
@@ -239,16 +239,3 @@ if (logoutBtn) {
     });
 }
 
-
-
-// // Sidebar Logout functionality
-// document.addEventListener("DOMContentLoaded", () => {
-//     const logoutBtn = document.querySelector('.sidebar-footer a');
-//     if (logoutBtn) {
-//         logoutBtn.addEventListener('click', (e) => {
-//             e.preventDefault();
-//             localStorage.clear(); // Simpler way to clear everything
-//             window.location.href = '../login.html';
-//         });
-//     }
-// });

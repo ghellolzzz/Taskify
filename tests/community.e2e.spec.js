@@ -49,10 +49,13 @@ test('should edit an existing note', async ({ page }) => {
     
     // Click the pencil icon
     await note.locator('.bi-pencil').click();
+    
+    // 2. Verify State Transition: Check that the Modal Title and Button text updated correctly
+    const modalTitle = page.locator('#modalTitle');
+    const submitBtn = page.locator('#submitBtn');
 
-    // Instead of checking the title, wait for the button text to change
-    const submitBtn = page.locator('#noteForm button[type="submit"]');
-    await expect(submitBtn).toHaveText('Post to Board');
+    await expect(modalTitle).toHaveText('Edit Encouragement'); 
+    await expect(submitBtn).toHaveText('Save Changes');           
 
     // Fill in the new content
     const textarea = page.locator('#noteContent');

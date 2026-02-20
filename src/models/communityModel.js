@@ -19,7 +19,7 @@ module.exports.getAll = function () {
   return prisma.communityNote.findMany({
     include: {
       user: { select: { name: true } },
-      reactions: { // Added this so the frontend knows WHO liked WHAT
+      reactions: { 
         select: { userId: true } 
       },
       _count: {
@@ -30,7 +30,7 @@ module.exports.getAll = function () {
   });
 };
 
-// TOGGLE a reaction (Option B: One per user/type)
+
 module.exports.toggleReaction = async function (userId, noteId, type) {
   const existing = await prisma.noteReaction.findUnique({
     where: {

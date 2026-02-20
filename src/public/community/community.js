@@ -1,5 +1,5 @@
 const token = localStorage.getItem("token");
-let currentEditId = null; // Track if we are editing or creating
+let currentEditId = null; // Track if editing or creating
 
 // Load everything on page load
 document.addEventListener("DOMContentLoaded", () => {
@@ -241,7 +241,7 @@ if (logoutBtn) {
 
 
 
-// // Sidebar Logout functionality (Keep your existing one)
+// // Sidebar Logout functionality
 // document.addEventListener("DOMContentLoaded", () => {
 //     const logoutBtn = document.querySelector('.sidebar-footer a');
 //     if (logoutBtn) {

@@ -30,7 +30,7 @@ module.exports.getNotes = function (req, res) {
 module.exports.reactToNote = function (req, res) {
   const userId = res.locals.userId;
   const noteId = req.params.id;
-  const { type } = req.body; // e.g., "HEART"
+  const { type } = req.body;
 
   communityModel.toggleReaction(userId, noteId, type || "HEART")
     .then(() => res.json({ success: true }))
@@ -40,7 +40,7 @@ module.exports.reactToNote = function (req, res) {
 // UPDATE Note
 module.exports.updateNote = function (req, res) {
   const id = req.params.id;
-  const userId = res.locals.userId; // Pattern from your other controllers
+  const userId = res.locals.userId;
   const { content, color } = req.body;
 
   communityModel.update(id, userId, content, color)

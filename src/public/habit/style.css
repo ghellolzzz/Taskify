@@ -534,12 +534,3 @@ body.profile-theme-dark .habit-expected {
 .habits-table th {
   overflow: visible !important;
 }
-
-#weekRangeLabel {
-  display: inline-block;
-  min-height: 1em;
-}
-#weeklyDeltaLabel {
-  display: inline-block;
-  min-height: 1em; /* prevents collapsing when empty */
-}

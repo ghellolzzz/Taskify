@@ -908,6 +908,21 @@ function renderHabitsBoard(board) {
   const sortedHabits = getSortedHabits(habits, habitsSortMode);
   const todayKey = getTodayDateKey(board);
 
+  // Week range label (ALWAYS set so it never stays empty)
+const weekRangeLabel = document.getElementById('weekRangeLabel');
+if (weekRangeLabel) {
+  const start = new Date(week.start);
+  const end = new Date(week.start);
+  end.setDate(end.getDate() + 6);
+  weekRangeLabel.textContent = `${start.toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+  })} – ${end.toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+  })}`;
+}
+
   // Week header labels (second header row)
   const headerRow = document.getElementById('habitsWeekHeaderRow');
   headerRow.innerHTML = '';
@@ -959,20 +974,6 @@ if (sortedHabits.length === 0) {
 
   // IMPORTANT: still render sidebar + week label + drag setup
   renderArchivedHabits(archivedHabits);
-
-  const weekRangeLabel = document.getElementById('weekRangeLabel');
-  if (weekRangeLabel) {
-    const start = new Date(week.start);
-    const end = new Date(week.start);
-    end.setDate(end.getDate() + 6);
-    weekRangeLabel.textContent = `${start.toLocaleDateString(undefined, {
-      day: 'numeric',
-      month: 'short',
-    })} – ${end.toLocaleDateString(undefined, {
-      day: 'numeric',
-      month: 'short',
-    })}`;
-  }
 
   updateSidebarStats(summary);
   updatePatternsCard(board);
@@ -1167,20 +1168,6 @@ week.days.forEach((day) => {
 
   renderArchivedHabits(archivedHabits);
 
-  // Week range label
-  const weekRangeLabel = document.getElementById('weekRangeLabel');
-  if (weekRangeLabel) {
-    const start = new Date(week.start);
-    const end = new Date(week.start);
-    end.setDate(end.getDate() + 6);
-    weekRangeLabel.textContent = `${start.toLocaleDateString(undefined, {
-      day: 'numeric',
-      month: 'short',
-    })} – ${end.toLocaleDateString(undefined, {
-      day: 'numeric',
-      month: 'short',
-    })}`;
-  }
 
 
   const sortEl = document.getElementById('habitsSortSelect');
@@ -1666,7 +1653,7 @@ const delta = weeklyPct - prevWeeklyPct;
 
 if (weeklyDeltaLabel) {
   if (summary.activeHabits === 0) {
-    weeklyDeltaLabel.textContent = '';
+    weeklyDeltaLabel.textContent = '—';
   } else if (delta === 0) {
     weeklyDeltaLabel.textContent = `Same as last week (${prevWeeklyPct}%).`;
   } else if (delta > 0) {

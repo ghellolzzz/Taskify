@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: taskify
+    runtime: node
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
+    buildCommand: npm install && npx prisma generate
+    startCommand: npx prisma migrate deploy && npm run start:prod
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: JWT_ALGORITHM
+        value: HS256

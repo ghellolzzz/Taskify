@@ -10,6 +10,7 @@
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
+    "nodemon": "^3.1.14",
     "pg": "^8.13.0",
     "serve-favicon": "^2.5.1"
   },
@@ -30,9 +31,11 @@
     "migration:dev": "dotenv -e .env.development -- npx prisma migrate dev",
     "migration:reset": "dotenv -e .env.development -- npx prisma migrate reset",
     "start": "dotenv -e .env.development -- node ./src/server.js",
+    "start:prod": "node ./src/server.js",
     "test": "dotenv -e .env.test -- playwright test --config=configs/playwright.config.js",
     "lint": "eslint -c configs/eslint.config.mjs src/**/*.js",
     "test-trace": "npm test -- --reporter=html --trace on",
-    "start:test": "dotenv -e .env.test -- node ./src/server.js"
+    "start:test": "dotenv -e .env.test -- node ./src/server.js",
+    "dev": "dotenv -e .env.development -- nodemon ./src/server.js"
   }
 }
